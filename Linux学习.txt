@@ -1,0 +1,947 @@
+ps aux 
+a:不与terminal有关的所有进程 
+u:有效用户相关的进程 
+x:通常与a这个参数一起使用，可列出完整信息 
+
+
+如果tty7默认没有启动就可以用startx来启动 
+[masf@www~]$ startx 
+
+可以修改/etc/inittab来修改默认使用的等级(run level 3 / run level 5) 
+
+注销Linux 
+[masf@www~]$ exit 
+
+显示目前所支持的语言 
+[masf@www~]$ echo $LANG 
+
+将数据同步写入硬盘中的命令:sync 
+惯用的关机命令：shutdown 
+重启、关机：reboot、halt、poweroff 
+
+//将系统的服务关掉后 立即停机 
+shutdown -h now 
+
+Linux有7中运行模式 
+level 0:关机 
+level 3:纯命令行模式 
+level 5:图形界面形式 
+levle 6:重启 
+可以用一下命令切换运行模式 
+init 0 
+
+/var是系统默认的一些数据暂存或者cache数据的保存目录 
+Email的数据就在这里面， 
+
+
+chgrp:改变文件/目录所属用户组 -R表示递归 
+[masf@www~]$ chgrp  -R users folder //将该文件夹下的所有东西，所属用户组改为users 
+
+chown:改变文件/目录所有者 
+[masf@www~]$ chown -R masf folder 
+//也可以同时更改组 
+[masf@www~]$ chown -R masf:users folder 
+
+chmod改变文件的权限 
+[masf@www~]$ chmod -R 777 folder 
+也可以用符号来改变权限u:user g:group o:others 
+[masf@www~]$ chmod u=rwx,go=rw aa.txt 
+将某个文件的写权限向所有人开放 
+[masf@www~]$ chmod a+x aa.txt 
+
+cp 复制行为会复制执行者的属性与权限 
+
+#删除目录 
+[masf@www~]$ rmdir -p test1/test2/test3 
+#利用-p这个参数，立刻就可以讲test1/test2/test3一次删除 
+#这个命令仅能删除空的目录 
+
+#递归删除目录 
+[masf@www~]$ rm -r 目录1 目录2 
+  -r: 递归删除 
+  -f: 不提示直接删除 
+
+#移动文件 
+[masf@www~]$ mv /root/ls /bin 
+
+#cp -i /aa.txt /tmp/aa.txt 
+-i: 若目标文件已经存在时，在覆盖时会先询问操作的进行(常用) 
+-p:连同文件的属性一起复制过去，而非使用默认属性(备份常用) 
+-r:递归持续复制，用于目录的复制行为(常用) 
+
+#文件内容查看 
+cat:由第一行开始显示文件内容 
+tac:从最后一行开始显示 
+nl:显示的时候，顺便输出行号 
+more:一页一页地显示文件内容 
+less:与more类似，但是比more更好的是，它可以往前翻页 
+head:只看头几行 
+tail:只看结尾几行 
+od:以二进制的方式读取文件内容 
+
+#显示最后20行数据 
+tail -n 20 /etc/aa.txt 
+#显示100行以后的数据 
+tail -n +100 /etc/aa.txt 
+
+which(寻找“执行文件”)也就是命令 
+[root@www~]$ which ifconfig 
+which是根据用户所设置的PATH变量内的目录区寻找可执行文件,加上-a参数时，同名的也会找出来 
+cd是bash内置的命令 
+
+whereis(寻找特定文件)利用数据库来查找数据 
+[masf@www~]$ whereis ifconfig 
+
+locate(寻找可匹配的文件)利用数据库来查找数据 
+[masf@www~]$ locate ifconfi不用写全 
+可以用updatedb命令更新数据库 
+
+#查找home下属于masf的文件 
+[root@www~]$ find /home -user masf 
+#查找系统中不属于任何人的文件 
+[root@www~]$ find / -nouser 
+#查找home下的某个文件 
+[root@www~]$ find /home -name 文件名 
+
+
+df可以查出目前挂载的设备 
+[root@www~]$ df 
+
+df：列出文件系统的整体磁盘使用量 
+容量结果以易读的容量格式显示出来 
+[root@www~]$ df -h 
+
+#连接文件 
+[root@www~]$ ln [-sf] 源文件 目标文件 
+-s:如果不加任何参数就进行连接，那就是hard link,至于-s就是symbolic link 
+-f:如果目标文件存在时，就主动将目标文件直接删除后再创建 
+
+#挂载mount 
+[root@www~]$ mount 设备名 挂载点 
+
+#Linux压缩文件扩展名 
+*.Z        compress程序压缩的文件 
+*.gz       gzip程序压缩的文件 
+*.bz2	   bzip2程序压缩的文件 
+*.tar	   tar程序打包的文件 
+*.tar.gz   tar程序打包的文件，其中经过gzip的压缩 
+*.tar.bz2  tar程序打包的文件，其中经过bzip2的压缩 
+
+#gzip压缩命令，可以解开compress,zip,gzip软件压缩的文件 
+#zcat查看用gzip压缩的文件 
+-c:将压缩数据输出到屏幕上 
+-d:解压缩 
+-v:查看压缩比 
+-#:压缩等级，-1 到 -9 
+#压缩一个文件 
+[root@www~]$ gzip -v man.config //会压缩成man.config.gz 源文件会消失 
+#解压缩一个文件 
+[root@www~]$ gzip -d man.config.gz //源文件也会消失 
+#解开一个文件用最佳的压缩比，并保留源文件 
+[root@www~]$ gzip -9 -c man.config>man.config.gz 
+
+#bzip2基本取代了gzip 
+#bzcat 
+-c:将压缩数据输出到屏幕上 
+-d:解压缩 
+-k:保留源文件 
+-z:压缩 
+-v:查看压缩比 
+-#:压缩等级，-1 到 -9 
+#压缩一个文件 
+[root@www~]$ bzip2 -z man.config 
+#解压缩一个文件 
+[root@www~]$ bzip2 -d man.config.gz 
+
+#tar 
+-c:新建打包文件 
+-t：查看打包文件的内容含有哪些文件名，重点是查看文件名 
+-x：解压缩或解打包 
+-j:通过bzip2进行压缩/解压缩  *.tar.bz2 
+-z:通过gzip  *.tar.gz 
+-v:查看过程中的数据 
+-f:filename: -f后接要处理的文件名 
+-C:目录 ：改变目标位置 
+-p:保留备份数据的原本权限与属性，常用于备份(-c)重要的配置文件 
+-P:保留绝对路径，即允许备份数据中含有根目录存在之意 
+--exclude=FILE:在压缩过程中，不要将FILE打包 
+#压缩:tar -jcv -f filename.tar.bz2  要被压缩的文件或目录 
+#查询:tar -jtv -f filename.tar.bz2 
+#解压:tar -jxv -f filename.tar.bz2 -C 要解压到的目录 
+
+
+#压缩bzip2方式 
+[root@www~]$ tar -jcv -f filename.tar.bz2  被压所的文件或目录 
+#解压缩bzip2方式 
+[root@www~]$ tar -jxv -f filename.tar.bz2 -C 解压到的地方 
+#查看bzip2方式 
+[root@www~]$ tar -jtv -f filename.tar.bz2 
+
+#更改环境变量可以去这个文件(在用户目录下，对单一用户永久生效) 
+1.~/.bash_profile 
+2.~/.bash_login 
+3.~/.profile 
+需要用source命令才能马上生效 
+#更改环境变量(对所有用户永久生效) 
+  /etc/profile 
+  修改后要想马上生效要运行$source /etc/profile,否则重启才会生效 
+
+#查看磁盘还剩多少空间 
+df -h(h代表用友好方式展示) 
+文件系统	容量 已用   可用  已用% 挂载点 
+$ /dev/sda2	 14G  1G   12.5G   xx%   / 
+
+#查看某个文件夹下的磁盘使用情况 
+$ du --max-depth=1  -h  /aa/bb 
+上面的命令会显出该目录下的所有直接文件或目录的大小，最后一行是该文件夹的大小 
+
+#直接查看某个目录的大小//h就是友好方式显示 
+# du -sh /aa/bb 
+$ 7.5M  /aa/bb  
+# du -h --max-depth=0 /aa/bb 
+$ 7.5M  /aa/bb 
+
+#bash shell的内置命令type 
+$ type [-tpa] name 
+-t :当加入-t参数是会将name以下面这些字眼显示出它的意义 
+     file :表示为外部命令 
+     alias:表示该命令为命令别名所设置的名称 
+     builtin:表示该命令为bash内置的命令功能 
+-p :如果后面接的name为外部命令，才会显示完整文件名，否则不显示 
+-a :会由PATH变量定义的路径中，将所有含name的命令都列出来，包含alias 
+
+#设置变量,不能有空格 
+$ myname=masf 
+
+#显示变量 
+$ echo ${myname} 
+
+#取消变量 
+$ unset myname 
+
+#进入到内核目录 
+$ cd /lib/modules/$(uname -r)/kernel 
+
+#单引号双引号取区别 
+$ name=masf 
+$ myname="$name its me" 
+$ echo $myname 
+$ masf its me 
+
+$ myname='$name its me' 
+$ echo $myname 
+$ $name its me 
+
+#查看环境变量 
+$ env 
+#查看所有环境变量(环境变量和自定义变量) 
+$ set 
+  变量PS1是命令提示符。当我们每次按下[Enter]按键去执行某个命令后，最后再次出现提示符时， 
+  就会主动去读取这个变量值了。 
+  \d:可显示出星期月日的日期格式，如 Mon Feb 2. 
+  \H:完整的主机名。 
+  \h:仅取主机名在第一个小树点之前的名字。 
+  \t:显示时间，24小时格式 HH:MM:SS 
+  \T:显示时间，12小时格式 HH:MM:SS 
+  \A:显示时间，24小时格式 HH:MM 
+  \@:显示时间，为12小时格式 am/pm样式 
+  \u:目前用户的账号名称 
+  \v:BASH的版本信息。 
+  \w:完整的工作目录名称，由根目录写起的目录名称。但主文件夹会以~替代。 
+  \W:利用basename函数取得工作目录名称，所有仅会列出最后一个目录名。 
+  \#:执行的第几个命令。 
+  \$:提示符，如果是root时，提示符为#，其他是$. 
+  
+# "$"本身也是一个变量。代表目前这个Shell的线程号，即PID. 
+  $ echo $$ 查看当前进程号. 
+# “？”上一个命令的回传码。 
+
+#语系，查看Linux支持多少语系,这些语系文件都放置在/usr/lib/locale/ 
+  $ locale -a 
+
+#如果其他的语系变量都为设置，且有设置LANG或LC_ALL时，则其他的语系变量就会被这两个变量替代。 
+这也是为什么我们再Linux当中，通常说明进设置LANG变量即可，因为它是主要变量。 
+
+#Linux主机终端无法显示中文 
+Linux主机的终端机接口环境下无法显示像中文这样复杂的编码文字，所以就会产生乱码。 
+只有在tty1~tty6的环境下装一些中文化接口软件，才能看到中文。如果在window主机中以远程连接 
+服务器的软件连接到主机的话，其实命令行界面是可以看到中文的。 
+
+#整体系统默认的语系定义在 /etc/sysconfig/i18n里 
+$ cat /etc/sysconfig/i18n 
+
+#/etc/sysconfig/i18n 这里存放的是系统的区域语言设置第一行,表明你当前系统的语言环境变量设置 
+
+#locale命令时列出的语系是LANG="en_US.UTF-8"，这个是当前用户，会话级别的； 
+
+#重新启动网络的配置 
+$ /etc/init.d/network restart 
+
+#读取来自键盘输入的变量,变量名字为name 
+$ read -p "这是一个提示符"  -t 30 name  //等待30秒钟 
+
+#声明变量的类型 
+$ declare [-aixr] variable 
+-a: 定义variable为数组变量 
+-i: 定义variable为整型变量 
+-x: 与export一样，将variable变为环境变量 
+-r: 将variable设置为只读 
+-p：列出variable的类型 
+
+#变量内容的删除 
+${<1><2><3>} 
+  <1>:代表变量 
+  <2>:代表运算符 
+  <3>:代表要删除的部分 
+例如：${variable#abc*dd} //“*”匹配任意字符 
+  表示，从变量variable中，从前面开始删除abc*dd组成的最短的字符。 
+可以使用的运算符： 
+#： 从前删除最短匹配的那个 
+##：从前删除最长匹配的那个 
+%： 从后删除最短匹配的那个 
+%%：从后删除最长匹配的那个 
+  
+#变量内容的替换 
+${变量/旧字符/新字符} //若变量符合“旧字符”，则第一个旧字符串会被新字符替换 
+${变量//旧字符/新字符} //若变量符合“旧字符”，则全部的旧字符串会被新字符替换 
+
+#判断变量是否存在，然后再决定赋什么样的值 
+设置变量的例子：old_var的值是abc 
+$ new_var=${old_var-content} 
+如果old_var变量已经存在，则new_var的值为“abc”，否则为“content” 
+
+加上“：”后，如果old_var变量为空字符串，会视为该变量未设置。 
+$ new_var=${old_var:-content} 
+如果old_var为空字符串，则new_var的值是“content” 
+
+#vim操作环境配置 
+1.整体的设置一般在/etc/vimrc文件中 
+2.用户相关的在~/.vimrc文件中(默认不存在，可以手动创建) 
+3.例如set nu 设置行号,:set all 显示目前所有环境参数设置 
+
+#vim多窗口功能 
+:sp[filename] 
+[ctrl]+w+j或[ctrl]+w+[向下箭头]  //光标移动到下方的窗口 
+[ctrl]+w+k或[ctrl]+w+[向上箭头]  //光标移动到上方的窗口 
+
+#vim移动光标到指定行 
+:set 3 
+
+#设置别名 
+$ alias lm='ls -l | more' 
+
+#历史命令 
+$ history [n] 
+$ history [-c] 
+$ history [-raw] histfiles 
+n:数字，列出最近的n条命令 
+-c:将目前的shell中的所有history内容全部消除。 
+-a:将目前新增的history命令新增入histfiles中，若没有加histfiles参数， 
+    则默认写入~/.bash_history. 
+-r:将histfiles的内容写入当前这个shell的history记忆中。 
+-w:将目前history记忆内容写入histfiles中。 
+
+#显示存储历史命令行数 
+$ echo $HISTSIZE 
+
+#历史命令的读取 
+当我们以bash登陆Linux主机之后，系统会主动由文件夹的~/.bash_history读取以前 
+记录过的命令，该文件会记录几条数据来自于HISTSIZE这个变量 
+
+#执行history命令 
+$ !number   //执行第几条命令 
+$ !command  //有最近的命令向前搜索命令串靠头为command的那个命令，并执行； 
+$ !!        //执行上一条命令 
+
+#bash执行命令的顺序 
+  1.以相对/绝对路径执行命令，例如“/bin/ls”或 “./ls” 
+  2.由alias找到该命令来执行 
+  3.由bash内置的命令执行 
+  4.通过$PATH这个变量的顺序找到的第一个命令来执行。 
+
+#bash的登陆界面(这时候还没有登录成功) 
+/etc/issue,这个文件内可以使用反斜杠变量 
+  \d:本地端时间的日期 
+  \l:显示第几个终端机接口 
+  \m:显示硬件的等级(i386/i486...) 
+  \n:显示主机的网络名称 
+  \o:显示domain name 
+  \r:操作系统的版本(相当于uanme -r) 
+  \t:显示本地端时间 
+  \s:操作系统的名称 
+  \v:操作系统的版本 
+/etc/issue.net //这个文件和上面文件功能一样，这个页面是用telnet连接主机是用的 
+
+#查看自己是哪个终端 
+$ who am i //也可以用w，这个更全 
+
+#登录后的欢迎界面 
+/etc/motd, 这个文件里面的信息在用户登录后可以看到 
+
+#登录login shell和non-login shell 
+  login shell  取得bash的时候需要完整的登陆流程，比如登录tty1--tty6，此时取得的bash 
+     就是login shell 
+  non-login shell 取得bash接口的方法不需要城府登录的举动，比如你在原本的bash环境 
+     下再次执行bash这个命令，不需要输入账号密码，那第二个bash(子进程)也是non-login shell 
+
+#/etc/profile(login shell才会读) 
+通过看这个文件的内容可以看到，其内部还回调用其他文件 
+。/etc/inputrc 此文件内容为bash的热键、【Tab】有没有声音等的数据。 
+。/etc/profile.d/*.sh 自己也可在该目录下建.sh文件。该目录下文件规定了操作接口颜色、语系 
+    ll与ls别名等。 
+。/etc/sysconfig/i18n 决定bash用那种语系。 
+
+#记住，bash的login shell情况下所有读取的整体环境配置文件就只有/etc/profile,但是该文件 
+  还会调用其他的配置文件。 
+
+#bash在读完了整体环境设置的/etc/profile并借此调用其他配置文件后，接下来会读取用户的个人 
+配置文件，并按顺序调用，只要有一个被调用，其他就不再调用。 
+1.~/.bash_profile  //如果有~/.bashrc文件，就会读取这个文件 
+2.~/.bash_login 
+3.~/.profile 
+
+#source:读入环境配置文件的命令 
+可以在不注销登录的情况下，将配置文件读入到当前shell,也可以用"." 
+$ source ~/.bashrc 
+$ . ~/.bashrc 
+
+#~/. bashrc(non-login shell会读) 
+  主要有用户的个人设置和整体的环境设置 
+
+#PS1变量控制提示符 如[root@localhost ~]$ 
+
+#/etc/man.config (CentOS) 
+该文件规定了使用man的时候man page的路径到哪里去寻找。 
+
+#~/.bash_history 
+  记录历史命令，记录的个数来自于HISTSISE变量 
+
+#~/.bash_logout 
+  注销bash后系统再帮我们做完什么操作后才离开 
+
+#stty(setting tty 设置终端机的意思) 
+
+#查看目前环境中所有的按键列表 
+$ stty -a 
+^ : 代表[ctrl] 
+eof=^D: End of file的意思，代表结束输入；[ctrl]+D 
+intr:发送一个interrrupt的信号给目前正在运行的程序 
+kill:删除在目前命令行上的所有文字； 
+quit:送出一个quit的信号给目前正在运行的进程 
+start:在某个进程停止后，重新启动它的输出 
+stop:停止目前屏幕的输出 
+susp:送出一个terminal stop的信号给正在运行的进程 
+erase(擦除)：删除字符串 
+
+#更改目前中端按键 
+$ stty erase ^h  //删除字符变为[ctrl]+h 
+
+#标准输入(stdin):代码为0,使用<或<< 
+#标准输出(stdout):代码为1，使用>或>>; 
+#标准错误输出(stderr):代码为2，使用2>或2>>; 
+
+#黑洞设备 
+/dev/null 
+
+#将标准输入和标准输出放入同一个文件 
+$ find /home -name .bashrc 1> list.txt 2>&1  //1>list.txt 2>list.txt这样也行，但是文件信息混乱 
+解释：将标准输入信息存入list.txt,然后将标准错误信息也放入到标准输入中。 
+
+#利用cat标准输入和标准输出，复制文件 
+$ cat >aa.txt < ~/.bashrc 
+
+#执行多个命令 
+$ cmd1 ; cmd2 
+
+#$?(命令回传码)与&&或|| 
+$ cmd1 $$ cmd2  若cmd1执行完毕且正确($?=0),则开始执行cmd2 
+$ cmd1 || cmd2  若cmd1执行正确($?=0),则cmd2不执行 
+
+#cut使用 
+-d:后接分隔符，与-f一起使用 
+-f:取出用-d分割的段落的第几段 
+-c:以字符单位取出固定字符区间 
+格式 
+$ cut -d '分隔符' -f 取第几个字段 
+$ cut -c 取字符范围 
+
+#取PATH变量的第五个路径 
+$ echo $PATH | cut -d ':' -f 5 
+
+#取PATH变量的5到10之间的字符 
+$ echo $PATH | cut -c 5-10 
+
+#将某个文件以‘：’作为分隔符，按照第三段排序 
+$ cat /etc/passwd | sort -t ':' -k 3 
+
+#uniq [-ic] 过滤掉重复的数据 
+-c:计数 
+-i:忽略大小写 
+$ last | cut -d ' ' -f 1 | sort | uniq -c 
+  
+#wc 获取某个文件的行数，字符等个数 
+-l:仅列出行 
+-w:仅列出多少字(英文单词) 
+-m:多少字符 
+
+#双向重定向tee，同时将输送到文件与屏幕 
+  $ tee [-a] file 
+  -a:以累加的方式，将数据加入文件 
+  $ last | tee aa.txt 
+
+#删除信息中的字符 
+$ last | tr -d root 
+
+#将输出的信息所有小写字符转为大写 
+$ last |  tr -s [a-z] [A-Z] 
+
+#将/etc/passwd /etc/shadow同一行沾在一起 
+$paste /etc/passwd /etc/shadow 
+
+#切割文件 
+$ split [-bl] file prefix 
+  -b:接与切割成的文件大小，单位b、k、m等 
+  -l:以行数来进行切割 
+  prefix:作为切割成的文件名前缀 
+$ split -b 10k /etc/passwd qiege 
+
+#将 /etc/passwd内的第一列取出，仅取三行，使用finger这个 
+命令将每个账号内容显示出来。 
+$ cut -d ':' f 1 /etc/passwd | head -n 3 | xargs finger 
+
+#xargs x:是乘号的意思；args是arguments的意思 
+$ xargs [-0epn] command 
+
+#管道中使用减号 - 
+$ tar -cvf - /home | tar -xvf - 
+将/home里面的文件打包，但数据不记录到文件，而是传送到stdout; 
+经过管道后，将数据传送到tar -xvf -。后面的这个 - 则是取前 
+一个命令的stdout,所以就不需要使用文件了。 
+
+#建立一个符号链接 
+$ ln -s 源文件[/export/start.sh]  目标文件[start.sh] 
+
+
+#查看某个端口，某个端口占用的进程 
+$ netstat -anep | grep 8057 
+输出结果类似这样 tcp 0  0 :::8057   :::*   LISTEN   0  886914  2608/java 
+其中数字2608就是进程 
+
+#解压war包 
+$jar -xvf gaem.war 
+
+#更改终端机分辨率到1024*768,且颜色深度为15bit,就是要指定vga=790 
+$ vim /boot/grub/menu.lst 
+kernel /vmlinuz-2.6.18-92.e15 ro root=LABEL=/1 rhgb quiet vga=790 
+
+#yum文件位置 
+cd /etc/yum.repos.d/ 
+
+#配置网易163的yum源 
+1.下载repo文件 
+   http://mirrors.163.com/.help/CentOS6-Base-163.repo 
+2.备份并替换系统的repo文件 
+   $/etc/yum.repos.d/ 
+   $ mv CentOS-Base.repo CentOS-Base.repo.bak 
+   $ mv /root/CentOS6-Base-163.repo CentOS-Base.repo 
+3.yum源更新 
+   $ yum clean all 
+   $ yum makecache 
+   $ yum update 
+
+#查看防火墙状态： 
+/etc/init.d/iptables status 
+#暂时关闭防火墙： 
+/etc/init.d/iptables stop 
+#禁止防火墙在系统启动时启动 
+/sbin/chkconfig --level 2345 iptables off 
+#重启iptables: 
+/etc/init.d/iptables restart 
+
+#开启80端口 
+#/sbin/iptables -I INPUT -p tcp --dport 80 -j ACCEPT 
+#保存 
+#/etc/rc.d/init.d/iptables save 
+
+#也可以直接修改 /etc/sysconfig/iptables 添加一条 
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT 
+
+#top查看多个cpu使用情况 
+top后按1可以查看不同cpu的负载 
+%wa这个选项代表I/Owait，通常你的系统变慢都是I/O产生的问题比较大！因此要注意这个选项耗用CPU的资源。 
+
+#####根据CPU消耗定位问题代码 
+#查看进程id，线程id;下面这条命令可以得出哪个线程对应哪个进程 
+ps -eo pid,lwp -L 
+e:显示所有的进程 
+o:自定义显示 
+f:全格式 
+h:不显示标题 
+l:长格式 
+w:宽输出 
+a:显示终端上的所有进程，包括其他用户的进程 
+u:有效用户 
+r:只显示正在运行的进程 
+x:显示没有控制终端的进程 
+
+pid:进程id 
+lwp:线程id 
+ruser:用户id 
+ppid:父进程id 
+psr:运行该线程的CPU的序号 
+args:命令行参数 
+
+L:显示进程，并尽量显示LWP和NLWP(线程个数) 
+
+#查看线程占用CPU情况 
+$ top 
+-d:后接整个界面更新的描述，默认5秒 
+-p:指定某个PID来进行查看检测 
+-b:将top输出编排成适合输出到文件的格式 
+-c:显示整个命令而不是只显示命令名 
+-s:在安全模式中运行，这将去除交互命令所带来的潜在危险 
+-S:指定累计模式 
+top执行过程中可以使用的按键 
+    ?:显示在top当中可以输入的按键 
+    H:查看每个线程占用CPU的情况 
+    n 键入数字可查看指定数量的进程，任意时刻按=即可回复最初的top显示 
+    M:内存占用排序 
+    P:cpu占用排序 
+    N:以PID来排序 
+    P:根据CPU使用百分比大小进行排序。 
+    T: 根据时间/累计时间进行排序。 
+    k:给某个PID一个信号 
+    1:显示每个CPU的详细情况 
+    i:忽略闲置和僵死进程。这是一个开关式命令。 
+    r:  重新安排一个进程的优先级别。系统提示用户输入需要改变的进程PID以及需要设置的 
+         进程优先级值。输入一个正值将使优先级降低，反之则可以使该进程拥有更高的优先权。默认值是10。 
+    S:切换到累计模式。 
+    s :  改变两次刷新之间的延迟时间。系统将提示用户输入新的时间，单位为s。如果有小数，就换算成ms。输入0值则系 
+       统将不断刷新，默认值是5 s。需要注意的是如果设置太小的时间，很可能会引起不断刷新，从而根本来不及 
+       看清显示的情况，而且系统负载也会大大增加。 
+    f或者F :从当前显示中添加或者删除项目。（默认只显示pid等重要项目） 
+    o或者O  :改变显示项目的顺序。(比如PID，USER等) 
+    l: 切换显示平均负载和启动时间信息。即显示影藏第一行 
+    m: 切换显示内存信息。即显示影藏内存行 
+    t: 切换显示进程和CPU状态信息。即显示影藏CPU行 
+    c: 切换显示命令名称和完整命令行。 显示完整的命令。 这个功能很有用。 
+    W：  将当前设置写入~/.toprc文件中。这是写top配置文件的推荐方法 
+#top后第一行，第二行和第三行信息如下： 
+  *.第一行任务队列信息 
+    22:36:41 ：当前时间 
+    up  1:20：系统运行时间（小时：分钟）  
+    4 users：当前登录用户数 
+    load average: 1.55, 1.40, 1.01 :系统负载，即任务队列的平均长度。三个数分别为1，5，15 
+     分钟前到现在的平均值。 
+    load average:数据是每隔5秒中检查一次活跃的进程数，按照特定算法计算出的数据。如果这个数据以逻辑cpu的数量，如果高于4或5说明负载高了。 
+  *.第二行任务 
+    232 total:进程总数 
+    1 running: 正在运行的进程数 
+    231 sleeping: 睡眠的进程数 
+    0 stopped:停止的进程数 
+    0 zombie:僵尸进程数 
+  *.第三行cpu状态信息 
+    us = user mode 用户占用CPU百分比 
+    sy = system mode 表示内核利用率的百分比（例如：中断） 
+    ni = low priority user mode (nice) 用户进程内改变过优先级的进程占用CPU百分比 
+    id = idle task  空闲CPU百分比 
+    wa = I/O waiting 可运行状态的线程被阻塞在I/O的百分比 
+    hi = servicing IRQs 硬中断占cpu的百分比 
+    si = servicing soft IRQs 软终端占cpu的百分比 
+    st = steal (time given to other DomU instances) 
+*.第四行：内存状态 
+*.第五行：swap交换分区 
+*.第六行：空行 
+*.第七行以下：各进程（任务）的状态监控 
+    PID 进程id 
+    PPID 父进程id 
+    RUSER Real user name 
+    UID 进程所有者的用户id 
+    USER 进程所有者的用户名 
+    GROUP 进程所有者的组名 
+    TTY 启动进程的终端名。不是从终端启动的进程则显示为 ? 
+    PR 优先级 
+    NI nice值。负值表示高优先级，正值表示低优先级 
+    P 最后使用的CPU，仅在多CPU环境下有意义 
+   %CPU 上次更新到现在的CPU时间占用百分比 
+   TIME 进程使用的CPU时间总计，单位秒 
+   TIME+ 进程使用的CPU时间总计，单位1/100秒 
+   %MEM 进程使用的物理内存百分比 
+   VIRT 进程使用的虚拟内存总量，单位kb。VIRT=SWAP+RES 
+   SWAP 进程使用的虚拟内存中，被换出的大小，单位kb。 
+   RES 进程使用的、未被换出的物理内存大小，单位kb。RES=CODE+DATA 
+   CODE 可执行代码占用的物理内存大小，单位kb 
+   DATA 可执行代码以外的部分(数据段+栈)占用的物理内存大小，单位kb 
+   SHR 共享内存大小，单位kb 
+   nFLT 页面错误次数 
+   nDRT 最后一次写入到现在，被修改过的页面数。 
+   S 进程状态。 
+        D=不可中断的睡眠状态 
+        R=运行 
+        S=睡眠 
+        T=跟踪/停止 
+        Z=僵尸进程 
+   COMMAND 命令名/命令行 
+   WCHAN 若该进程在睡眠，则显示睡眠中的系统函数名 
+   Flags 任务标志，参考 sched.h 
+#查看java进程 
+jps -lm 
+jps [options] [hostid] 
+options可以用 
+  -q :安静模式 
+  -m :输出传递给main方法的参数 
+  -l :显示完整路径 
+  -v :显示传递给JVM的命令行参数 
+  -V :显示通过flag文件传递给JVM的参数 
+  -J :和其他Java工具类似用于传递参数给命令本身要调用的java进程 
+  hostid是主机id，默认localhost。 
+
+#查看当前虚拟机的线程栈 
+jstack -l vmid 
+  -F 强制输出线程堆栈 
+  -l 显示关于锁的附加信息 
+  -m 显示本地方法堆栈 
+
+#SCP(Secure Copy,安全复制协议) 
+-r:递归复制 
+-p:保留文件的权限和模式 
+$ scp filename  user@remotehost:/home/path 
+$ scp user@remotehost:/home/path  filename 
+
+#语系编码转换 
+$iconv -f 原本编码 -t 新编码 filename [-o newfile] 
+--list:列出iconv支持的语系数据 
+-f: from,后接原本的编码格式 
+-t: to,要转变成的编码 
+-o file:如果要保留原本的文件，使用这个，可以建立新编码文件 
+
+#DOS与Linux的断行字符转换 
+$dos2UNIX [-kn] file [newfile] 
+$UNIX2dos [-kn] file [newfile] 
+-k:保留该文件原本的mtime时间格式(不更新文件上次内容经过修订的时间) 
+-n:保留原本的旧文件，将转换后的内容输出到新文 
+
+#vim字符编码 
+encoding:vim内部使用的字符编码，类似于vim的母语，不管什么语言，进入vim内部都是以vim的内部编码方式来表示。 
+fileencoding:当前编辑的文件的编码方式，保存时也会按这个编码方式保存。 
+fileencodings:编码探测表，启动时会按照该顺序表逐一探测要打开的文件的编码方式，并将fileencoding设置为最终探测到的字符编码。 
+termencoding:vim工作终端的编码方式。 
+
+#vim编码设置 
+vim启动，根据/etc/vimrc（或~/.vimrc,默认不存在，可以新建一个）中设置的encoding的值来设置buffer、菜单文本、消息文的编码方式。 
+根据fileencodings进行编码探测。 
+读入或保存时如果fileencoding和encoding值不同，则调用iconv进行转换 
+
+#编辑~/.vimrc文件 
+set fileencodings=ucs-bom,utf-8,gbk 
+
+#键盘读取变量 
+$read [-pt] variable 
+-p:后面可以接提示符 
+-t:后面可以接等待的秒数。表示不会一直等待用户 
+
+#声明变量的类型declare/typeset 
+$declare [-aixr] variable 
+-a:定义数组变量 
+-i:定义整形变量 
+-x:定义环境变量 
+-r:将变量设置为readonly类型 
+
+#变量的删除 
+$var=${变量#要删除的字符} 
+  #:代表减号，由前面开始向右删除，且仅删除最短的那个。 
+  ##:匹配最长的那个 
+  %:从后向前删，匹配最短的 
+  %%:从后向前删，匹配最长 
+  要删除的字符串中可以用通配符*替代0到无穷多个任意字符 
+
+#login shell在登陆的时候，只会读取这两个文件 
+/etc/profile:系统的整体设置，每个用户登陆取的bash时一定会读取的配置文件 
+~/.bash_profile或~/.bash_login或~/.profile：用户个人设置文件。 
+
+通过查看/etc/profile文件，可以看到它还会调用/etc/profile.d/*.sh、/etc/sysconfig/i18n等文件 
+
+#读入环境配置文件的命令source(.) 
+/etc/profile与~/.bash_profile都是在取得login shell时才会读，所以改完后需要注销。通过该命令可以不用注销。 
+$source /etc/profile 
+
+#non-login shell会读的文件 
+~/.bashrc:可通过源文件查看具体会做什么。 
+
+#查看终端按键 
+$stty -a 
+在随后出现的列表中，字符的代表意义如下： 
+^:[Ctrl] 
+eof:End of file的意思，代表结束输入 
+erase:向后删除 
+intr:interrupt 
+kill:删除在目前命令行上的所有文字 
+quit:送出一个quit信号给目前正在运行的进程 
+start:在某个进程停止后，重新启动它的输出 
+stop:停止目前屏幕的输出 
+susp:送出一个terminal stop的信号给正在运行的进程 
+
+#将标准错误(stderr)转成标准输出(stdout) 
+$ 2>&1 
+
+#选取命令cut 
+$cut -d '分隔符' -f 第几段 
+-d:后接分割符，与-f一起用 
+-f:取出第几段，例如第三和第五 3,5 
+-c:取出固定字符区间，例如12-17 
+
+#取出PATH变量的第五个路径 
+$echo $PATH | cut -d ':' -f 5 
+
+#取出PATH变量第12个字符以后的所有字符串 
+$echo $PATH | cut -c 12- 
+
+#grep 
+$grep [-acinv] [--color=auto] '查找字符串' filename 
+-a:将binary文件以text文件的方式查找数据 
+-c:计算找到‘查找字符串’的个数 
+-i:忽略大小写 
+-n:输出行号 
+-v:反向选择，显示出没有‘查找字符串’内容的 
+--color=auto:将找到的关键字部分加上颜色 
+
+#排序 
+$sort [-fbMnrtuk] [file or stdin] 
+-f:忽略大小写 
+-b:忽略最前面空格 
+-M:以月份的名字排序 
+-n:使用纯数字进行排序 
+-r:反向排序 
+-u:uniq,相同数据仅显示一行 
+-t:分隔符，默认用Tab键分割 
+-k:以那个区间来进行排序的意思 
+
+#将文件内容/etc/passd以：分割，以第三列排序 
+$cat /etc/passwd |sort -t ':' -k 3 
+
+#过滤重复的数据 
+$uniq [-ic] 
+-i:忽略大小写 
+-c:进行计数 
+
+#统计文件行、字、字符 
+$wc [-lwm] 
+-l:仅列出行 
+-w:仅列出多少字(英文单字) 
+-m:多少字符 
+
+#统计/etc/passwd文件的行、字、字符 
+$wc /etc/passwd 
+
+#双向重定向tee，tee会同时将数据流送到文件和标准输出 
+$ls | tee ./aa.txt | more 
+
+#字符转换命令tr 
+$tr [-ds] '字符串' 
+-d:删除信息当中的‘字符串’ 
+-s:去掉重复的字符 
+
+#删除信息中的‘:’ 
+$echo $PATH |tr -d ':' 
+
+#去掉重复的字符 
+$echo ::::::: |tr -s ':' 
+
+#col命令 
+$col [-xb] 
+-x:将tab建转换成对等的空格键 
+-b:在文字内有反斜杠时，仅保留反斜杠最后接的那个字符 
+
+#利用cat -A显示出所有特殊按键，最后以col将[tab]转成空白；^I的符号就是tab 
+$cat -A /etc/man.config | col -x |cat -A 
+
+#将tab建转换成空格键 
+$expand [-t] file 
+-t:后接数字，表示一个tab按键可以代表多个空格 
+
+#将文件中的tab按键设置成6个空格 
+$expand -t 6 aa.txt 
+
+#文件切割 
+$split [-bl] file PREFIX 
+-b:欲切割成的文件大小，可加单位，如b、k、m等 
+-l:以行数进行切割 
+PREFIX:切割文件名字的前道符，如所文件都已abc开头 
+
+#将大文件切成300k一个文件 
+$split -b 300k /etc/ghtd abc 
+
+#将分割的文件合成一个文件 
+$cat abc* >>abcnew.txt 
+
+#将使用 ls -al /输出的信息，每10行记录成一个文件 
+$ls -al / | split -l 10 - abc 
+
+#设置静态IP 
+1.设置IP地址 
+$vim /etc/sysconfig/network-scripts/ifcfg-eth0 
+DEVICE=eth0  //描述网卡对应的设备别名 
+BOOTPROTO=static  //网卡获取ip地址的方式，[static|dhcp|bootp] 
+BROADCAST=192.168.1.255  //对应的子网广播地址 
+HWADDR=00:07:E9:05:E8:B4 //对应的网卡物理地址 
+IPADDR=192.168.1.110    //ip地址 
+NETMASK=255.255.255.0   //子网掩码 
+NETWORK=192.168.1.0     //网络地址 
+ONBOOT=yes //系统启动时是否设置此网络接口，设置为yes时，系统启动时激活此设备 
+
+2.设置网关 
+$vim /etc/sysconfig/network 
+NETWORKING=yes   //表示系统是否使用网络，一般设置为yes。如果设为no，则不能使用网络，而且很多系统服务程序将无法启动 
+HOSTNAME=masf    //设置本机的主机名，这里设置的主机名要和/etc/hosts中设置的主机名对应 
+GATEWAY=192.168.1.1  //设置本机连接的网关的IP地址 
+
+3.设置DNS 
+$vim /etc/resolv.conf 
+nameserver 192.168.1.1 //dns地址 
+
+4.重启网络配置 
+$service network restart 
+$/etc/init.d/network restart 
+
+#Ubuntu安装wine运行window程序 
+$sudo add-apt-repository ppa:ubuntu-wine/ppa 
+$sudo apt-get update 
+sudo apt-get install wine 
+
+#CentOS安装git 
+$rpm -Uvh http://repo.webtatic.com/yum/centos/5/latest.rpm 
+$yum install --enablerepo=webtatic git-all 
+
+#ftp文件传输 
+$ lftp username@ftphost 
+$ get filename 
+$ put file 
+
+#netstat显示网络相关信息 
+$ netstat 
+  -a:all,显示所有socket，包括正在监听的。 
+  -i:显示所有的网络接口信息（这里的接口指网卡） 
+  -n:尽力用用数字显示 
+  -t:tcp,仅显示tcp相关 
+  -u:udp,仅显示udp相关 
+  -l:仅列出在Listen的服务状态 
+  -p:显示建立相关链接的程序名 
+  -r:显示路由表（同route -e） 
+  -e:显示扩展信息，uid等 
+  -s:按各个协议进行统计 
+  -c:每隔一秒重新显示一遍 
+  -v:显示正在进行的工作 ？ 
+  -b:显示在创建每隔连接或监听端口时设计的可执行程序 
+  LISTEN和LISTENING只用用-a或-l才能看到 
+
+  //打印信息分两部分: 
+   1.Active Internet connections,有源连接，Recv-Q和Send-Q指接收队列和发送队列。一般是0 
+   2.Active Unix domain sockets，有源Unix域套接口，只能用于本机通信。 
+     Proto：显示连接使用协议 
+     RefCnt：连接到本套接口上的进程号 
+     Types：显示套接口的类型 
+     State：套接口当前状态 
+     Path：连接到套接口的其它进程使用的路径名 
+  
+#安装rz sz 
+$ yum install lrzsz -y
