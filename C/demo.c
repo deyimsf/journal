@@ -10,6 +10,8 @@
 
 int main(){
 	/*字符串*/
+	char input[MAX_INPUT];
+	
 	while( gets(input) != NULL){
 		printf("字符串: %s\n",input);
 	}
