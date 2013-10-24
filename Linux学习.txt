@@ -945,3 +945,9 @@ $ netstat
   
 #安装rz sz 
 $ yum install lrzsz -y
+
+#sha1校验和
+$ sha1sum filename
+ -b, --binary //用二进制格式读取文件
+ -c, --check // 检查sha1和，用跟定的列表
+ -t, --text //用文本模式读取文件(默认)
