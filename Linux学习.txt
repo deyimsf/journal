@@ -38,6 +38,7 @@ chgrp:改变文件/目录所属用户组 -R表示递归
 [masf@www~]$ chgrp  -R users folder //将该文件夹下的所有东西，所属用户组改为users 
 
 chown:改变文件/目录所有者 
+
 [masf@www~]$ chown -R masf folder 
 //也可以同时更改组 
 [masf@www~]$ chown -R masf:users folder 
@@ -667,9 +668,18 @@ top执行过程中可以使用的按键
    TIME 进程使用的CPU时间总计，单位秒 
    TIME+ 进程使用的CPU时间总计，单位1/100秒 
    %MEM 进程使用的物理内存百分比 
-   VIRT 进程使用的虚拟内存总量，单位kb。VIRT=SWAP+RES 
-   SWAP 进程使用的虚拟内存中，被换出的大小，单位kb。 
-   RES 进程使用的、未被换出的物理内存大小，单位kb。RES=CODE+DATA 
+   VIRT --Virtual Image  
+         The total amount of virtual memory used by the task.
+         It includes all code,data and shared libraries plus pages that have 
+         been swapped out.(Note:you can define the STATSISE=1 environment variable
+         and the VIRT will be calculated from the /proc/#/state VmSize field.)
+         进程使用的虚拟内存总量，单位kb。VIRT=SWAP+RES 
+   SWAP --Swapped size
+        Per-process swap values are now taken from /proc/#/status VmSwap field.
+        进程使用的虚拟内存中，被换出的大小，单位kb。 
+   RES --Resident size
+        The non-swapped physical memory a task has used. RES=CODE+DATA 
+        进程使用的、未被换出的物理内存大小，单位kb。
    CODE 可执行代码占用的物理内存大小，单位kb 
    DATA 可执行代码以外的部分(数据段+栈)占用的物理内存大小，单位kb 
    SHR 共享内存大小，单位kb 
