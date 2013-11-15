@@ -1,0 +1,7 @@
+tExceptionHandler接口
+设置Handler
+ Thread.setUncaughtExceptionHandler(new UncaughtExceptionHandler(){});
+       .setDefaultUncaughtExceptionHandler(...);
+当一个未捕获异常在线程被抛出，JVM尝试寻找3种handler
+ 在当前线程找handler--->在当前线程组寻找handler--->当前线程默认的handler
+ 如果以上都找不到，则异常信息写入控制台，结束任务。
