@@ -961,3 +961,30 @@ $ sha1sum filename
  -b, --binary //用二进制格式读取文件
  -c, --check // 检查sha1和，用跟定的列表
  -t, --text //用文本模式读取文件(默认)
+
+vmware网络配置(NAT)
+ 1.设置NAT服务器
+   --> Edit 
+   --> Virtual Network Editor 
+   --> 选择VMnet8
+   --> NAT Settings 
+   --> 设置Gateway IP,这个应该是虚拟机中网卡上网时需要用到的ip,
+       可以随便写。如果不希望用默认的dns可以手动设置，默认会是
+       设置的Gateway IP,可以改成物理机的网关，或者任何一个可以
+       使用的DNS地址。(DNS Setting可以设置dns)
+       对dns的设置最终会反映到/etc/resolv.conf这个文件中
+ 2.物理机中的虚拟网卡VMware Network Adapter VMnet8对虚拟机是否可以
+   进行NAT、是否可以上网，不起任何作用，他只起到通过物理机可以访问
+   到虚拟机。如果不需要通过物理机访问虚拟机，可以禁用该虚拟网卡。
+ 说明：1中所说的VMnet8是用于NAT的一个虚拟交换机；2中的VMware是一个
+       虚拟网卡，他和虚拟机种的网卡(虚拟网卡)是对等的。
+       
+       网络拓扑图类似这样：
+       VMnet8(NAT虚拟交换机)
+         |
+         +---VMware Network Adapter VMnet8(物理机上的一个虚拟网卡)
+         |
+         +---虚拟机内部的一个虚拟网卡
+     
+       其他方式，比如桥接，也类似这张拓扑图，只不过会虚拟出一个
+       bridge虚拟交换机。
