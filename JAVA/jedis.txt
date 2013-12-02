@@ -1,0 +1,25 @@
+Jedis中每个ShardedJedis是一个hash全环,里面包含了
+所有的分片主机的虚节点(JedisShardInfo)
+
+ShardedJedisPool是一个分片池，这个池子里面放的是ShardedJedis对象；
+这个池子里面有一个ShardedJedisFactory工厂，用makeObject()方法
+来创建ShardedJedis分片对象
+
+ShardedJedisPool继承自抽象的Pool<T>类，该类中有一个T getResource()
+方法，入则从池子里面拿对象.
+
+Pool类中有一个GenericObjectPool(factory, poolConfig)对象池；
+我们在创建ShardedJedisPool的时候，调用父类Pool的构造方法，将
+我们的ShardedJedisFactory工厂传入，
+然后被new GenericObjectPool(factory, poolConfig)接收
+
+每次用对象的时候，我们都会从池子中取对象，也就调用ShardedJedisPool
+的父类Pool<T>的T getResource()方法，这个方法最终会从池子里面拿对象
+，或者调用我们的ShardedJedisFactory.makeObject();
+
+对象池初始化的时候有一个startEvictor(_timeBetweenEvictionRunsMillis);
+是一个时间调度器，_timeBetweenEvictionRunsMillis=30000
+会定期的检查对象池，应该是向对象池放对象或释放对象。
+
+JedisPoolConfig池的配置对象,这里面可以设置_timeBetweenEvictionRunsMillis
+等参数
