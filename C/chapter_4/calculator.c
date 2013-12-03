@@ -16,7 +16,7 @@ main(){
 	char s[MAXOP]; //操作数
 
 	while((type = getop(s)) != EOF){
-		switch(type)
+		switch(type){
 		case NUMBER: //是数字
 			push(atof(s)); //推入栈顶
 			break;
@@ -45,6 +45,7 @@ main(){
 		default:
 			printf("error: unkown command %s\n", s);
 			break;
+		}
 	}
 }
 
@@ -77,12 +78,12 @@ double pop(void){
 //获取运算符或操作数
 #include <ctype.h>
 int getch(void);
-int ungetch(int);
+void ungetch(int);
 
 /*获取操作数*/
 int getop(char s[]){
 	int i, c;
-	while((s[0] = c = getch()) == '' || c == '\t'){  //过滤掉空格和制表符
+	while((s[0] = c = getch()) == ' ' || c == '\t'){  //过滤掉空格和制表符
 	}
 	s[1] = '\0';
 	
@@ -95,7 +96,7 @@ int getop(char s[]){
                 }
         }       
         if(c == '.'){//收集小数部分
-                while(isdigit(s[++i] = c = getch)){
+                while(isdigit(s[++i] = c = getch())){
                 }
         }
         
