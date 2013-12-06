@@ -144,3 +144,77 @@ C数组指针
  int (*bb)[13]
  bb指向的是一个长度是13的int型的数组;
  bb+1 的地址跨度是13*4个字节;
+
+C语言结构体
+ 定义结构:
+	struct point{ //定义了一个叫point的结构
+		int x;
+		int y;
+	};
+ 声明一个结构变量
+	struct point cc; //声明了一个cc变量，这个变量是一个结构，这个结构名字是point;
+ 使用结构： 
+	cc.x=12; //为结构成员变量赋值
+	cc.y=15;
+
+ 匿名结构
+	struct {int x; int y;} a={3,4},b={7},c;
+ 上面这条语句声明了三个变量，每个变量都是一个结构体，结构体中有两个整形的成员变量;
+
+C结构和函数
+ 结构在函数传递的过程中仍是按值传递: 
+	#include <stdio.h>
+	struct point {
+		int x;
+		int y;
+	};
+
+	struct point addpoint(struct point p1){
+		//结构的传递仍然是传值,所以这里的p1是传进来p1的一个副本
+		//在这里对p1的任何操作，不会对外部操作产生影响
+		p1.x= p1.x+1;
+		p1.y= p1.y+1;
+	
+		return p1;
+	}
+
+	void addpoint_pointer(struct point *p1){
+		//p1是一个指向结构体的指针，*p就是这个结构体
+		(*p1).x = (*p1).x +1;
+	        //为了方便，C语言提供了一种结构指针简写的方式,
+        	//可以用 p1->x  代替 (*p1).x
+		p1->y = p1->y +1;
+	}
+	
+	//测试结构传递
+	main(int argc, char* argv){
+		struct point a;
+		a.x=3;	
+		a.y=4;
+	
+		addpoint(a);
+        	//结构a中成员变量值不变, 保持x=3,y=4
+		printf("%d %d\n",a.x, a.y);
+	
+		addpoint_pointer(&a);
+		//结构a中成员变量改变, x=4,y=5
+		printf("%d %d\n",a.x, a.y);
+	}
+
+位字段
+ 为了节省空间可以使用一个char或int对象中的位，来标记某个变量；
+ 例如：某一位是1表示存在某个变量，是0表示不存在等。
+   定义一个屏蔽码集合 KEY=01  EXT=02 STATIC=04
+ 用一个char长度的二级制表示是这样:
+   0000 0111 这就表示KEY EXT STATIC都存在
+
+ C语言提供了另一种替代的方法，直接定义位字段
+   struct flags{
+   	unsigned int is_key:1;  //位字段宽度是1 可以表示 0,1
+	unsigned int is_ext:3;  //为字段宽度是3 可以表示 000, 001, 011,101等
+	unsigned int is_sta:6;  //位字段宽度是6 可表示 000000, 000001, 000111等
+   };
+   
+   struct flags cc;
+   cc.is_key=0;
+   cc.is_ext=5; //小于2的三次方
