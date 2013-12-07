@@ -218,3 +218,88 @@ C结构和函数
    struct flags cc;
    cc.is_key=0;
    cc.is_ext=5; //小于2的三次方
+
+C实现的头文件，在unix系统中一般放在 /usr/include 目录中
+
+C文件操作
+ FILE 文件结构，包括：缓冲区位置，缓冲区中当前字符的位置、文件的读写状态、
+ 是否出错或是否已经到达文件结尾等。
+ FILE *fp; //定义一个执行FILE结构的指针fp
+
+ 打开一个文件
+ 	fp = fopen(char *name, char *mode);
+        //name是文件名
+        //mode是读("r")、写("w")、追加("a")、二进制("b")     
+ 关闭一个文件
+ 	fclose(fp);     
+ 从文件读一个字符
+ 	int getc(fp); //返回读到的字符，如果结束或出错返回EOF 
+ 向文件写一个字符
+	int putc(c,stdout);//将字符c写入到标准输出，并返回写入的字符，如果出错返回EOF 
+ 如果流fp中出现错误，则函数ferror返回一个非0值
+	int ferror(FILE *fp);//比如输出到磁盘时，磁盘满。
+ 如果文件fp到达文件尾，返回非零值
+	int feof(FILE *fp);
+
+ 例子: readfile.c
+ 	#include <stdio.h>
+
+	//读文件
+	main(int argc ,char *argv[]){
+		FILE *fp; //指向文件的指针
+		void filecopy(FILE *infp,FILE *outfp);
+	
+		if(argc !=2){
+			printf("命令错误，请输入文件名!\n");
+			return 1;
+		}
+
+		fp = fopen(argv[1],"r"); //打开一个文件
+		if(fp == NULL){ //如果发生错误，fopen返回NULL
+			printf("文件：%s打开错误!\n",argv[1]);
+			return 1;
+		}
+
+		int c;
+		while((c=getc(fp)) != EOF){ //从文件fp中读一个字符
+			putc(c,stdout); //向文件stdout中写入一个字符
+		}
+	
+		fclose(fp); //关闭文件，每个操作系统对程序打开的文件个数都有限制
+
+		return 0;
+	} 
+    
+行输入和行输出 
+ //从fp指向的文件中读取一行数据(包括换行符)
+ //line 将读取的数据结尾加上'\0'放入line中
+ //maxline 读取字符的个数，最多maxline-1个字符？
+ //返回值  正常情况下返回line,发生错误或到文件结尾,则返回NULL
+ char *fgets(char *line, int maxline, FILE *fp) 
+
+ //将字符串line 写入到文件fp中
+ //正常返回非负值，错误返回EOF
+ int fputs(char *line, FILE *fp)
+
+ 函数gets和puts功能与fgets和fputs函数类似，但他们是对stdin和stdout
+ 进行操作。gets在读取字符串时，将删除结尾的'\n';而puts在写入时，将加
+ 上一个'\n'。
+
+空间分配函数
+ //分配n个字节的空间
+ void *malloc(size_t n)
+ 使用：
+ 	int *a = (int *)malloc(sizeof(int));
+        *a = 9;
+ //分配n*size个字节的空间
+ void *calloc(size_t n, size_t size)
+ 使用：
+	int *p = (int *)calloc(3,sizeof(int));
+        *p = 3;
+	*(p+1) = 5;
+	*(p+2) = 8;
+
+
+ 
+
+
