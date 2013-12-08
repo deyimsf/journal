@@ -299,7 +299,113 @@ C文件操作
 	*(p+1) = 5;
 	*(p+2) = 8;
 
+UNIX系统接口
+ 任何时候对文件的输入输出都是通过文件描述符表示文件，不是通过文件名。
+ 操作系统在打开一个文件的时候，会返回一个小的非负整数，这个整数就是文件描述符。
+ 0、1、2分别代表标准输入、标准输出、标准错误输出；任何程序在运行的时候，都会
+ 打开这个三个文件。
+ 
+系统接口read和wirte
+  //fd 文件描述符
+  //buf 存放读到的字符
+  //n 指定要读多少个
+  //n_read 实际读了; 0 表示已到达文件结尾，-1 发生了某种错误 
+  int n_read = read(int fd, char *buf, int n);
+  
+  //fd 要写入的文件描述符
+  //buf 要写入的字符
+  //n 指定要写多少个
+  //n_writen 写了多少个； 如果n和n_writen不相等，表明发生了错误
+  int n_writen = write(int fd, char *buf, int n);
+
+  例子：将输入写到输出
+  	#include <syscall.h>
+	main(){
+		char buf[BUFSIZ];
+		int n;
+		//0 是标准输入的文件描述符
+		while( (n=read(0, buf, BUFISIZ)) > 0 ){
+			//1 是标准输出的文件描述符
+			write(1, buf, n);
+		}
+	}
+
+系统接口open、creat、close、unlink
+ //该函数与标准库函数fopen很相似，不同的是该函数返回的是文件描述符(int类型)，
+ //fopen返回的是一个文件指针(FILE *fp)
+ //name 要打开的文件名
+ //flags 打开方式,int类型; O_RDONLY 只读方式, O_WRONLY 只写方式, O_RDWR 读写方式
+ //perms
+ //fd 返回值，如果发生错误，返回-1
+ int fd = open(char *name, int flags, int perms);
+
+ //创建一个文件，若存在则覆盖
+ //name 要创建的文件的名字
+ //perms 创建的文件的权限,如0755
+ //fd 创建的文件描述符，若创建失败则放回-1 
+ int fd = creat(char *name, int perms);
+ 
+ //断开文件描述符和已打开文件之间的关联
+ //一个程序同时打开的文件数通常是20个
+ close(int fd);
+
+ //通过文件名删除文件
+ //该函数和标准库中的remove对应
+ unlink(char *name);
+
+ 例子：文件复制
+ 	#include <stdio.h>
+	#include <stdlib.h>
+	#include <fcntl.h>
+	#define PERMS 0666 //对于所有者、所有者组和其他成员均可读写
+
+	//系统调用 f1复制到f2
+	main(int argc, char *argv[]){
+		int f1,f2,n;
+		char buf[BUFSIZ];
+
+		if(argc != 3){
+			printf("参数需要两个文件f1 to f2\n");
+			exit(1);
+		}
+	
+		if((f1 = open(argv[1], O_RDONLY, 0)) == -1){
+			printf("不能打开文件 %s\n",argv[1]);
+		}
+
+		if((f2 = creat(argv[2], PERMS)) == -1){
+			printf("不能创建文件 %s, mode %03o\n",argv[2],PERMS);
+		}
+
+		while( (n=read(f1,buf,BUFSIZ)) >0 ){
+			if( write(f2,buf,n) != n){
+				printf("写文件错误 %s\n", argv[2]);
+			}
+		}
+	
+		return 0;
+	}
+ 
+ 随机访问文件
+  //fd 文件描述符
+  //offset 要设置的文件描述符fd的当前位置
+  //origin 0 offset基于文件开始位置; 1 offset基于文件当前位置; 2 offset基于文件结束位置
+  //返回值 表示文件的新位置，如果错误返回-1
+  long lseek(int fd, long offset, int origin);
+
+标准输入stdin是有缓冲区的，比如标准函数 getc(stdin);
+ 例如程序: 
+	int c = getc(stdin);
+	c = getc(stdin);
+ 第一次访问的时候，因为还没有缓存区，所以会先创建缓存区，再调用系统函数read填充次缓冲区，
+ 这时会等待用户输入数据，比如输入为"abcdef",则会返回第一个字符'a'。
+ 第二次访问的时候，因为缓冲区里面已经有数据了，所以会从缓冲区中取出第二字符'b'。
+ 当缓冲区中的数据被全部取出后，如果再次调用函数getc(stdin),会再次要求用户输入数据。
+
 
  
+
+
+
 
 
