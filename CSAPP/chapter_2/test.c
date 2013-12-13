@@ -2,12 +2,8 @@
 
 main(int argc, char *argv[]){
 	
-	char v = -127;
-	unsigned char uv = (unsigned char)v;
+	int x = 8;	
 	
-	printf("%i\n", v);
-	printf("%u\n", uv);
-	
-	printf("%x\n", -1<0);
+	printf("%i %i\n",-7>>1,7>>1);
 
 }
