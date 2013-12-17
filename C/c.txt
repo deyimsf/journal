@@ -504,4 +504,15 @@ C语言编译器gcc
 反汇编器objdump可以将目标代码,反汇编成汇编格式的代码
  objdump -d dest.o
 
+CPU八个常用32位寄存器
+ EAX : extend accumulator   累加寄存器
+ ECX : extend counter  计数寄存器
+ EDX : extend data 数据寄存器
+ EBX : extend base 基址寄存器
+ ESP ：extend stack pointer 栈指针寄存器
+ EBP : extend base pointer 基址指针寄存器
+ ESI ：extend source index 源变址寄存器
+ EDI ：extend destination index 目的变址寄存器
+
+
 
