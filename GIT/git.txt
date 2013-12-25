@@ -1,0 +1,5 @@
+#查看某个文件的历史版本
+ $ git log --oneline   //用一行显示历史提交
+ $ git show 144b50:C/c.txt //显示144b50这个提交版本的C/c.txt这个文件的内容
+ $ git show HEAD:C/c.txt
+
