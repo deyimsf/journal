@@ -758,7 +758,7 @@ IO发生时涉及的对象和步骤
   signal(signal,SIG_IGL)  //忽略类型为signal的信号
   signal(signal,SIG_DFL)  //恢复类型为signal的信号的默认行为
   注意：SIGSTOP和SIGKILL两个信号的默认行为，不会通过上面三种方式被修改
-给自己发送信号
+给自己发送信号,进程可以通过调用alarm函数向它自己发送SIGALRM信号
   unsiged int alarm(unsigned int secends);
   返回值：前一次闹钟剩余的秒数，如果以前没有设置则返回0; ?前一次的设置是否还有效。
   secends: 多长时间后发送信号.
@@ -770,8 +770,73 @@ IO发生时涉及的对象和步骤
 
 外壳为每个作业(job)创建一个独立的进程组
  且每个作业的进程号pid就是它所属的进程组号gpid。
+ 外壳用:
+	execve(const char *filename, const char *argv[], const char *envp[])
+ 来调用程序，execve加载了filename之后，调用启动代码。启动代码会将控制传递给新程序的
+ 主函数：
+ 	int main(int argc,char *argv[],char *envp[])
 
+子进程回收
+  int waitpid(int pid, int *status, int options);
+  //等待某个子进程结束，成功返回后会将这个已终止的子进程从系统中清除
+  //如果主进程没有子进程，返回-1，并且设置errno为ECHILD.如果waitpid被一个信号中断，
+  //那么返回-1，并设置errno为EINTR.
+  知识点：
+    系统函数read,可能就是创建一个子进程去准备数据，然后用waitpid阻塞主进程。这个时候
+   如果主进程收到一个中断信号，那么waitpid就会提前返回-1，并且errno为EINTR。
+   但是子进程并没有将数据准备好，所以就可能会导致read提前返回。对于这种情况不同的系统
+   处理的方式不一样，linux会再次调用read函数，确保可以返回正确的数据，在特定的Solaris系统中
+   会直接返回一个错误。
 
+用SIGCHLD信号回收子进程，这样子进程运行的时候，主进程也可以做其它的事
+  例子：
+    int main(){
+	signal(SIGCHLD,handler);//为主进程绑定一个信号处理函数
+       
+        int pid = fork();
+	if(pid == 0){ //子进程
+		//TODO something
+		exit(0);
+		//当该子进程终止的时候，会向主进程发一个SIGCHLD信号，然后handler函数运行。
+	}
+        
+        read();//读一些数据  这个过程可能被信号中断，不同系统有不同处理
+        while(1){
+	   //do something 这个过程可能被信号中断
+	}
+       
+    }
+    //回收子进程的函数,这个函数会在主进程中并行的执行
+    void handler(int singnal){
+	int status;
+	int pid;
+        
+        //在这个信号处理函数中，waitpid会被一个信号中断吗？
+        //感觉不会，因为这已经是主进程在处理信号了，如果有相同的信号它不会接收，
+        //不同的信号也不应对这个产生影响.
+        //主进程会并行的处理不同的信号.
+        while(waitpid(-1,&status,0) > 0){ //尽可能多的回收子进程
+            //这样可以避免多个子进程同时终止时，发生信号丢失的情况 
+        }
+        
+        //waitpid返回-1代表发生错误终止，同时如果errno等于ECHILD代表是因为没有子进程了
+        //如果不是ECHILD说明是其他错误. 
+	if(errno != ECHILD){
+		//不是正常终止的
+	}         
+           
+	return;	
+    }
+
+非本地跳转 <setjmp.h>
+  int setjmp(jmp_buf env);
+  int sigsetjmp(sigjum_buf env, int savesigs); //信号
+  调用一次返回两次;如果返回零那就是自身返回的，如果返回非零就是longjmp返回的。
+  
+  int longjmp(jmp_buf env,int returnvalue); 
+  int siglongjmp(sigjmp_buf env, int returnvalue); //信号
+  从不返回到自身，返回到setjmp处(或者理解成，该函数导致setjmp的第二次返回,值是returnvalue);
+  注意：这两个方法好像需要在同一个进程中配合使用
 
 
 
