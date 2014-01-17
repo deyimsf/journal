@@ -19,7 +19,10 @@ main(){
 	};
 	printf("struct S1 size:%d\n\n",sizeof(struct S1));
 	
-	
+        struct S1 aa;
+	int bb;
+	printf("----%d , %d\n",sizeof( aa), sizeof( bb));	
+   
 	int local;
 	printf("local at %p\n",&local);
 	printf("local at %p\n",&local+1);

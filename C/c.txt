@@ -866,5 +866,156 @@ I/O重定向
 
 
 
+网络字节顺序的转换函数 <netinet/in.h>
+ //将无符号长整型的主机字节顺序，转换为网络字节顺序(大端法)
+ unsigned long int htonl(unsigned long int hostlong);
+ //将无符号短整型的主机字节顺序，转换为网络字节顺序(大端法)
+ unsiged short int htons(unsigned short int hostshort);
 
+ //网络字节顺序转主机字节顺序
+ unsigned long int ntohl(unsigned long int netlong);
+ unsigned short int ntohs(unsigned short int netshort);
+
+网络ip地址和点分十进制互转 <arpa/inet.h>
+ //将点分十进制串(*cp)转换为网络ip地址(*inp)
+ //成功为1，出错为0
+ int inet_aton(const char *cp, struct in_addr *inp);
+ //将一个网络ip地址(in)转换为点分十进制字符串，返回值是指向这个串的指针
+ char *inet_ntoa(struct in_addr in);
+
+从DNS数据库中获取主机条目 <netdb.h>
+ //获取*name这个域名对应的DNS条目
+ //出错返回NULL指针，并设置h_errno
+ struct hostnet *gethostbyname(const char *name);
+ //*addr 点分十进制字符串
+ //len ip地址的字节长度
+ //出错返回NULL指针，并设置h_errno
+ struct hostnet *gethostbyaddr(const char *addr,int len, 0);
+
+两种套接字结构
+   struct sockaddr{ //一般类型的套接字地址结构
+   	unsigned short sa_family;
+	char 	       sa_data[14];
+   }
+   
+   struct sockaddr_in{ //<netinet/in.h>互联网类型的套接字地址结构,我们用这个赋值，然后强转成sockaddr,传给需要的套接字函数
+	unsigned short sin_family;  //AF_INET
+	unsigned short sin_port;    //套接字端口
+	struct in_addr sin_addr;    //套接字地址
+	unsiged char   sin_zero[8]; //?	
+   }
+
+DNS条目结构   
+   struct hostent{  //DNS 条目结构
+	 char *h_name;       //正式的域名
+   	 char **h_aliases;   //别名？
+	 int  h_addrtype;    //主机的地址类型 AF_INET?
+         int  h_length;      //这个地址的长度，单位字节
+	 char **h_addr_list; //这个域名对应的所有ip地址(点分十进制)
+   } 
+
+IP地址结构
+ struct in_addr{
+ 	unsigned int s_addr;
+ }
+
+
+创建一个套接字描述符 <sys/types.h> <sys/socket.h>
+ //domain:AF_INET  代表因特网
+ //type:SOCK_ATREAM 表示该套接字是因特网的一个端点
+ //protocal:0
+ //返回套接字描述符，出错则-1
+ int socket(int domain, int type ,int protocol);
+
+客户端和服务器连接 <sys/socket.h>
+ //客户端和服务器建立连接
+ //sockfd 客户端套接字描述符
+ //*serv_addr 服务端套接字地址 (一般结构表示法) 
+ //addrlen  sizeof(sockaddr_in)  网络结构表示法的 结构长度
+ int connect(int sockfd, struct sockaddr *serv_addr, int addrlen);
+
+服务器和客户端建立连接，需要bind、listen、accept这三个函数 <sys/socket.h>
+ //配置服务器
+ setsockopt()
+ 
+ //sockfd 通过socket函数创建的，用于监听的，服务端的套接字描述符
+ //*my_addr 服务端的套接字地址，需要我们自己赋值
+ //addrlen sizeof(sockaddr_in)
+ //成功为0，出错为-1
+ int bind(int sockfd, struct sockaddr *my_addr, int addrlen);
+ 
+ //将sockfd转化为一个监听套接字
+ //backlog 等待队列的大小
+ //成功返回0，出错为-1
+ int listen(int sockfd, int backlog); 
+
+等待客户端的连接请求 <sys/socket.h>
+ //listenfd 监听的描述符
+ //*addr 该函数要填写的客户端套接字地址
+ //*addrlen 该函数负责填写
+ //返回连接描述符，出错返回-1
+ int accept(int listenfd,struct sockaddr *addr, int *addrlen);
+
+
+服务器端监听端口的例子：
+ #include <stdio.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <stdlib.h>
+ #include <netinet/in.h>
+ #include <string.h>
+
+ int main(int argc, char **argv){
+	//创建套接字描述符
+	int listenfd = socket(AF_INET,SOCK_STREAM,0);
+
+	//int optval=1;
+	//setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,(const void *)&optval,sizeof(int))//设置socket一些配置
+	
+        //指定特定ip地址
+	struct in_addr inaddr;        
+	if(inet_aton("10.12.212.86", &inaddr) == 0){ //此时已经是网络字节顺序
+		printf("点分十进制ip转网络ip地址错误!");
+		return -1;
+	}
+        //所有ip地址
+        //inaddr.s_addr = htonl(INADDR_ANY); //主机字节顺序转网络字节顺序，这台主机所有ip地址       
+	
+        //服务器socket地址
+        struct sockaddr_in serveraddr;
+        //从指定地址开始为套接字清零，第二个参数是要清零的字节个数
+	//bzero((char *)&serveraddr,sizeof(serveraddr));
+        serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port = htons(8001);    //主机字节顺序到网络字节顺序转换
+	serveraddr.sin_addr.s_addr = inaddr.s_addr;
+ 
+        //listenfd描述符和服务端套接字地址绑定
+        int bi = bind(listenfd,(struct sockaddr *)&serveraddr,sizeof(serveraddr));
+        if(bi < 0){
+		printf("绑定失败！\n");
+		return -1;
+	}
+        
+        //开始监听
+        int li = listen(listenfd,1024);        
+        if(li < 0){
+		printf("监听失败");
+                return -1;
+	}
+
+       //等待接受客户端请求
+       struct sockaddr_in clientaddr;  //客户端套接字地址
+       int addrlen;                    //套接字地址的字节个数
+       int connfd = accept(listenfd,(struct sockaddr *)&clientaddr,&addrlen); 
+ 
+       //从套接字描述符读数据
+       while(1){
+	  char c[]={0,'\0'};
+          read(connfd,c,1);
+          printf("%s",c);	
+	}
+       //关闭 套接字描述符
+       close(connfd);
+       close(listenfd);	
+ }
 
