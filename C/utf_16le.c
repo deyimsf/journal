@@ -24,7 +24,7 @@ void decode_utf_16le(char *cc,int length){
 		//0xDC00  1101 1100 0000 0000
 		unsigned short w1 = 0;
 		unsigned short w2 = 0;
-			if((index+1)>=length){
+		if((index+1)>=length){
 			printf("2数组越界");
 			return;
 		}
