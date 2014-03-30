@@ -1,0 +1,16 @@
+#从本地导入到代码服务器
+ $svn import /My/workspace/eclipse/heron http://svn1.360buy-develop.com/buy/CatalogSystem/branches/heron
+
+#从服务端下载代码
+ $svn checkout http://mycode --username=masf --password=123 /My/workspace/eclipse/heron
+
+#提交代码到服务器
+ $ cd /My/workspace/eclipse/heron
+ $ svn commit [Path] -m "修改某个文件"
+
+#更新服务代码到本地
+ $ cd /My/workspze/eclipse/heron
+ $ svn update
+
+#其它命令帮助
+ $svn help <command>

@@ -756,7 +756,7 @@ vim启动，根据/etc/vimrc（或~/.vimrc,默认不存在，可以新建一个�
 读入或保存时如果fileencoding和encoding值不同，则调用iconv进行转换 
 
 #编辑~/.vimrc文件 
-set fileencodings=ucs-bom,utf-8,gbk 
+set fileencodings=ucs-bom,utf-8,gbk,cp936,gb18030,big5,latin1,ucs-bom,ucs 
 
 #键盘读取变量 
 $read [-pt] variable 
