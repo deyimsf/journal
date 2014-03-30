@@ -1,5 +1,28 @@
+#克隆版本库
+ $ git clone https://[username:passport@]github.com/deyimsf/journal.git
+
 #查看某个文件的历史版本
  $ git log --oneline   //用一行显示历史提交
  $ git show 144b50:C/c.txt //显示144b50这个提交版本的C/c.txt这个文件的内容
  $ git show HEAD:C/c.txt
 
+#重置命令三个动作
+ 1.替换引用的指向
+ 2.替换暂存区。替换后，暂存区的内容和引用指向的目录树一致。
+ 3.替换工作区。替换后，工作区的内容变得和暂存区一致，和HEAD志向的目录树内容一致
+#重置命令格式
+ $ git reset [--soft | --mixed | --hard] <commit>
+  
+ 例子1：
+ 	$ git reset --hard HEAD
+ 该命令会执行所有动作，会将引用执行HEAD，暂存区的内容变为HEAD指向目录树的内容，
+ 工作区的内容会和暂存区的一致。
+
+ 例子2：
+	$git reset --soft 342bf3
+ 该命令将当前引用指向342bf3这个提交，其它不变。
+
+ 例子3：
+	$git reset --mixed(默认) 342b3f
+ 该命令执行1、2两个动作。
+ 
