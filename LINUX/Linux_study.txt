@@ -1005,3 +1005,27 @@ vmware网络配置(NAT)
 #查看二进制文件
  $ hexdump -C 二进制文件
 
+#ifconfig网卡信息
+ eth0      Link encap:Ethernet  HWaddr 00:50:56:A3:65:F4  
+           inet addr:192.168.195.117  Bcast:192.168.195.255  Mask:255.255.255.0
+           inet6 addr: fe80::250:56ff:fea3:65f4/64 Scope:Link
+           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+           RX packets:258126023 errors:0 dropped:9486 overruns:0 frame:0
+           TX packets:253091591 errors:0 dropped:0 overruns:0 carrier:0
+           collisions:0 txqueuelen:1000 
+           RX bytes:180581342041 (168.1 GiB)  TX bytes:58825927697 (54.7 GiB)
+
+ lo        Link encap:Local Loopback //本地环回接口  
+           inet addr:127.0.0.1  Mask:255.0.0.0
+           inet6 addr: ::1/128 Scope:Host
+           UP LOOPBACK RUNNING  MTU:16436  Metric:1
+           RX packets:86560691 errors:0 dropped:0 overruns:0 frame:0
+           TX packets:86560691 errors:0 dropped:0 overruns:0 carrier:0
+           collisions:0 txqueuelen:0 
+           RX bytes:22369632188 (20.8 GiB)  TX bytes:22369632188 (20.8 GiB)  
+ 
+ 第一行:   连接类型: Ethernet(以太网) HWaddr(硬件mac地址)
+ 第二三行: 网卡ip地址 网管 子网掩码
+ 第四行:   UP(网卡开启状态) RUNNING(网卡的网线被接上) MULTICAST(支持组播) 最大数据传输单元
+ 第五六行: 接收、发送数据包情况统计
+ 第八行:   接收、发送数据字节统计信息
