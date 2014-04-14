@@ -26,6 +26,10 @@ Tcp首部中6个标志比特说明
  SYN	请求建立连接
  FIN	请求断开连接
 
+MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度。
+ 对于以太网，MSS值最大可到1500 - IP首部(20) - TCP首部(20) = 1460字节
+ 对于802.3，MSS之最大可到1492 - IP首部(20) - TCP首部(20) = 1452字节
+
 Tcp建立连接  mss:Maximum Segement Size  MTU:Maxmum Transmission Unit(链路层叫法)
                             SYN 157445:157445 <mss 1024>
   SYN_SENT     |--------------------------------------------------->|   SYN_RCVD
