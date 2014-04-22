@@ -1,0 +1,10 @@
+根据缺省的TCP/IP协议栈处理，请求报文的目标地址为VIP，响应报文的源地址肯定也为VIP。
+
+LVS的模型是：
+  1.一个Load Balancer(负载均衡)
+  2.多个Real Server(真正干活的服务器，tomcat应用等)
+
+  load Balancer负责接收请求的Ip是VIP。
+  每个Real Server上都需要配置与其对应的vip，可以配置多个。这些IP地址都必须配置在本地
+  的Non-ARP网络设备上，比如本地的环回接口，不会响应arp，外网对此ip不可见。
+  
