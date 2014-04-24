@@ -1006,6 +1006,7 @@ vmware网络配置(NAT)
  $ hexdump -C 二进制文件
 
 #ifconfig网卡信息
+(网卡一)
  eth0      Link encap:Ethernet  HWaddr 00:50:56:A3:65:F4  
            inet addr:192.168.195.117  Bcast:192.168.195.255  Mask:255.255.255.0
            inet6 addr: fe80::250:56ff:fea3:65f4/64 Scope:Link
@@ -1014,7 +1015,7 @@ vmware网络配置(NAT)
            TX packets:253091591 errors:0 dropped:0 overruns:0 carrier:0
            collisions:0 txqueuelen:1000 
            RX bytes:180581342041 (168.1 GiB)  TX bytes:58825927697 (54.7 GiB)
-
+(本地接口)
  lo        Link encap:Local Loopback //本地环回接口  
            inet addr:127.0.0.1  Mask:255.0.0.0
            inet6 addr: ::1/128 Scope:Host
@@ -1025,7 +1026,11 @@ vmware网络配置(NAT)
            RX bytes:22369632188 (20.8 GiB)  TX bytes:22369632188 (20.8 GiB)  
  
  第一行:   连接类型: Ethernet(以太网) HWaddr(硬件mac地址)
- 第二三行: 网卡ip地址 网管 子网掩码
+ 第二三行: 网卡ip地址 广播地址 子网掩码
  第四行:   UP(网卡开启状态) RUNNING(网卡的网线被接上) MULTICAST(支持组播) 最大数据传输单元
  第五六行: 接收、发送数据包情况统计
  第八行:   接收、发送数据字节统计信息
+
+ 一个网卡可以设置多个IP地址，例如在eth0上再加一个IP地址：
+ $ifconfig eth0:0 192.168.195.118 broadcast 192.168.195.255 netmask 255.255.255.0
+ $ifconfig lo:0 192.168.195.119 broadcast 192.168.195.255 netmask 255.255.255.0
