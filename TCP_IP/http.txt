@@ -1,0 +1,195 @@
+http支持的方法(大写字母):
+	GET	获取资源	1.0、1.1
+	POST	传输实体主体	1.0、1.1
+	PUT	传输文本	1.0、1.1
+	HEAD	获得报文首部	1.0、1.1
+	DELETE	删除文件	1.0、1.1
+	OPTIONS	询问支持的方法	1.1
+	TRACE	追踪路径	1.1
+	CONNECT	用隧道连代理	1.1
+	LINK	建立和资源的联系1.0
+	UNLINK	断开连接关系	1.0
+
+多部分状态集合：
+	multipart/form-data 表单文件上传时使用
+	multipart/byteranges 状态码206
+	
+
+范围请求：
+	GET /tip.jdp HTTP/1.1
+	host:www.jd.com
+	range:bytes=5001-10000
+
+	HTTP/1.1 206 Partial Content
+	Date:Fri,13 Jul 2012 04:39:17 GMT
+	Content-Range:bytes 5001-10000/10000
+	Content-Type:image/jpeg
+
+HTTP状态码类别：
+	1XX	Informational(信息性状态码)	接收的请求正在处理
+	2XX	Success(成功状态码)		请求正常处理完毕
+	3XX	Redirection(重定向状态码)	需要进行附加操作以完成请求
+	4XX	Client Error(客户端错误状态码)	服务器无法处理请求
+	5XX	Server Error(服务器错误状态码)	服务器处理请求出错	
+
+	204 No Content:
+		成功，但不返回实体，并且浏览器显示的页面不更新
+	206 Partial Content:
+		客户端进行了范围请求，响应报文中包含由Content-Range指定范围的实体内容。		
+
+
+	301 Moved Permanently
+		永久行重定向。如果改URI已被保存为书签，这是应该按Location的提示重新保存。
+		http://cc.com/eac ,这个URI因为指定的资源没有最后的斜杠，会产生301状态码。
+	
+	302 Found
+		临时重定向。和301相似，不过不会更新书签。
+	303 See Other
+		表示由于请求对应的资源存在着另一个URI，应使用GET方法定向获取请求的资源。
+	Note:
+		当301，302，303响应状态码返回时，几乎所有的浏览器都会吧POST改成GET，并删除
+	      请求报文内的主体，之后请求会自动再次发送。
+                301，302标准时禁止将POST方法改成GET方法的，但实际使用时大家都会这么做。 
+	304 Not Modified
+		该状态码表示客户端发送附带条件请求时，服务端允许请求资源，但未满足条件。
+	      条件是指采用GET方法的请求报文中包含If-Match,If-Modified-Since,If-None-Match,
+	      If-Range,If-Unmodified-Since中任一个。	  
+
+	400 Bad Request
+		请求报文中存在语法错误。
+	401 Unauthorized
+		表示发送的请求需要有通过HTTP认证的认证信息。或者是认证失败。
+	403 Forbidden
+		服务器拒绝访问该资源。	
+	
+	500 Internal Server Error
+		服务端在执行请求时发生了错误。
+	503 Service Unavailable
+		服务器暂时处于超负载或正在进行停机维护，现在无法处理请求。
+	        响应首部有可能会带有Retry-After字段，告诉浏览器多长时间后再试。
+
+HTTP首部报文格式
+	------------------------
+	|      请求/响应行     |
+	------------------------
+	|   请求/响应首部字段  |
+	------------------------
+	|      通用首部字段    |
+	------------------------
+	|      实体首部字段    |
+	------------------------
+	|	其他字段       |
+	------------------------
+
+HTTP/1.1通用首部字段：
+	Cache-Control：If-Modified-Since字段似乎会覆盖Cache-Control
+		缓存请求指令:
+		  指令		参数	说明
+		------------------------------------------------------
+		no-cache	无	强制向源服务器再次验证
+		no-store	无	不缓存请求或响应的任何内容
+		max-age=[秒]	必须	响应的最大age
+		max-stale(秒)   可省略	接收已过期的响应
+		min-fresh[秒]	必须	期望在指定时间内的响应仍有效
+		no-transform	无	代理不可更改媒体类型
+		only-if-cached	无	从缓存获取资源
+		cache-extension	-	新指令标记
+	
+		缓存响应指令
+		  指令		参数	说明
+		------------------------------------------------------
+		public		无	可向任意方提供响应的缓存
+		private		可省略	仅向特定用户返回响应
+		no-cache	可省略	缓存前必须先确认其有效性
+		no-store	无	不缓存请求或响应的任何内容
+		no-transform	无	代理不可更改媒体类型
+		must-revalidate	无	可缓存但必须再次向源服务器进行确认
+		proxy-revalidate无	要求中间缓存服务器对缓存的响应有效性再进行确认
+		max-age=[秒]	必需	响应的最大age值
+		s-maxage=[秒]	必需	公共缓存服务器响应的最大Age值
+		cache-extension	-	新指令标记
+		
+		注意：一般来说，源服务器都是值web服务器，像nginx等。
+			
+		指令public：
+		  当指定public指令时，则表明其他用户也可利用缓存。
+                指令private：
+		  响应只以特定用户作为对象，也就是只有特定用户才能利用改缓存。
+		指令no-cache: 注意该字段对应于缓存服务器
+		   如果是请求首部，则明确告诉缓存服务器，我不要你的缓存数据，要从源服务器拿。
+		   如果是响应首部，明确告诉缓存服务器，不要缓存这个数据。
+		指令no-store: 
+		   该指令规定缓存不能在本地缓存请求或响应的任一部分。
+		指令max-age:
+		   当客户端发送带max-age的请求时，如果判定，缓存资源的缓存时间数值比指定的
+		  时间的数值更小，则客户端就接收缓存的资源。但是，当指定max-age=0时，缓存
+		  服务器会把请求转发给源服务器,来验证缓存是否有效,如果大于零就不会验证了。
+		   当服务器返回的响应中包含max-age指令时，缓存服务器在指定的缓存时间数值内，
+		  不再对资源的有效性做确认。也就是说，这个资源在可以在缓存服务器上缓存这么长时间。
+		 注意：如果同时存在Expires，那么对于HTTP/1.1则忽略Expires字段，HTTP/1.0则相反。
+	        指令min-fresh：
+		   要求缓存服务器返回未经过指定时间的缓存资源。比如缓存服务器上一个资源从
+		  开始缓存到现在，经过了30秒，如果我客户端指定的min-fresh:60,那么就返回缓
+		  存，如果是min-fresh:29,则转发给源服务器。
+	       	指令max-stale：
+		   即使资源过期，只要仍处于max-stale指定的时间内，仍旧会被客户端接收。
+		指令only-if-cached: 这个指令挺好玩
+		   客户端只要求在缓存服务器有缓存的情况下返回资源，如果缓存服务器没有缓
+		  存，则返回504状态码。
+		指令must-revalidate:
+		   浏览器请求带这个指令时，代理服务器回向源服务器再次验证即将返回的响
+		  应目前是否有效。如果无效并且代理也无法从源服务器获取有效资源，则代理
+		  返回504状态码。	
+		   另外使用该指令会忽略max-stale指令。
+	Date
+		创建HTTP报文的日期和时间。注意是报文。
+	Pragma
+		HTTP/1.1之前的遗留字段，仅作为与HTTP/1.0的向后兼容。
+	Trailer
+		用于说明在报文主体后记录了那些首部字段。例如：
+		HTTP/1.1 200 OK
+		Date: Tue,03 Jul 2013 08:08:08 GMT
+		...
+		Transfer-Encoding:chunked
+		Trailer:Expires
+		
+		...报文主体...
+		Expires:Tue,28 Sep 2014 23:34:34 GMT
+	Transfer-Encoding
+		规定了传输报文主体是采用的编码方式。HTTP/1.1的传输编码方式仅对分块传输编码有效。
+	Via
+		报文在经过代理或网关时，会现在首部字段Via中附加服务器的信息，然后再进行转发。
+
+HTTP/1.1请求首部字段
+	Accept
+		该字段可以通知服务器，用户代理能够处理的媒体类型及媒体类型的优先级。例如：
+		Accept:text/html,application/xhtml+xml,application/xml;q=0.9
+		其中q=用来指定权重，用“；”分割，如果没写q=则默认为q=1。
+		权重q的范围是0~1(精确小数点3位)
+	Accept-Charset
+		用来通知服务器用户代理支持的字符集及字符集的相对优先顺序。例如：
+		Accept-Charset:iso-8859-5,unicode-1-1;q=0.8
+	Accept-Encoding
+		告知服务器用户代理支持的内容比编码机器内容编码的优先级顺序。(压缩方式)
+		Accept-Encoding:gzip,identity。 identity代表不执行压缩
+	Accept-Language
+		告知服务器用户代理能够处理的自然语言集(中文或英文)，以及相对优先级。
+		Accept-Language:zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4
+	Authorization
+		携带认证信息
+	Expect
+		客户端使用该字段来告知服务器，期望出现的某种特定行为。
+		Expect:100-continue		
+	  形如If-xxx这种样式的请求首部字段，都可称为条件请求。服务器接收到附带条件的请求后，
+	只有判断指定条件为真时，才会执行请求。
+	If-Match
+		服务器会比对该字段的值和资源的ETag值，仅当两者一致时才会执行请求。
+		Etag(实体标记)是与特定资源关联的确定值。资源更新后ETag值也会更新。
+	If-Modified-Since
+		用于确认代理或客户端拥有的本地资源的有效性。
+		如果在该字段指定的日期时间后，资源发生了更新，服务就会接收请求，
+	      否则返回304。
+		只有服务端返回的首部字段包含Last-Modified时，客户端再次请求时才会
+	      带上If-Modified-Sinece字段。	
+	If-None-Match
+		只有该字段与ETag值不一致时，才处理请求。
