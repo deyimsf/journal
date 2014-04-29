@@ -215,3 +215,67 @@ HTTP/1.1请求首部字段
 	      带上If-Modified-Sinece字段。	
 	If-None-Match
 		只有该字段与ETag值不一致时，才处理请求。
+	If-Range
+		如果指定的值和资源的ETag值一致，则作为范围请求处理。否则返回全部资源。
+		GET /index.html HTTP/1.1
+		If-Range: "12345"
+		Range: bytes=5001-10000
+	
+		HTTP/1.1 206 Partial Content
+		Content-Range: bytes 5001-10000/10000
+		Content-Length: 5000
+	If-Unmodified-Since
+		服务端资源在该日期时间之后未更新则处理请求，否则返回412。
+
+	Range
+		接收到附带Range首部字段请求的服务器，处理后返回206。无法处理该范围时，
+		会返回200即响应全部资源。
+	TE
+		该字段会告知服务器客户端能够处理响应的传输编码方式及系那个对优先级。
+		和首部字段Accepte-Encoding的功能很像，但是用于传输编码。	
+
+HTTP/1.1响应字段
+	Accept-Ranges
+		该字段告知客户端服务器是否能处理范围请求。
+		可以处理指定为bytes,反之则指定为none。
+	Age
+		该字段告诉客户端,资源从生成响应或重新生效以来所经过的时间估值。
+	Location
+		一般配合3xx响应码一起使用，提供重定向的URI。
+		几乎所有的浏览器在收到Location响应后，都会强制性地尝试对资源访问。
+	Vary
+		Vary:Accept-Encoding
+		提示缓存服务器，缓存资源的时候加上请求头的Accept-Encoding:value标识。
+		当代理服务收到带有Accept-Encoding首部字段的请求后,如果对应的Acecept-Encoding
+		值不同，则视为不同的资源。
+		例如：资源/sample.html有如下的响应头：
+			HTTP/1.1 200 OK
+			Vary: Accept-Language
+		后续请求如下:
+			GET /sample.html HTTP/1.1
+			Accept-Language: zh
+
+			GET /sample.html HTTP/1.1
+			Accept-Language: us
+
+		这两次请求资源虽然相同，但不能共享缓存服务器上得资源，资源的内容
+		可能会根据Accept-Language: zh的不同而不同。
+
+HTTP/1.1实体首部字段
+	Allow
+		Allow: GET, HEAD
+		服务端支持的方法
+	Content-Encoding
+		Content-Encoding: gzip
+		告知客户端对实体的主体部分选用的内容编码方式。压缩方式
+	Content-Language
+		Content-Language: zh-CN
+		告知客户端实体主体使用的自然语言。
+	Content-Length
+		告知实体主体的大小。当主体使用内容编码进行传输时，不能再使用改字段。
+	Content-Location
+		和Location不用，该字段表示的时报文主体返回资源对应的URI。
+	Content-Type
+		Content-Type: text/html; charset=utf-8
+		说明实体主体内容的媒体类型和字符编码方式。
+
