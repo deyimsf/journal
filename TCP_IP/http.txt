@@ -279,3 +279,55 @@ HTTP/1.1实体首部字段
 		Content-Type: text/html; charset=utf-8
 		说明实体主体内容的媒体类型和字符编码方式。
 
+
+Set-Cookie字段的属性: 服务端用
+	Name=Value
+	  赋予Cookie的名称和值
+	
+	expires=DATE
+	  指定浏览器可发送Cookie的有效期
+
+	path=PATH
+	  指定Cookie的发送范围的文件目录
+	  如: path=/，表示访问根目录及以下的，都可以发Cookie
+
+	domain=域名
+	  通过Cookie的domain属性指定的域名可做到与结尾匹配一致。
+	
+	secure
+	  该属性用于限制Web页面仅在HTTPS安全连接时，才可以发Cookie。
+	  Set-Cookie: name=value; secure
+	  只有客户端用HTTPS协议时，才会向服务器发送该Cookie。
+	
+	HttpOnly
+	  该属性可以使JavaScript脚本无法获得Cookie。
+	  通常从Web页面内还可以对Cookie进行读取操作。
+	  但使用JavaScript的document.cookie就无法读取附加HttpOnly后的Cookie内容了。
+
+Cookie字段：客户端用
+	Cookie: name=value
+
+其他首部字段
+	X-Frame-Options：响应字段
+	  该字段用于控制网站内容在其他Web网站的Frame标签内的显示问题。
+	  有两个可指定的值。
+	  X-Frame-Options: DENY 拒绝
+	  X-Frame-Options: SAMEORIGIN 仅同源域名下的页面匹配时许可。
+	
+	X-XSS-Protection: 响应字段
+	  是针对跨站脚本攻击的一种对策，用于控制浏览器XSS防护机制的开关。
+	  X-XSS-Protection: 0 将XSS过滤设置为无效
+
+	DNT: 请求字段
+	  Do Not Track,拒绝个人信息被收集，是表示拒绝被精准广告追踪的方法。
+	  0: 同意被追踪
+	  1: 拒绝被追踪
+	
+	P3P: 响应首部
+	  利用P3P(在线隐私偏好平台)技术，可以让Web网站上的个人隐私编程一种
+	  仅供程序可理解的形式。
+	  进行p3p设定，需一下步骤:
+	  1: 创建P3P隐私
+	  2: 创建P3P隐私对照文件后，保存命名在/w3c/p3p.xml
+	  3: 从P3P隐私中新建Compact policies后，输出到HTTP响应中
+	  X-XSS-Protection: 1 将XSS过滤设置为有效	
