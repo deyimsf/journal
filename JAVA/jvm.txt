@@ -1,0 +1,65 @@
+#jmap查看堆内存情况
+ -heap  简单查看堆的使用情况，堆大小等。
+ -histo 查看堆内存中得对象数量和大小。
+ -dump  dump出堆内存
+ -dump:file=m.dump 将堆内存输出到m.dump文件
+ 例子：
+  jmap -dump:file=m.dump pid
+
+#jhat分析导出的对内存文件
+  -port 指定端口号
+  -J   向jvm传递启动参数，如-mx512m,表示指定堆内存为512m
+  例子：
+   jhat -J-mx512m -port 8090 m.dump
+
+#jstat查看gc的一些统计信息
+  -gc 查看gc的次数、及时间，包括yang gc等。
+  -class 类的加载数量等
+  -compiler jit编译的类的个数等
+  -gccapacity 显示内存的使用状况
+  -gccause gc引起的暂定信息
+  -gcnew
+  -gcnewcapacity
+  -gcold
+  -gcoldcapacity
+  -gcpermcapacity
+  -gcutil
+  -printcompilation
+
+  用上面的参数打印的术语说明:
+     S0C：年轻代中第一个survivor（幸存区）的容量 (字节)
+     S1C：年轻代中第二个survivor（幸存区）的容量 (字节)
+     S0U：年轻代中第一个survivor（幸存区）目前已使用空间 (字节)
+     S1U：年轻代中第二个survivor（幸存区）目前已使用空间 (字节)
+     EC：年轻代中Eden（伊甸园）的容量 (字节)
+     EU：年轻代中Eden（伊甸园）目前已使用空间 (字节)
+     OC：Old代的容量 (字节)
+     OU：Old代目前已使用空间 (字节)
+     PC：Perm(持久代)的容量 (字节)
+     PU：Perm(持久代)目前已使用空间 (字节)
+     YGC：从应用程序启动到采样时年轻代中gc次数
+     YGCT：从应用程序启动到采样时年轻代中gc所用时间(s)
+     FGC：从应用程序启动到采样时old代(全gc)gc次数
+     FGCT：从应用程序启动到采样时old代(全gc)gc所用时间(s)
+     GCT：从应用程序启动到采样时gc用的总时间(s)
+     NGCMN：年轻代(young)中初始化(最小)的大小 (字节)
+     NGCMX：年轻代(young)的最大容量 (字节)
+     NGC：年轻代(young)中当前的容量 (字节)
+     OGCMN：old代中初始化(最小)的大小 (字节) 
+     OGCMX：old代的最大容量 (字节)
+     OGC：old代当前新生成的容量 (字节)
+     PGCMN：perm代中初始化(最小)的大小 (字节) 
+     PGCMX：perm代的最大容量 (字节)   
+     PGC：perm代当前新生成的容量 (字节)
+     S0：年轻代中第一个survivor（幸存区）已使用的占当前容量百分比
+     S1：年轻代中第二个survivor（幸存区）已使用的占当前容量百分比
+     E：年轻代中Eden（伊甸园）已使用的占当前容量百分比
+     O：old代已使用的占当前容量百分比
+     P：perm代已使用的占当前容量百分比
+     S0CMX：年轻代中第一个survivor（幸存区）的最大容量 (字节)
+     S1CMX ：年轻代中第二个survivor（幸存区）的最大容量 (字节)
+     ECMX：年轻代中Eden（伊甸园）的最大容量 (字节)
+     DSS：当前需要survivor（幸存区）的容量 (字节)（Eden区已满）
+     TT： 持有次数限制
+     MTT ： 最大持有次数限制
+
