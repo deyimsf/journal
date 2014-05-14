@@ -316,9 +316,17 @@ $ new_var=${old_var:-content}
 如果old_var为空字符串，则new_var的值是“content” 
 
 #vim操作环境配置 
-1.整体的设置一般在/etc/vimrc文件中 
+1.整体的设置一般在/etc/vimrc文件中,mac版在/usr/share/vim/vimrc 
 2.用户相关的在~/.vimrc文件中(默认不存在，可以手动创建) 
 3.例如set nu 设置行号,:set all 显示目前所有环境参数设置 
+
+#vim配置(~/.vimrc文件，或者全局的vimrc文件)
+ syntax on :打开语法高亮
+ set ai : 自动缩进
+ set nu : 显示高亮
+ set ruler: 显示光标位置
+ set hlsearch: 高亮显示查找到的数据
+
 
 #vim多窗口功能 
 :sp[filename] 
