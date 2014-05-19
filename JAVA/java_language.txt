@@ -1,0 +1,64 @@
+#类型变量
+ TypeParameter:
+  TypeVariable TypeBound(opt)
+ 类型变量就是类的变量，这个变量包含一个可选的界限，这个界限
+以这种形式出现 extends C & I1 & I2,其中C表示一个类，I表示接口。
+可以看到这个界限其实和类的定义是对应的,如:
+	public class A extends C implements I1,I2{}
+如果没有指定类型变量的界限就假定为Object型。
+
+类型变量举例: (在方法上声明类型变量)
+	class C{ //类
+		void mC(){}
+	}
+	
+	interface I1{//接口1
+		void mI1();
+	}
+	
+	interface I2{//接口2
+		void mI2();
+	}
+	
+	//声明一个类型变量T，这个变量具有类C和接口I1、I2相同的成员
+	//当然，不包括私有变量
+	<T extends C & I1 & I2> void test(T t){
+   		t.mC();
+		t.mI1();
+		t.mI2();
+   	}
+注意：T是一个类型变量,T可以代表一个类型如String List List<Strig>等。
+      类似List<String>是一个参数化的类型。 
+	
+	
+#类型参数
+   //声明类型变量的所有实体的公共接口。
+   public interface GenericDeclaration{
+	TypeVariable<?>[] getTypeParameters();
+   }
+
+     实现这个接口的类型，可以获取定义在该类型上的TypeVariable(类型变量,如T)   目前实现这个接口的有Class、Constructor、Method三个类型，也就是说我们可
+   以拿到在这三个类型上定义的类型变量。
+     比如Class类型，它实现TypeParameters()的时候肯定需要用到类文件中的内
+   容，从类文件中拿到这些类型变量(如K,V)同理其他两个类型都需要用到类文件。
+
+ 参数化类型包含一个类或接口名称C,以及实际的类型参数列表<T1,,Tn>
+ 例如:
+	Vector<String>
+	Map<String,String>
+ 带有界通配符的参数化类型：
+	List<? extends Object>
+        List<? extends E> //E被定义的类型变量 
+
+#类型编译时会被擦除
+
+#变量共有7种
+ 1.类变量是在类中使用static声明的字段，或者接口中得字段。当准备好类或接口
+   时，就会创建类变量并将其初始化默认值。 
+ 2.实例变量是在类中不使用关键字static声明的字段。当创建好类实例后，对应的
+   类变量就会被创建并被初始化默认值。
+ 3.数组元素是未命名的变量。
+ 4.方法参数
+ 5.构造函数参数
+ 6.每当catch子句或try语句捕获一个异常时，就会创建一个异常处理程序参数。
+ 7.局部变量

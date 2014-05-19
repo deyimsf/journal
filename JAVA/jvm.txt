@@ -1,6 +1,11 @@
 #jmap查看堆内存情况
  -heap  简单查看堆的使用情况，堆大小等。
- -histo 查看堆内存中得对象数量和大小。
+ -histo[:live] 打印每个class的实例数目,内存占用,类全名信息。
+	VM的内部类名字开头会加上前缀*。如果live子参数加上后，
+	只统计活得对象数。
+ -permstat 打印clasload和jvm heap长久层的信息。包含每个classloader的名字
+	活泼性，地址，父classloader和记载的class数量。内部String的数量和
+	占用内存数也会打印出来。
  -dump  dump出堆内存
  -dump:file=m.dump 将堆内存输出到m.dump文件
  例子：
@@ -10,8 +15,18 @@
   -port 指定端口号
   -J   向jvm传递启动参数，如-mx512m,表示指定堆内存为512m
   例子：
-   jhat -J-mx512m -port 8090 m.dump
-
+    jhat -J-mx512m -port 8090 m.dump
+  访问地址：
+    http://localhost:8090
+   当点一个类进入后，页面展示的时关于这个类的一些信息，
+  比如Superclass(父类),被那个类加载的,子类等信息。其中有一个
+  References summary by Type 关于该类的引用的摘要，里面包含了
+  该类被那些类引用，以及该类引用了那些类。
+  Referrers by Type表示该类被下面的类引用。
+  Referees by Type表示该类引用了下面的类。
+  基本类型不再该页面反应，该页面只包括引用类型，向"fdsaf"这样
+  的字符串不在该页面体现。
+  
 #jstat查看gc的一些统计信息
   -gc 查看gc的次数、及时间，包括yang gc等。
   -class 类的加载数量等
