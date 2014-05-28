@@ -1,0 +1,8 @@
+#使用wireshark抓取包含某个IP地址的包
+   filter中输入 ip.addr eq 124.192.136.141,然后点右边的Apply,之后点filter上的
+ 小鲨鱼,这时候就开始抓包了。
+   这时候wireshark默认显示的sequence number都是从0开始的,这个只是wireshark为了
+ 显示更友好，使用了relative sequence numbers--相对序号，可以在右菜单中的
+ protocol preference中取消掉就可以看到绝对序号了。
+   点击菜单上的Statistics->Flow Graph 可以以图形的形式看到包得流动。 
+

@@ -2,12 +2,13 @@
  -heap  简单查看堆的使用情况，堆大小等。
  -histo[:live] 打印每个class的实例数目,内存占用,类全名信息。
 	VM的内部类名字开头会加上前缀*。如果live子参数加上后，
-	只统计活得对象数。
+	只统计活得对象数,GC收不走得对象。
  -permstat 打印clasload和jvm heap长久层的信息。包含每个classloader的名字
 	活泼性，地址，父classloader和记载的class数量。内部String的数量和
 	占用内存数也会打印出来。
  -dump  dump出堆内存
  -dump:file=m.dump 将堆内存输出到m.dump文件
+ -dump:live,file=m.dump 
  例子：
   jmap -dump:file=m.dump pid
 
