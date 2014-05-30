@@ -99,3 +99,61 @@
 
 #static方法不能被一个实例方法重写。
 
+#注释类型 annotation
+  注释类型声明不能是泛型。
+  不允许使用extends子句(注释类型隐式扩展annotation.Annotation)
+  方法不能有任何参数。
+  方法声明不能有throws
+
+#注释类型中声明的方法的返回类型，只能是以下类型：
+  基本类型之一。
+  String、Class和Class的任何调用?
+  枚举类型。
+  注释类型或上述类型之一的数组。
+  多维数组不行。
+
+#注释例子：
+  @interface Demo{
+ 	public String name() default "默认";
+  }
+
+#虚拟机启动过程
+  1.加载类
+  2.链接:
+	验证:验证字节码对错
+	准备:准备分配有虚拟机内部使用的静态存储区和数据结构,如方法表
+	解析:把该类引用的其他类或接口的符号，进行检查或替换。
+	    解析再链接时时可以选的，可以再以后实际进行符号调用的时候
+            在进行解析。所以有时候可能会看到NoSuchMethodError这种异常。
+	    比如A、B两个类，A调用B的某个方法，后来B删掉了该方法，俩个
+	    类在加载链接的时候没做符号解析，那么会在实际调用的时候做
+	    符号解析，结果发现没有那个方法。
+  3.初始化:
+	初始化之前必须初始化它的直接超类,不包括接口。
+	接口初始化之前不必初始化它的超接口.
+  4.调用main方法
+
+#类实例化过程：
+   例子：
+	class Point{
+		int x,y;
+		Point(){x=1;y=1;}
+	}
+	class ColoredPoint extends Point{
+		int color = 0xFF00FF;
+	}
+	
+	class Test{
+		public static void main(){
+		    ColoredPoint cp = new ColoredPoint();
+		    System.out.println(cp.color);
+		}
+	}
+   步骤：
+   1.为ColoredPoint分配空间
+   2.初始化所有字段成他们的默认值(这个例子中都是0)
+   3.开始调用ColoredPoint无参的构造函数,该过程会递归地调用超类的构造函数。
+     Object(){} --> Point(){} --> ColoredPoint构造函数体
+   4.初始化完成
+
+   
