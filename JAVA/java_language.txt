@@ -97,7 +97,61 @@
 
 #被static修饰的字段称为类变量，未用static修饰的字段称为实例变量。
 
-#static方法不能被一个实例方法重写。
+#static方法不能被一个实例方法重写,也不能被static方法重写(override)。
+  实例方法重写静态方法会编译错误：
+     class Father{
+	public static void bg(){}	
+     }
+     class Sub extends Father{
+     	public void bg(){}   //编译时错误
+     }
+  静态方法也不可以重写静态方法：
+     class Sub{
+	@override     
+     	public static void bg(){} //编译时错误
+     }
+  但是子类静态方法可以隐藏父类静态方法：
+     class Sub{
+     	public static void bg(){}  //隐藏父类方法，不是重写
+     }
+  对于隐藏的解释：
+  就是说Sub的bg()方法和父类Father的bg()方法没有关系，具体调用哪个方法是看
+  谁在引用它。
+    Father f = new Sub();
+    Sub s = new Sub();
+    f.bg(); //调用的是父类的方法
+    s.bg(); //调用的时子类的方法
+  对于上面的代码，如果两个方法都是实例方法，那么就是重写，因为实际实例对象
+  是Sub实例，所以调用的就是Sub得方法。
+
+#jvm方法调用相关的指令集
+  例子代码：
+	interface I{
+		public void inter(){}
+	}
+	
+	class Sub implements I{
+		public static void sta(){}
+		public void vir(){}
+		public void inter(){}
+	}
+
+  invokestatic		//调用类方法(静态绑定，速度快)
+	例如：Sub.sta(),会编译成静态绑定   
+
+  invokevirtual		//调用实例方法(动态绑定)
+	例如：Sub sub = new Sub();
+	      sub.vir(); 该调用会编译成动态绑定
+
+  invokespecial		//调用实例方法(静态绑定,速度快 如调用构造函数)
+	例如：Sub sub = new Sub(); 会编译成静态绑定
+
+  invokeinterface	//调用引用类型是interface的实例方法(动态绑定)
+	例如：I subI = new Sub();
+	      subI.inter(); 会编译成动态绑定
+
+  invokedynamic		//JDK7引入，为了支持动态语言的方法调用
+ 异常的指令都会有指令操作数，这里省略了。
 
 #注释类型 annotation
   注释类型声明不能是泛型。
@@ -156,4 +210,32 @@
      Object(){} --> Point(){} --> ColoredPoint构造函数体
    4.初始化完成
 
-   
+#编译时(static)常量(final)带来的副作用
+   class Flags{
+      final static boolean debug = true;
+   }
+   class Test{
+   	public static void main(String args[]){
+		if(Flags.debug){
+			System.out.println("debug is true");
+		}
+	}
+   }
+   上面的代码输出的结果如下:
+     debug is true
+   假定对类Flags创建新版本:
+     class Flags{
+	final static boolean debug=false;
+     }
+   然后重新编译Flags类，不编译Test类，一起运行新德二进制代码与Test现在
+   的二进制代码,则产生如下输出：
+     debug is true
+   因为debug是一个编译时常量，在Test的二进制代码中不会产生一个指向类Flags
+   的引用。
+
+#运行时，方法调用需要的步骤：
+   1.一个目标引用可以被计算(如果有必要，static方法没有目标引用)
+   2.参数表达式倍计算
+   3.检查要被调用的方法的可访问性
+   4.定位要被执行的方法的实际代码
+   5.创建新德激活帧
