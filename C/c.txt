@@ -260,7 +260,7 @@ C文件操作
  如果文件fp到达文件尾，返回非零值
 	int feof(FILE *fp);
 
- 例子: readfile.c
+ readfile.c
  	#include <stdio.h>
 
 	//读文件
@@ -1115,8 +1115,104 @@ IP地址结构
        close(listenfd);	
  }
 
+#IO多路复用中select的解释
+ int select(int n,fd_set *readfds,fd_set *writefds,fd_set *exceptfds,struct timeval *timeout);
+ 参数说明:
+ n: 要监视的描述符的做大值+1
+ readfds: 监视该集合中的描述符是否有数据可读(即该集合中的描述符可以无阻塞完成)
+ writefds: 监视该集合中描述符是否可以无阻塞写
+ exceptfds: 监视该集合中得描述符是否发生异常
+ timeval: 设置等待时间
+ 返回值：如果成功则返回就绪的描述符的个数。如果超时则返回可能是0.
+	出错时返回-1，同时会设置errno
 
-IO多路复用的例子:
+ 其中三个集合都可以是NULL，意味着什么也没监听。
+ 例如：
+	int maxfd = 9;
+	fd_set readfds;
+	int ret = select(maxfd+1,&readfds,NULL,NULL,NULL);
+	每次调用select的时候都会把readfds中可用的描述符放入到readfds中。
+    所以我们在实际使用的时候想这样：
+	fd_set readfds;
+	fd_set initfds;
+
+	//首先将要监控的描述符放入initfds中
+    FD_SET(0,&initfds);
+	FD_SET(1,&initfds);
+	
+	while(true){
+		readfds = initfds; //这样每次都会监控初始化的描述符
+		int ret select(2,&readfds,NULL,NULL,NULL);
+
+		//do something 
+		//like FD_ISSET(0,&readfds);
+	}
+
+#IO多路复用poll的解释
+  int poll(struct pollfd *fds,nfds_t nfds,int timeout);
+  fds: 是个结构体，每个fds代表一个文件描述符
+  nfds_t: fds代表的结构体的个数
+  timeout: 超时时间
+  返回值：成功时返回可用的描述符的个数。如果没事件发生且超时则返回0。
+	失败时返回-1，且设置errno值。
+
+  //fds代表的结构体
+  struct pollfd{
+	int fd;			//文件描述符
+	short events;	//要监控的事件
+	short revents;	//可用的事件
+  }
+  
+  例子：
+	#include <stdio.h>
+	#include <unistd.h>
+	#include <poll.h>	
+	#define TIMEOUT 5
+
+	int main(int argc,char *argv[]){
+		struct pollfd fds[2];	//要监控两个文件描述符
+		int ret; 	//返回值
+		
+		/*监控标准输入描述符*/
+		fds[0].fd = STDIN_FILENO;
+		fds[0].events = POLLIN;		//监控的事件,有数据可读
+		
+		/*监控标准输出描述符*/
+		fds[1].fd = 1;
+		fds[1].events = POLLOUT:	//要监控的事件,可以无阻塞写
+	
+		while(true){	
+			/*开始监控描述符*/
+			//不需要每次调用时都重新构建pollfd结构体，内核会在必要的时候
+			//把revents清空。对于select调用，返回时会重新创建文件描述符集
+			//因此每次调用都必须重新初始化。poll会把输入(evnts)输出(revents)
+			//分离开
+			ret = poll(fds,2,TIMEOUT*1000); //2代表描述符个数
+			if(ret == -1){ // 调用失败
+				//do something
+				return 1;
+			}
+
+			if(ret == 0){	//超时
+				//do something
+				return 0;
+			}
+	
+			/*fds[0]这个描述符,是否可无阻塞读*/
+			if(fds[0].revents & POLLIN){			
+				printf("stdin is readable\n");
+			}
+
+			/*fds[1]这个描述符是否可无阻塞写*/
+			if(fds[1].revents & POLLOUT){
+				printf("stdout is writable\n");
+			}
+		}
+
+		return 0;
+	}
+
+IO多路复用select的例子:
  #include <stdio.h>
  #include <sys/types.h>
  #include <sys/socket.h>
@@ -1134,7 +1230,7 @@ IO多路复用的例子:
 
        //////初始化
        int listenfd = open_listenfd();
-       FD_ZERO(&read_set); //创建一个空的fd_set集合
+       FD_ZERO(&read_set); //清空该集合
        FD_SET(STDIN_FILENO,&read_set);  //标准输入放入监控集合
        FD_SET(listenfd,&read_set);  //套接字描述符放入监控集合
        maxfd = listenfd;
@@ -1147,8 +1243,8 @@ IO多路复用的例子:
        while(1){ //这种多路复用的方式，可以让一个进程处理多个IO，和java中的nio一样 
          
          ready_set = read_set;  //select返回后这个集合里面就是可以读的描述符 
-         select(maxfd+1,&ready_set,NULL,NULL,NULL); //select每次都会修改第二个参数的执指向 
-          
+         select(maxfd+1,&ready_set,NULL,NULL,NULL); //select每次都会修改第二个参数的执指向         
+ 
          //////////////////////接收客户端 add_client 
          if(FD_ISSET(listenfd,&ready_set)){ 
            struct sockaddr_in clientaddr;  //客户端套接字地址 
