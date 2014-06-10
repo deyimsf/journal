@@ -559,38 +559,38 @@ CPU八个常用32位寄存器
  
 栈针的结构
                      栈底
-		|     .       |
-		|     .	      |  
-		|     .	      |                 较早的帧
-		|             |
-                |	      |  
+				|     .       |
+				|     .	      |  
+				|     .	      |                 较早的帧
+				|             |
+                |		      |  
   old %ebp  --> |_____________| ______________________________________________
-		|     .	      |
-		|     .       |
-		|     .       |
-		|-------------|
-		|   参数n     |                调用者的帧
-		|-------------|
-                |     .       |
-		|-------------|         
-		|   参数1     |
-		|-------------|
-		|  返回地址   |--->pc要用到的 
-		|_____________|  ___________________________________________
+				|     .	      |
+				|     .       |
+				|     .       |
+				|-------------|
+				|   参数n     |                调用者的帧
+				|-------------|   这些参数是调用着要传给被调用者的值。
+                |     .       |   被调用者使用这些参数的时候可以通过%ebp，
+				|-------------|   %ebp+2就是第一个参数的地址。
+				|   参数1     |
+				|-------------|
+				|  返回地址   | --->pc要用到的,是当被调用者返回后,要继续执行的地址 
+				|_____________|  ___________________________________________
  帧指针%ebp --->| 老帧指针值  |
-		| old %ebp    |
-		|-------------|
-		|             |
+				| old %ebp    |
+				|-------------|
+				|             |
                 | 被保存的    |
-		| 寄存器、    |
-		| 本地变量、  |
-		| 临时变量等  |                当前帧
-		|             |
-		|-------------|
-		|             |
-		| 参数构造区域|
-		|             |
- 栈指针%esp --->| 	      |  _____________________________________________
+				| 寄存器、    |
+				| 本地变量、  |
+				| 临时变量等  |                当前帧
+				|             |
+				|-------------|
+				|             |
+				| 参数构造区域|
+				|             |
+ 栈指针%esp --->|	 	      |  _____________________________________________
 
 过程调用和返回指令格式
 	call Label      过程调用	
@@ -621,7 +621,7 @@ GCC方法编译后有三部分组成
    leave      //为返回准备栈
    ret        //返回
 
-数据对齐  //可以提高效率，可以用移位等操作代替乘法等擦做
+数据对齐  //可以提高效率，可以用移位等操作代替乘法等操作
  linux沿用的对齐策略是,2字节数据类型的地址必须是2的倍数，也就是地址的最低位必须是0。1010
  较大数据(int、int*、float、double)的地址必须是4的位数，地址最低方位必须是0。1100
  一个字节的数据就按1的倍数。
@@ -632,12 +632,12 @@ GCC方法编译后有三部分组成
 		int j;
 	}
   如果不用对齐，编译器用最小9字节分配，如下图：
- 	偏移 0	  4 5    9
+	 	偏移 0	  4 5    9
              -------------
         内容 | i  |c| j  |
              --------------
   按4字节对齐，会分配12字节，如下图：
-	偏移 0	  4    8    12 
+		偏移 0	  4    8    12 
              ----------------
         内容 | i  |c   | j  |
              ----------------
@@ -677,16 +677,16 @@ GCC方法编译后有三部分组成
 64为参数传递
  最多可以有6个整型(整数和指针)参数可以通过寄存器进行传递。寄存器按指定的顺序指定。
  如图：
-	-----------------------------------------------------|
-	操作数大小 |               参数数量                  |
+		-----------------------------------------------------|
+		操作数大小 |               参数数量                  |
                    |   1      2	     3	    4	  5   	 6   |
-	-----------------------------------------------------|
-	    64     | %rdi | %rsi | %rdx | %rcx | %r8  | %r9  |
+		-----------------------------------------------------|
+	   	    64     | %rdi | %rsi | %rdx | %rcx | %r8  | %r9  |
         -----------------------------------------------------|
             32     | %edi | %esi | %edx | %ecx | %r8d | %r9d |
         -----------------------------------------------------|
-	    16     | %di  | %si  |  %dx | %cx  | %r8w | %r9w |
-	-----------------------------------------------------|
+	    	16     | %di  | %si  |  %dx | %cx  | %r8w | %r9w |
+		-----------------------------------------------------|
              8     | %dil | %sil | %dl  | %cl  | %r8b | %r9b |
         -----------------------------------------------------|
  在16个通用目的寄存器中，6个用来传参数，6个(%rbx,%rbp,%r12~%r15)是被调用这保存，
@@ -940,7 +940,7 @@ Unix用三种数据结构表示打开的文件
  v-node表:所有进程共享这样表。每个表项包括文件访问、文件大小、文件类型等
  
                     描述符表(每个进程一个)
-			------------
+						------------
                     fd0 |          |       打开的文件表(所有进程共享)       v-node表(所有共享)
                         ------------                                          
                     fd1 |          |             ----------                    --------
@@ -949,7 +949,10 @@ Unix用三种数据结构表示打开的文件
                         ------------             ----------                    | 类型 |
                     fd3 |          |             |文件位置| 文件B              --------
                         ------------             ----------
-                                                 NODE:文件A和文件B可以同时指向同一个v-node表项
+    注意:不同的文件描述符可以指向相同的文件表项;文件A和文件B也可以同时指向同一个v-node表项。
+	当用open打开一个文件aa.txt两次的时候，会产生两个文件描述符、两个文件表项、一个v-node表项。
+	当调用fork后，子进程仅会有父进程描述符的副本，所以子进程会共享父进程的打开的文件、包括位置.	
+
 I/O重定向
   所谓的IO重定向，就是将一个文件描述符拷贝到另一个描述符
   例子,将标准输入重定向到一个磁盘文件aa.txt
@@ -993,7 +996,8 @@ I/O重定向
 	char 	       sa_data[14];
    }
    
-   struct sockaddr_in{ //<netinet/in.h>互联网类型的套接字地址结构,我们用这个赋值，然后强转成sockaddr,传给需要的套接字函数
+   struct sockaddr_in{ //<netinet/in.h>互联网类型的套接字地址结构,我们用这个赋值，
+					   //然后强转成sockaddr,传给需要的套接字函数
 	unsigned short sin_family;  //AF_INET
 	unsigned short sin_port;    //套接字端口
 	struct in_addr sin_addr;    //套接字地址
@@ -1005,7 +1009,7 @@ DNS条目结构
 	 char *h_name;       //正式的域名
    	 char **h_aliases;   //别名？
 	 int  h_addrtype;    //主机的地址类型 AF_INET?
-         int  h_length;      //这个地址的长度，单位字节
+     int  h_length;      //这个地址的长度，单位字节
 	 char **h_addr_list; //这个域名对应的所有ip地址(点分十进制)
    } 
 
@@ -1068,51 +1072,51 @@ IP地址结构
 	//int optval=1;
 	//setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,(const void *)&optval,sizeof(int))//设置socket一些配置
 	
-        //指定特定ip地址
+    //指定特定ip地址
 	struct in_addr inaddr;        
 	if(inet_aton("10.12.212.86", &inaddr) == 0){ //此时已经是网络字节顺序
 		printf("点分十进制ip转网络ip地址错误!");
 		return -1;
 	}
-        //所有ip地址
-        //inaddr.s_addr = htonl(INADDR_ANY); //主机字节顺序转网络字节顺序，这台主机所有ip地址       
+    //所有ip地址
+    //inaddr.s_addr = htonl(INADDR_ANY); //主机字节顺序转网络字节顺序，这台主机所有ip地址       
 	
-        //服务器socket地址
-        struct sockaddr_in serveraddr;
-        //从指定地址开始为套接字清零，第二个参数是要清零的字节个数
+    //服务器socket地址
+    struct sockaddr_in serveraddr;
+    //从指定地址开始为套接字清零，第二个参数是要清零的字节个数
 	//bzero((char *)&serveraddr,sizeof(serveraddr));
-        serveraddr.sin_family = AF_INET;
+    serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(8001);    //主机字节顺序到网络字节顺序转换
 	serveraddr.sin_addr.s_addr = inaddr.s_addr;
  
-        //listenfd描述符和服务端套接字地址绑定
-        int bi = bind(listenfd,(struct sockaddr *)&serveraddr,sizeof(serveraddr));
-        if(bi < 0){
+    //listenfd描述符和服务端套接字地址绑定
+    int bi = bind(listenfd,(struct sockaddr *)&serveraddr,sizeof(serveraddr));
+    if(bi < 0){
 		printf("绑定失败！\n");
 		return -1;
-	}
+ 	}
         
-        //开始监听
-        int li = listen(listenfd,1024);        
-        if(li < 0){
+    //开始监听
+    int li = listen(listenfd,1024);        
+    if(li < 0){
 		printf("监听失败");
-                return -1;
+        return -1;
 	}
 
-       //等待接受客户端请求
-       struct sockaddr_in clientaddr;  //客户端套接字地址
-       int addrlen;                    //套接字地址的字节个数
-       int connfd = accept(listenfd,(struct sockaddr *)&clientaddr,&addrlen); 
+    //等待接受客户端请求
+    struct sockaddr_in clientaddr;  //客户端套接字地址
+    int addrlen;                    //套接字地址的字节个数
+    int connfd = accept(listenfd,(struct sockaddr *)&clientaddr,&addrlen); 
  
-       //从套接字描述符读数据
-       while(1){
+    //从套接字描述符读数据
+    while(1){
 	  char c[]={0,'\0'};
-          read(connfd,c,1);
-          printf("%s",c);	
+      read(connfd,c,1);
+      printf("%s",c);	
 	}
-       //关闭 套接字描述符
-       close(connfd);
-       close(listenfd);	
+    //关闭 套接字描述符
+    close(connfd);
+    close(listenfd);	
  }
 
 #IO多路复用中select的解释
@@ -1322,3 +1326,88 @@ IO多路复用select的例子:
 
         return listenfd;
 }
+
+#IO多路复用实现telnet程序
+  #include <stdio.h>
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <stdlib.h>
+  #include <netinet/in.h>
+  #include <string.h>
+  #include <poll.h>
+  #include <unistd.h>
+
+  int main(int argc,char *argv[]){
+	//校验输入参数
+	if(argc < 3){
+		printf("errored arguments\n");
+	}
+	
+	char *ip = argv[1];
+	int port = atoi(argv[2]);
+	int socketfd = socket(AF_INET,SOCK_STREAM,0);
+	
+	struct in_addr inaddr;
+	int ret = inet_aton(ip,&inaddr); //ip地址
+	if(ret == -1){
+		perror("inet_aton");	
+		return 2;
+	}
+
+	struct sockaddr_in serveraddr;	
+	serveraddr.sin_family=AF_INET;
+	serveraddr.sin_port = htons(port);
+	serveraddr.sin_addr = inaddr;
+	
+	//int connect(int sockfd,struct sockaddr *serv_ddr,int addrlen)
+	ret = connect(socketfd,(struct sockaddr *)&serveraddr,sizeof(serveraddr));
+	if(ret == -1){
+		perror("connect");
+		return 1;
+	}
+
+	int buffer=1;
+	char buf[buffer];
+	int len;
+
+	//IO多路复用	
+	struct pollfd fds[2];
+	fds[0].fd = STDIN_FILENO;
+	fds[0].events = POLLIN;
+	fds[1].fd = socketfd;
+	fds[1].events=POLLIN;
+
+	while(1){
+		int ret = poll(fds,2,5000); //超时时间5秒
+		if(ret == -1){
+			perror("poll");
+			return 1;
+		}
+		
+		//读标准输入数据
+		if(fds[0].revents & POLLIN){
+			len = read(0,buf,buffer);
+			if(len < 0){
+				perror("read(stdin)");
+			}
+
+			write(socketfd,buf,len);
+		}
+
+		//读socket数据
+		if(fds[1].revents & POLLIN){
+			len = read(socketfd,buf,buffer);
+			if(len < 0){
+				perror("read(socketfd)");
+				break;
+			}
+			if(len == 0){
+				break;
+			}
+			//向标准输出写数据	
+			write(1,buf,len);
+		}
+	}
+ }      
+
+  
