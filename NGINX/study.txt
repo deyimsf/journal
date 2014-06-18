@@ -1,0 +1,2 @@
+#nginx拦截错误代码
+proxy_intercept_errors on;
