@@ -41,12 +41,12 @@ Tcp建立连接  mss:Maximum Segement Size  MTU:Maxmum Transmission Unit(链路�
 Tcp终止连接
                            |         FIN          |
  主动关闭 FIN_WAIT_1       |--------------------->|     CLOSE_WAIT 别动关闭
-       			   |	     ACK          |
- 	  FIN_WAIT_2       |<---------------------|          
-           		   |	     FIN          |
-	  TIME_WAIT        |<---------------------|      LAST_ACK
-           		   |	     ACK          |
-			   |--------------------->|      CLOSED
+		       			   |	     ACK          |
+ 	  		FIN_WAIT_2     |<---------------------|          
+           				   |	     FIN          |
+	  		TIME_WAIT      |<---------------------|      LAST_ACK
+           		   		   |	     ACK          |
+			   			   |--------------------->|      CLOSED
                            |                      |
 套接字复位(RST,异常关闭)
  RST报文段不会导致另一端产生任何响应，另一端根本不进行确认。

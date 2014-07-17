@@ -25,4 +25,10 @@
  例子3：
 	$git reset --mixed(默认) 342b3f
  该命令执行1、2两个动作。
- 
+
+#里程碑命令
+ $ git tag  
+ 不带参数则是直接查看里程碑
+
+#查看提交记录
+ $ git log --graph --pretty=raw
