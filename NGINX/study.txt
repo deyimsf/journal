@@ -1,2 +1,194 @@
 #nginx拦截错误代码
 proxy_intercept_errors on;
+
+##安装Nginx 
+1.GCC---GNU编译器集合 
+  gcc是一个开源编译器集合，是用于处理各种各样的语言：C、C++、java 
+  、Ada、FORTRAN，等等。 
+  $yum install gcc 
+2.PCRE库 
+   在Nginx编译需要PCRE，因为Nginx的Rewrite模块和HTTP核心模块会使用 
+   到PCRE正则表达式。需要安装两个安装包pcre和pcre-devel。第一个安装 
+   包提供编译版本的库，而第二个提供开发阶段的头文件和编译项目的源代码。 
+  $yum install pcre pcre-devel 
+3.zlib库 
+   zlib库提供了开发人员的压缩算法，在Nginx的各种模块中需要使用gzip压缩。 
+  $yum install zlib zlib-devel 
+4.OpenSSL 
+   在Nginx中，如果服务器提供安全网页时则会用到OpenSSL库，我们需要安装库文件 
+   和它的开发安装包。 
+  $yum install openssl openssl-devel 
+5.下载并安装Nginx 
+  $ wget http://nginx.org/download/nginx-0.7.66.tar.gz 
+  $ tar zxf nginx-0.7.66.tar.gz 
+  $ cd ./nginx-0.7.66 
+  $ ./configure 
+  $ make 
+  $ make install 
+
+
+##启动nginx 
+$ /usr/local/nginx/sbin/nginx 
+
+##立即停止守护进程(使用TERM信号) 
+$ /usr/local/nginx/sbin/nginx -s stop 
+
+##温和地停止守护进程(使用QUIT信号) 
+$ /usr/local/nginx/sbin/nginx -s quit 
+
+##重新打开日志 
+$ /usr/local/nginx/sbin/nginx -s reopen 
+
+##重新载入配置文件 
+$ /usr/local/nginx/sbin/nginx -s reload 
+
+##配置文件默认位置 
+/usr/local/nginx/conf/nginx.conf 
+
+##指令总是以分号结尾 
+worker_processes 1; 
+
+##location 区段 
+Nginx允许你定义location区段，通过指定的模式与客户端请求的URI相匹配。 
+   语法: location [=|~|~* |^~ |@] /uri/{...} 
+   修饰符： 
+  1)[=]: URI的定位必须与指定的模式精确匹配。该模式在这里限定为一个简单的字符串， 
+  不能 使用正则表达式。 
+        server{ 
+        server_name website.com; 
+        location = /abcd { 
+          #对该位置的访问： 
+          a>可用http://website.com/abcd 
+          b>可用http://website.com/ABCD (如果操作系统区分大小写就不可访问) 
+          c>可用http://website.com/abcd?param1&param2 
+          d>不可用http://website.com/abcd/ (结尾斜杠) 
+          e>不可用http://website.com/abcde 
+        } 
+        } 
+  2)[无]: URI的定位必须以指定模式开始，不可以使用正则表达式。 
+         server{ 
+         server_name website.com; 
+         location /abcd{ 
+           #对该配置的访问 
+             a>可用http://website.com/abcd 
+             b>可用http://website.com/ABCD   (大小写看操作系统) 
+             c>可用http://website.com/abcd?param1&param2 
+             d>可用http://website.com/abcd/ 
+             e>可用http://website.com/abcde (只要以/abcd开头就可以) 
+         } 
+         } 
+  3)[~]: 客户端请求的URI与指定 的正则表达式匹配必须区分大小写。 
+        server{ 
+        server_name website.com; 
+        location ~ ^/abcd${ 
+          #对该配置的访问 
+            a>可用http://website.com/abcd 
+            b>不可用http://website.com/ABCD  (区分大小写) 
+            c>可用http://website.com/abcd?param1&param2 (不过滤查询字符串) 
+            d>不可用http://website.com/abcd/ 因指定了正则表达式 
+            e>不可用http://website.com/abcde 因指定了正则表达式 
+        } 
+        } 
+  4)[~*]: 对客户端请求的URI与指定的正则表达 式匹配， 不区分大小写。 
+        server{ 
+        server_name website.com; 
+        location  ~* ^/abcd${ 
+          #对该配置的访问 
+            a>可用http://website.com/abcd 
+            b>可用http：//website.com/ABCD 
+            c>可用http://webstie.com/abcd?param1&param2 
+            d>不可用http://website.com/abcd/ 
+            e>不可用http：//website.com/abcde 
+        } 
+        } 
+  5)[^~]: 类似于无标志行为(2),URI的定位必须以指定模式开始。不同的是，如果模式匹配，那么Nginx就停止搜索其他模式 
+  6)[@]: 定义命名location区段，这些区段客户端不能访问，只可以由内部产生的请求来访问，例如try_files 或 error_page                          
+
+##Nginx在下面的顺序中搜索匹配模式 ？？？？？ 
+  1.带有=修饰符的location区段， 如果指定字符串与请求的URI精确匹配，则Nginx使用该location的设置。 
+  2.没有修饰符的location区段，如果指定字符串与请求的URI精确匹配，则Nginx使用该location设置。 
+  3.带有^~修饰符的location， 如果指定字符串与请求的URI开始匹配，则Nginx使用该location设置。 
+  4.带有~或~*修饰符的location区段， 如果正则表达式与请求的URI匹配，则Nginx使用该location设置。 
+  5.没有修饰符的location区段， 如果指定字符串与URI请求开始匹配，则Nginx使用该location的设置。 
+  
+    例子1：请求http://website.com/document 
+    server{ 
+    server_name website.com; 
+    location /doc{ 
+    ... 
+    } 
+    location ~* ^/document${ 
+    #会匹配该配置，因为可以精确匹配"document" 
+    } 
+    } 
+   例子2:请求http://website.com/document 
+   server{ 
+   server_name website.com; 
+   location /document{ 
+   #会匹配该配置，因为是精确匹配并且没有修饰符的location区段(精确匹配)优先级比正则(精确匹配)高 
+   } 
+   location ~* ^/document${ 
+   ... 
+   } 
+   } 
+   例子3:请求http://websit.com/document 
+   server{ 
+   server_name website.com; 
+   location ^~ /doc{ 
+   #匹配该配置，^~的优先级比~或~*高 
+   } 
+   location ~* ^/document${ 
+   ... 
+   } 
+   } 
+  
+
+##windows下Nginx的操作 
+   start nginx    启动nginx 
+   Nginx -s stop         快速关闭Nginx，可能不保存相关信息，并迅速终止web服务。 
+   Nginx -s quit         平稳关闭Nginx，保存相关信息，有安排的结束web服务。 
+   Nginx -s reload       因改变了Nginx相关配置，需要重新加载配置而重载。 
+   Nginx -s reopen       重新打开日志文件。 
+
+##正则表达式的11种元字符 
+  ^    行开始 
+  $    行结束 
+  .    任何字符 
+  []   匹配指定集合内的任意字符 
+  [^]  匹配不包括在指定字符集内的字符串 
+  |    或 
+  ()   分组 
+  \    转义 
+  *    0或多次 
+  +    1或多次 
+  ?    0或1次 
+  {x}  x次 
+  {x,} 至少x次 
+  {x,y}x到y次 
+可以用$1,$2...等来捕获子表达式 
+  
+##Nginx代理模块 
+[proxy_pass]:指定转发到后端服务器的请求，在location中指示 
+  对于TCP套接字，语法如下： 
+     proxy_pass http://hostname:port; 
+     proxy_pass http://unix:/path/to/file.socke; ???? 
+  也可以指向upstream区段 
+  例子： 
+  proxy_pass http://localhost:8080; 
+  proxy_pass http://127.0.0.1:8080; 
+  proxy_pass http://unix:/tmp/nginx.sock; 
+  proxy_pass http://192.68.0.1; 
+  proxy_pass http://localhost:8080/uri/; 
+  proxy_pass http://$server_name:8080; 
+  使用upsteam区段 可以实现负载 
+  upstream backend{ 
+  server 127.0.0.1:8080; 
+  server 127.0.0.1:8081; 
+  } 
+  location ~* \.php${ 
+  proxy_pass http://backend; 
+  } 
+  
+  location xxx{ 
+  rewrite a b; 将a替换为b，例如：rewrite ^/search/(.*)$ /search.php?q=$1; 
+  } 
