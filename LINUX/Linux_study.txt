@@ -463,7 +463,7 @@ $ cat >aa.txt < ~/.bashrc
 $ cmd1 ; cmd2 
 
 #$?(命令回传码)与&&或|| 
-$ cmd1 $$ cmd2  若cmd1执行完毕且正确($?=0),则开始执行cmd2 
+$ cmd1 && cmd2  若cmd1执行完毕且正确($?=0),则开始执行cmd2 
 $ cmd1 || cmd2  若cmd1执行正确($?=0),则cmd2不执行 
 
 #cut使用 
