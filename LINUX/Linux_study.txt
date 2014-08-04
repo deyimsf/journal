@@ -832,9 +832,13 @@ $grep [-acinv] [--color=auto] '查找字符串' filename
 -a:将binary文件以text文件的方式查找数据 
 -c:计算找到‘查找字符串’的个数 
 -i:忽略大小写 
+-r:递归查找
 -n:输出行号 
 -v:反向选择，显示出没有‘查找字符串’内容的 
---color=auto:将找到的关键字部分加上颜色 
+--color=auto:将找到的关键字部分加上颜色
+
+#在当前目录下得文件中找到含有hello字符的行并输出文件名和行号 
+$grep -rn hello ./
 
 #排序 
 $sort [-fbMnrtuk] [file or stdin] 
