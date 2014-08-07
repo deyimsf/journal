@@ -1,0 +1,65 @@
+digraph tcp{
+	
+	node[shape="Mrecord",fontsize="11",height=0.3,width="1",fontname="Micrsoft YaHei"];
+	closed[label="CLOSED",style="filled"];
+	closed_1[label="CLOSED",style="filled"];
+	
+	subgraph cluster_s3{
+		style="dotted";
+		label="被动打开";
+		listen[label="LISTEN"];
+	}
+
+	syn_rcvd[label="SYN_RCVD"];
+	
+	subgraph cluster_s4{
+		style="dotted";
+		label="主动打开";
+		syn_sent[label="SYN_SENT"];
+	}
+
+	established[label="ESTABLISHED"];
+
+	subgraph cluster_s1{	
+		style="dashed";
+		label="被动关闭";
+	
+		close_wait[label="CLOSE_WAIT"];
+		last_ack[label="LAST_ACK"];
+	}
+	
+	subgraph cluster_s2{
+		style="dashed";
+		label="主动关闭";	
+
+		fin_wait_1[label="FIN_WAIT_1"];
+		fin_wait_2[label="FIN_WAIT_2"];
+		//closing[label="CLOSING"];
+		time_wait[label="TIME_WAIT"];
+	}
+
+
+	//服务端坚挺端口并被动建立连接
+	closed->listen[label="服务端监听端口",style="dashed"];	
+	listen->syn_rcvd[label="收SYN\n发SYN,ACK",style="dashed"];
+	syn_rcvd->established[label="收ACK",style="dashed"];
+
+	//作为客户端去主动建立连接
+	closed->syn_sent[label="客户端主动连接\n发SYN"];
+	syn_sent->established[label="收SYN,ACK\n发ACK"];
+
+	//主动关闭连接
+	established->fin_wait_1[label="发FIN",color="skyblue"];
+	fin_wait_1->fin_wait_2[label="收ACK",color="skyblue"];	
+	fin_wait_2->time_wait[label="收FIN\n发ACK",color="skyblue"];
+	time_wait->closed_1[label="等2MSL",color="skyblue"];	
+	
+
+	//被动关闭
+	established->close_wait[label="收FIN\n发ACK",style="dashed",color="skyblue"];
+	close_wait->last_ack[label="发FIN",style="dashed",color="skyblue"];
+	last_ack->closed_1[label="收ACK",style="dashed",color="skyblue"];
+
+		   
+}
+

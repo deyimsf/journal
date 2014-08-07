@@ -1,0 +1,34 @@
+digraph st{
+	fontname="Verdana";
+	fontsize=10;
+	rankdir=LR;
+	
+	node[shape="record",width=.1,height=.1];
+	node[fontname="Verdana",fontsize=10,color="skyblue"];
+	edge[fontname="Verdana",fontsize=10,color="crimson",style="solid"];
+
+	node[shape="plaintext"]; //设置下面的顶点没有边框	
+	//用html布局label
+	st_table[label=<
+		<table border="0" cellborder="1" cellspacing="0" align="left">
+			<tr><td>st_table</td></tr>
+			<tr><td>num_bins=5</td></tr>
+			<tr><td>num_entries=3</td></tr>
+			<tr><td port="bins">bins</td></tr> //port="bins"指定锚点
+		</table>
+	>];
+
+	node[shape="record"];  //设置下面的顶点都是方框型的
+ 	num_bins[label="<b1>|<b2>|<b3>|<b4>|<b5>",height=2];//<b1>指定锚点
+	node[width=2];
+
+	entry_1[label="{<e>st_table_entry|<next>next}"];
+	entry_2[label="{<e>st_table_entry|<next>null}"];
+	entry_3[label="{<e>st_table_entry|<next>null}"];
+
+	st_table:bins->num_bins:b1;
+	num_bins:b1->entry_1:e;
+	entry_1:next->entry_2:3;
+	num_bins:b3->entry_3:e;	
+
+}

@@ -1,0 +1,26 @@
+//定义图
+digraph st2{
+	fontname="Verdana";
+	fontsize=10;
+	rankdir=TB;
+	
+	//设置顶点
+	node[fontname="Verdana",fontsize=10,color="skyblue",shape="record"];
+	//设置边
+	edge[fontname="Verdana",fontsize=10,color="crimson",style="solid"];
+
+    //Hash结构类型顶点
+	st_hash_type[label="{<head>st_hash_type|(*compare)|(*hash)}"];
+	//hash实体
+	st_table_entry[label="{<head>st_stable_entry|hash|key|record|<next>next}"];
+	//hash表
+	st_table[label="{st_table|<type>type|num_bins|num_entries|<bins>bins}"];
+
+	st_table:bins->st_table_entry:head;
+	st_table:type->st_hash_type:head;
+	st_table_entry:next->st_table_entry:head[style="dashed",color="forestgreen"];
+
+	//布局
+	layout="circo";
+	
+}

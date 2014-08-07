@@ -1,0 +1,18 @@
+digraph ast{
+	
+	fontname="Microsoft YaHei";
+	fontsize=10;
+
+	node[shape="plaintext",fontname="Microsoft YaHei",fontsize=10];
+	edge[fontname="Microsoft YaHei",fontsize=10];
+
+	mul[label="mul(*)"];
+	add[label="add(+)"];
+	
+	add->3;
+	add->4;
+	
+	mul->5;
+	mul->add;
+
+}

@@ -1,0 +1,4 @@
+digraph abc{
+	node[shape="component"];
+	a->{x,y};
+}

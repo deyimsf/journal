@@ -1,0 +1,24 @@
+#五种布局器, 用layout指定
+ dot 默认布局方式，主要用于有向图(digraph{})
+ neato
+ twopi  径向布局
+ circo	圆环布局
+ fdp	用于无向图(graph{})
+
+#画图流程
+ 1,定义一个图
+ 2,向图中添加顶点和边
+ 3,为顶点和边添加样式
+
+st_table_entry[shape="record",label="{<head>st_stable_entry|hash|key|record|<next>next}"];
+ 上面的例子，顶点的形状为shape=record，label中<>括起来的时锚点
+
+#画子图
+	digraph abc{
+		layout="circo";	
+
+		subgraph cluster_cd{ //子图名字必须以cluster开头 
+			lable="子图";
+		}
+	}
+	
