@@ -1,0 +1,18 @@
+db.c/propagateExpire
+负责删除过期的键，并且向所有的从传播删除操作，
+函数aeCreateTimeEvent(server.el, 1, serverCron, NULL, NULL)
+会为serverCron创建时间事件，最终serverCron会调用progageteExpire
+
+读取、删除、写入等操作会调用db.c/expireIfNeeded
+expireIfNeeded函数会调用propagateExpire来保证先删除过期键，在进行后续操作。
+
+
+db.c/setKey—>lookupKeyWrite—>expireIfNeed—>propagateExpire
+
+
+
+
+当所有的命令执行完后会调用addReply***()函数用来回复命令，改组命令并不会直接回复
+而是为每个调用该命令的客户端注册一个写事件,这个写事件会关联一个命令回复的写处理器
+prepareClientToWrite(c)—>aeCreateFileEvent(server.el, c->fd, AE_WRITABLE,sendReplyToClient, c)
+负责传送命令回复的写处理器networking.c/sendReplyToClient会一直循环知道回复缓冲区为空或者指定条件满足.

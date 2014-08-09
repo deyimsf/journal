@@ -1,0 +1,84 @@
+digraph redis{
+
+	redis[label="redis.c/main"];
+	//初始化服务器
+    initServer[label="redis.c/initServer"];
+	aeCreateTimeEvent[label="redis.c/aeCreateTimeEvent"];
+	anetTcpServer[label="redis.c/anetTcpServer"];
+	anetListen[label="anet.c/anetListen"]; 
+    initAcceptHandler[label="fe-\>rfileProc=acceptTcpHandler",fontcolor="red"];
+	
+    //关联时间事件
+ 	redis->initServer;  
+	initServer->aeCreateTimeEvent[label="创建时间事件\n绑定serverCron"]; 
+
+	 //监听socket
+	initServer->anetTcpServer[label="监听socket"];
+	anetTcpServer->anetListen; 
+	aeCreateFileEvent[label="ae.c/aeCreateFileEvent"];	
+	initServer->aeCreateFileEvent[label="创建文件事件"];		
+	aeCreateFileEvent->initAcceptHandler[label="设置有socket可接收\n时要调用的方法"];
+	
+	//循环处理事件
+	aeMain[label="redis.c/aeMain"];
+	aeProcessEvents[label="ae.c/aeProcessEvents\n(事件分离器)"];
+	redis->aeMain;
+	aeMain->aeProcessEvents[label="循环处理就绪事件"];
+
+	aeApiPoll[label="ae_epoll.c/aeApiPoll\n(IO多路复用器)"];
+	fileProc[label="fe-\>rfileProc\nfe-\>wfileProc",fontcolor="red"];	
+	processTimeEvents[label="ae.c/processTimeEvents"];
+    aeProcessEvents->aeApiPoll[label="获取已就绪的socket"];
+    aeProcessEvents->fileProc[label="对就绪事件进行分离调用"]; 	
+	aeProcessEvents->processTimeEvents[label="执行时间事件"];	
+
+	//接收客户端
+	acceptTcpHandler[label="networking.c/acceptTcpHandler"];
+	anetTcpAccept[label="anet.c/anetTcpAccept"];
+	anetGenericAccept[label="anet.c/anetGenericAccept"];	
+ 	acceptTcpHandler->anetTcpAccept[label="accept新的socket"];
+	anetTcpAccept->anetGenericAccept->accept;
+	
+	//接收完客户端后，为该socket绑定事件
+	acceptCommonHandler[label="networking.c/acceptCommonHandler"];
+	createClient[label="networking.c/createClient"];
+	aeCreateFileEvent_1[label="aeCreateFileEvent"];
+	acceptTcpHandler->acceptCommonHandler[label="为接收的socket绑定事件"];
+	acceptCommonHandler->createClient;
+	createClient->aeCreateFileEvent_1[label="创建AE_READBLE事件\n绑定readQueryFromClient\n(命令请求处理器)"];
+
+	//命令请求处理器
+	readQueryFromClient[label="networking.c/readQueryFromClient"]
+	processInputBuffer[label="networking.c/processInputBuffer"];
+	readQueryFromClient->processInputBuffer[label="将命令读到缓存后\n解析命令"];
+	processInputBuffer->"processInlineBuffer\nprocessMultibulkBuffer"[label="将解析到的命令\n放入客户端c-\>argv\[\]"];
+	
+	//执行命令
+	processCommand[label="redis.c/processCommand"];
+	call[label="redis.c/call"];
+	propagate[label="redis.c/propagate"];
+	replicationFeedSlaves[label="replication.c/replicationFeedSlaves"];
+	addReplyBulk[label="networking.c/addReplyBulk"];
+	prepareClientToWriter[label="prepareClientToWriter"];
+	aeCreateFileEvent_2[label="aeCreateFileEvent"];
+
+	processInputBuffer->processCommand[label="执行命令"];
+	processCommand->call[];
+	call->propagate[label="传播命令到从节点\n和AOF文件"];		
+	propagate->replicationFeedSlaves[label="传播到从节点"];
+	replicationFeedSlaves->addReplyBulk;
+	//addReplyBulk->addReplyLen;
+	addReplyBulk->addReply;
+	addReply->prepareClientToWriter;
+    addReply->"_addReplyToBuffer\n_addReplyObjectToList"[label="命令放入回复缓存区"];
+	prepareClientToWriter->aeCreateFileEvent_2[label="创建AE_WRITABLE事件\n绑定sendReplyToClient\n(命令回复器)"];
+
+    
+ 	//命令回复器
+	sendReplyToClient[label="networking.c/sendReplayToClient"];
+
+}
+
+
+
+
