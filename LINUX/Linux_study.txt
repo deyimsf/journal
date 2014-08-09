@@ -1046,3 +1046,15 @@ vmware网络配置(NAT)
  一个网卡可以设置多个IP地址，例如在eth0上再加一个IP地址：
  $ifconfig eth0:0 192.168.195.118 broadcast 192.168.195.255 netmask 255.255.255.0
  $ifconfig lo:0 192.168.195.119 broadcast 192.168.195.255 netmask 255.255.255.0
+
+#查看目前的后台工作状态
+$ jobs -l
+ -l:列出job number、命令串、PID号
+ -r:仅列出正在后台run的工作
+ -s:仅列出增在后台当中暂定的工作
+
+#将后台工作拿到前台执行
+$ fg %jobnumber
+
+#让工作在后台下得状态变成运行中
+$ bg %jobnumber

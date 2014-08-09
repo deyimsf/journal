@@ -31,4 +31,42 @@
  不带参数则是直接查看里程碑
 
 #查看提交记录
- $ git log --graph --pretty=raw
+ $ git log --graph --pretty=raw  -3
+
+#.git/refs
+ heads  //该目录下是本地版本的mster引用
+ remotes //该目录下是远程版本的master引用
+ tags
+
+#获取远程版本库的内容
+$ git fetch
+
+#本地分支和远程分支合并
+$ git merge origin/master
+
+#查看文件内容都是谁提交的
+$ blame filename
+
+#当有合并冲突的时候.git目录下会出现以下文件
+ ./git/MERGE_HEAD  记录所合并的提交的ID(origin/master)
+ ./git/MERGE_MODE  表示合并状态
+ ./git/MERGE_MSG   记录合并失败的文件
+#暂存区中会同时记录冲突文件的多个不同版本
+$ git ls-files -s
+100644(属性)  ea12387877ea7a8e798a7e98a7e89a78e(sha1哈希)  1  fileName
+100644(属性)  34c435c43c54c54c54c54e98a7e82e0ea(sha1哈希)  2  fileName
+100644(属性)  453c5ccc554ea7a8e7987e98a7e89a24e(sha1哈希)  3  fileName
+#编号为1的暂存区保存冲突修改之前的副本,即双方共同的祖先版本
+$ git show :1:fileName
+#编号为2的暂存区保存当前文件在当前分支中修改的副本
+$ git show :2:fileName
+#编号3暂存区保存该文件在远程版本(分支)中修改的副本
+$ git show :3:fileName
+#冲突文件的特殊标识
+ <<<<<<<(七个小于号)和=======(七个等号)之间的内容是当前分支更改的内容。
+ =======和>>>>>>>之间的内容是要合并的版本(分支)更改的内容
+#手动解决冲突
+ 删除冲突文件的特殊标识，提交完后会看到./git/MERGE_*三个文件就消失了。
+ 冲突文件在暂存区中得三个副本也都消失了(这个在git add后就清除了)。
+ //实际上即使你不删除特殊标识，而是直接git add 然后git commit那么git就
+ //认为你已经修改冲突了。
