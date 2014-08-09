@@ -1,5 +1,24 @@
+#创建版本库
+ $ git init
+
+#创建裸版本库
+ $ git --bare init
+
+#在存在的版本库中拉取数据
+ $ git pull 版本库[https://github.com/deyimsf/journal.git]
+
 #克隆版本库
  $ git clone https://[username:passport@]github.com/deyimsf/journal.git
+ //该命令可以认为是git init & git pull的结合版
+
+#工作区和暂存区比较
+ $ git diff
+
+#暂存区和HEAD比较
+ $ git diff --cached
+
+#工作区和HEAD比较
+ $ git diff HEAD
 
 #查看某个文件的历史版本
  $ git log --oneline   //用一行显示历史提交
@@ -29,6 +48,14 @@
 #里程碑命令
  $ git tag  
  不带参数则是直接查看里程碑
+
+#查看在暂存区和工作树文件的信息：ls-files
+ $ git ls-files
+  -c|--cached	:显示工作区中提交到暂存区中得文件
+  -d|--deleted  :显示在工作区中删除的文件，但暂存区中还在
+  -m|--modified :显示工作区和暂存区内容不一样的文件
+  -o|--others	:展示不再暂存区的文件 
+  -u|--unmerged :显示不能merge的文件,就是有冲突的文件
 
 #查看提交记录
  $ git log --graph --pretty=raw  -3
@@ -70,3 +97,5 @@ $ git show :3:fileName
  冲突文件在暂存区中得三个副本也都消失了(这个在git add后就清除了)。
  //实际上即使你不删除特殊标识，而是直接git add 然后git commit那么git就
  //认为你已经修改冲突了。
+#半手工解决冲突
+$ git mergetool
