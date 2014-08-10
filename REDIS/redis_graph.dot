@@ -21,7 +21,7 @@ digraph redis{
 	
 	//循环处理事件
 	aeMain[label="redis.c/aeMain"];
-	aeProcessEvents[label="ae.c/aeProcessEvents\n(事件分离器)"];
+	aeProcessEvents[label="ae.c/aeProcessEvents\n(事件分派器)"];
 	redis->aeMain;
 	aeMain->aeProcessEvents[label="循环处理就绪事件"];
 
