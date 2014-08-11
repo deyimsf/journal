@@ -1,0 +1,44 @@
+#hello world
+ print("Hello World");
+
+#命令行方式执行lua: lua[options] [script [args]]
+ -e:直接将命令传入lua并执行
+  $ lua -e "print('hello world')" --> hello world
+ 
+ -l:加载一个文件并执行(默认)
+  	---test.lua----
+		print("hello world");
+  	-------------- 
+  $ lua -l test.lua
+
+ -i:进入交互模式
+ 
+ _PROMPT:该变量可更改交互模式的提示符,例如
+ $ lua -i -e "_PROMPT='lua>'"
+ lua>
+
+#全局变量arg用于存放Lua的命令行参数
+ lua用所有参数构造arg表,脚本名索引为0，脚本后从1开始，脚本后从-1开始
+ 	------------>test.lua<-----------
+		print("arg[-1]="..arg[-1]);
+		print("arg[0]="..arg[0]);
+		print("arg[1]="..arg[1]);
+	---------------------------------
+ $ lua -e "c=c" test.lua a b
+   arg[-1]=c
+   arg[0]=test.lua
+   arg[1]=a
+
+#获取数据类型
+ print(type("hello world"));		-->string
+ print(type(20*3));					-->number
+ print(type(print));				-->function
+ print(type(true));					-->boolean 
+ print(type(a));					-->nil
+
+#可以用[[]]表示字符串，里面的内容不用转义
+ lua> page=[[<html> </htm> "a"]] 
+ 
+ lua> io.write(page);
+
+####第三章
