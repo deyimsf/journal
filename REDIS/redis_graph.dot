@@ -75,7 +75,7 @@ digraph redis{
 
     
  	//命令回复器
-	sendReplyToClient[label="networking.c/sendReplayToClient"];
+	sendReplyToClient[label="networking.c/sendReplyToClient"];
 
 }
 

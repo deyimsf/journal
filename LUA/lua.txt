@@ -6,9 +6,9 @@
   $ lua -e "print('hello world')" --> hello world
  
  -l:加载一个文件并执行(默认)
-  	---test.lua----
+    ----------->test.lua<-----------
 		print("hello world");
-  	-------------- 
+  	-------------------------------- 
   $ lua -l test.lua
 
  -i:进入交互模式
@@ -41,4 +41,204 @@
  
  lua> io.write(page);
 
-####第三章
+#逻辑运算符 and or not
+ false和nil是假，其它为真
+ a and b	--如果a为false，则返回a,否则返回b
+ a or b		--a为true返回a，否则返回b
+
+#表的构造
+ days={"sunday","monday","tuesday"}
+ 等价于
+ days={[1]="sunday",[2]="monday",[3]="tuesday"}
+
+#赋值
+ a,b,c = 0,1;
+ print(a,b,c);   -->0,1,nil
+
+#控制语句
+ if xxx then ... end
+ if xxx then ... else ... end
+ if xxx then ... elseif xxx then ... else ... end
+
+ while xxx do 
+   ...
+ end
+
+ repeat
+	...
+ until xxx
+
+#for语句
+ for var=exp1(初始值),exp2(终止值),exp3(step) do
+	...
+ end
+
+ for i,v in ipairs(array) do
+	...
+ end
+ //i是数组的第几个，v是数组值
+
+ for k,v in pairs(table) do
+	...
+ end
+ //k是表的key，v是表的值
+
+#可变参数
+ function select(...)
+	local a,b,c = ...;
+	print({...}); //传过来的参数放在表中
+    for i,v in ipairs({...}) do
+		print(i.."--"..v);
+	end
+ end
+
+#函数排序
+	net={"a","b","c"};
+  	print(net[1].."--"..net[2].."--"..net[3]);  -->a b c
+  	
+  	table.sort(net,
+  	           function(a,b)
+  	               return (a>b);
+  	           end
+  	)
+  	print(net[1].."--"..net[2].."--"..net[3])   -->c b a
+ 
+#当一个函数内部嵌套另一个函数定义时,内部的函数体可以访问外部函数的局部变量
+ ,这种特征我们称作词法定界(闭包)。
+
+#闭包
+	function nc()
+		local i = 0;
+		return function()
+				 i=i+1;
+				 return i;
+			   end
+	end   
+
+	nc();		 -->function: 0x7fd9024066a0(匿名函数的地址) 
+	c1 = nc();   --将返回的匿名函数赋值给c1
+    print(c1()); -->1
+    print(c2()); -->2
+    
+#利用闭包重写open函数
+	do
+		local old_open = io.open
+		io.open=function(filename,mode)
+					if access_ok(filename,mode) then
+						return old_open(filename,mode);
+					else
+						return nil,"access denied";
+					end
+				end
+	end
+
+#闭包是一个内部函数，它可以访问一个或者多个外部函数的外部局部变量。
+ 每次闭包的成功调用后，这些外部局部变量(upvalue)都保存他们的值。
+
+#创建闭包的代价比创建table小；处理闭包要比处理table速度快.
+
+#dofile加载一个文件并执行
+
+#loadfile加载一个文件，将其编译成中间代码并返回编译后的chunk作为一个函数，不执行代码。
+ lua中的函数定义发生在运行时的赋值而不是发生在编译时。
+	 --------------------->foo.lua<------------------------
+		function aa()
+			print("aa");
+		end
+	
+		function bb()
+			print("bb");
+		end
+ 	------------------------------------------------------
+ lua> f,v = loadfile("foo.lua");  --只是加载foo.lua文件
+	 //如果加载错误，f=nill、v=错误信息
+ lua> f();	--定义aa bb,之后aa、bb就可以使用了
+ lua> aa();	-->aa
+ lua> bb(0; -->bb
+
+ 和loadstring一样都不会抛出错误，如果发生错误他们将返回nil和编译错误信息
+ 如:
+	print(loadstring("i i"))	-->[string "i i"]:1: syntax error near 'i'
+ 
+#loadstring与loadfile类似，只不过它从一个串中读入chunk
+ lua> f = loadstring("i=i+1");
+ //f是一个函数，只有调用时才执行;
+ lua> i = 0;
+ lua> f(); print(i);  -->1
+
+#lua把每一个chunk都作为一个匿名函数处理。
+ 例如：
+	chunk "a=1";
+	loadstring("a=1");
+ 返回与其等价的函数:
+    function () 
+		a=1
+	end
+
+#require函数，和dofile类似，编译并执行程序
+ 1.require会搜索目录加载文件
+ 2.require会判断是否文件已经加载避免重复加载同一文件。
+ 例如：
+ lua> require("test");  --加载并运行test.lua中得内容
+ lua> aa();		-->aa
+
+#assert函数
+ //如果aa()执行失败，返回后面的信息，否则正常返回(print()有点问题)
+ n=assert(aa(),"aa()执行时错误 ");
+ 
+#pcall函数和error函数可以配合在lua中处理异常和错误
+ 使用pcall执行代码，如果代码返回错误，则pcall返回false和nil;否则返回true
+ 例子：
+	function foo(v)
+		status,err=pcall(function()      //相当于java中得try catch
+						   if v==1 then
+							 //数字是错误级别。
+						     error("errors",2); //相当于java中得throw exception
+						   else
+							 return "hello";
+						   end
+						 end
+					)
+
+		print(status);
+		print(err)
+   end
+
+#输出栈信息
+lua> print(debug.traceback())
+
+
+#创建协同
+ co = coroutine.create(
+	  	function()
+			print("hi");
+		end
+	  )
+ print(co) -->thread:0x80237690
+ print(type(cp)) -->thread
+
+#协同状态
+ 挂起(suspended)、运行、停止(dead)
+
+#查看协同状态
+ print(coroutine.status(co)) -->suspended
+
+#运行挂起状态的程序
+ coroutine.resume(co)	-->hi
+ print(coroutine.status(co))  -->dead  //运行后状态变为停止
+
+#将运行的程序挂起yield
+ co = coroutine.create(
+	  	function()
+			for i=1,5 do
+				print("aa");
+				//运行到这里就会挂起,当程序激活的时候会继续执行
+				coroutine.yield();
+			end 
+		end
+	  ) 
+  //运行
+  coroutine.resume(co);			-->aa
+  print(coroutine.status(co))	-->suspended
+
+######11张 76
