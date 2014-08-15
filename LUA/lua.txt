@@ -241,4 +241,264 @@ lua> print(debug.traceback())
   coroutine.resume(co);			-->aa
   print(coroutine.status(co))	-->suspended
 
-######11张 76
+#将一个表链接成字符串
+ t={"a","b","c"}
+ s=table.concat(t)	-->abc
+ s=table.concat(t,"-") -->a-b-c 
+
+#metatables可以改变table的行为 
+ lua对两个表相加时会检查两个表是否其中一个有metatable,
+ 并检查__add域，如果有则用该函数去计算结果。
+
+#获取表的metatable
+ lua>t={}
+ lua>print(getmetatable(t))    -->nil //默认没有元表
+
+ lua>t1={}
+ lua>setmetatable(t,t1)
+ lua>assert(getmetatable(t) == t1)
+
+#任何表可以是其他表的metatable，可以共享metatable,也可以是自身.
+
+#metamethod方法
+ __add、__sub __mul __div __unm(负) __pow(幂) __concat __eq __lt __le
+ __tostring 
+ 例子：
+   m = {}  //元表
+   m.__add = function()...end  //定义表+操作
+   
+   a = {}; setmetatable(a,m); //设置元表
+   b = {}; setmetatable(b,m); //设置元表
+ 此后a+b就是用m.__add函数来处理的
+
+ lua选择metamethod的原则是按顺序找，最后没找到则报错
+  
+#metafile _metatable,这个属性是设置在元表上的
+ 如果对metatable设置了__metatable值,getmetatable将返回赋给这个的值，
+ 调用setmetatable会出错
+ 例如:
+	m={};
+	t={};
+	
+	setmetatable(t,m);
+	print(getmetatable(t));		-->table:0x808384
+
+	m.__metatable="haha";
+	print(getmetatable(t));		-->haha
+	setmetatable(t,{});			-->报错	
+  
+#__index
+ 当访问表中的一个不存在的域的时候，lua解释器去查找metatable中__index是否存在，
+ 如果不存在返回nil；否则，则按__index指定的方法返回结果
+ 例如:
+	m={};
+	t={"a"};
+	setmetatable(t,m);
+	m.__index=function (table,key) return "bb" end  //table是当前table,key是调用的域
+
+	print(t.a);		-->a
+	print(t.b);		-->bb
+
+#__index不需要非是一个函数，也可以是一个表。当是一个表的时候,将在这个表中查看是否
+ 有缺少的域。
+ 例如：
+	m.__index={"bb"};
+
+#__newindex用来对表更新；当给表的一个不存在的域赋值时，就会调用这个函数
+
+#rawget(table,key)和rawset(table,key,value)
+ 这两个函数可以绕过__index和__newindex等metamethod方法
+
+#lua的所有全局变量都存在_G表中
+ for n in pairs(_G) do
+	print(n)
+ end
+
+#改变一个函数的环境setfenv
+ a=1;
+ setfenv(1,{}); //改变当前函数的环境变量
+ print(a);  -->报错，因为当前函数的环境变量变为空,里面没有print函数
+
+#weak 虚表
+ 表的weak性有他的元表(metatable)的__mode域来指定，__mode的值是字符串
+ 例如：
+	m={};
+	t={};
+	setmetatable(t,m);
+	m.__mode="k";   //t表的keys时weak的，可以被垃圾收集掉
+    m.__mode="v";	//valus是weak的
+    m.__mode="kv";	//keys、values都是weak的
+  注意：只有对象(表|函数)才可以从一个weak table中被收集。字符、数字等都不会
+  所以如果想key被收集应该这样:
+	key={};     //key
+	t={};		
+	t[key] = 1; //赋值,这样这个key就是可以被收集掉的
+
+#(#)返回一个表的最后索引
+例如：
+	t={12,432,32}
+	print(#t);		-->3
+
+#插入删除元素
+ t={10,28};
+ table.insert(t,20);  //插入一个元素t={10,28,20}
+ table.insert(t,1,25);//指定位置插入一个元素t={15,10,28,20} 
+
+ table.remove(t,1);   //删除第一个元素 t={10,28,20}
+
+#ipairs、pairs遍历数组.前者使用key的顺序1、2...，后者用表的自然存储顺序
+
+#字符串函数	
+ string.len("abc");   //返回字符串的长度,3
+ string.rep("abc",2); //将字符串重复两次返回,abcabc
+ string.lower("ABC"); //大写转小写 abc
+ string.upper("abc");
+ string.sub("abc",1,2); //截取字符串
+ string.format("%d=%d",4,5);//格式和C语言的print一样
+
+#查找字符串string.find(str,substr,index)  index是开始搜索位置
+ i,j=stringfind("hello world","hello"); 
+ print(i,j); -->1,5 //查找成功,返回子串的开始和结束索引;否则返回nil
+
+#全局字符串替换 string.gsub(str,arg1,arg2,scope) scope是要替换的个数
+ s=string.gsub("Lua is cute","cute","great");
+ print(s);	-->Lua is great
+
+ s=string.gsub("aa aa aa","a","b",2);
+ print(s);	-->bb aa aa
+ 
+#全局字符串查找string.gfind
+
+
+#模式
+ .		任意字符
+ %a		字母
+ %c		控制字符
+ %d		数字
+ %l		小写字母
+ %p		标点字符
+ %s		空白符
+ %u		大写字母
+ %w		字母和数字
+ %x		十六进制数字
+ %z		代表0的字符
+
+#捕获子串
+ date="17/7/1990";
+ i,j,d,m,y=string.find(date,"(%d+)/(%d+)/(%d+)");
+ print(i,j,d,m,y);	-->1 9	17	7  1990
+
+#对子串的引用
+ s="\command{some text}";
+ s=string.gsub(s,"\\(%a+){(.-)}","<%1>%2</%1>");
+ print(s);		--><command>some text</command>
+
+
+#I/O库的所有函数都放在表io中
+ print(io);  -->table:0x9d9a0a8a
+
+#简单I/O操作在标准输入(stdin)和标准输出(stdout)
+ 例如：
+	s=io.read(); //之后要求从键盘输入数据，比如abc
+	print(s);	-->
+	
+	io.write("abc\n"); //向屏幕输出abc
+ 可以用io.input和io.output改变当前文件
+ 例如：
+	------------------>foo.lua<-----------------------
+		hello
+		nihao
+		haha
+	--------------------------------------------------
+ 	io.input("foo.lua"); //之后所有输入都来自该文件	
+	s=io.read();
+	print(s);	-->hello
+	s=io.read();	
+	print(s);	-->nihao
+	
+	//读取整个文件
+	io.input("foo.lua");
+	s=io.read("*all");
+	print(s);	-->hello
+				   nihao
+				   haha
+    //读取下一行
+	io.input("foo.lua");
+	s=io.read("*line"); 
+	print(s);	-->hello
+	
+	//从一行中转换出一个数值，如果这行有数字的话
+    s=io.read("*number");
+	
+	//读取num个字符
+	s=io.read("*8");
+    
+#完全模式I/O，可以持有一个文件句柄，类似C语言中的FILE*
+ filename:文件名
+ model:打开类型;r(读) w(写) a(附加) b(二进制)
+ return:正确打开，返回文件句柄(file (0x7fff7687d598))
+		错误打开，返回nil	错误信息
+ io.open(filename,model); 
+ 例如：
+	f = io.open("/etc/passwd","r");
+	print(f);	-->file (0x7fff7687d598)
+
+#对完全I/O模式的读写要用冒号
+ //读整个文件
+ f = io.open("foo.lua");
+ t = t:read("*all");
+ f:close();	//关闭文件  
+
+#发送错误信息到标准错误输出
+ io.stderr:write(message);
+
+#读取一个文件的一段并加上一行，这样可以避免切割文件中的行
+ text,rest = f:read(30,"*line");  //读取30个字符加一行
+
+#获取某个日期的时钟值
+ print(os.time({year=1970,month=1,day=1})); -->12600
+
+#创建一个时间表
+ date = os.date("*t",12600);
+ //date是一个时间表{year=1970,month=1,day=1,...}
+
+#格式化时间
+ date = os.date(model,[时钟值]);
+ print(os.date("%Y%m%d")); -->20140820
+
+#获取系统环境变量
+ print(os.getenv("HOME"));  -->/home/lua
+
+#执行系统命令
+ os.execute("mkdir c");  //创建一个目录c
+
+#debug库,获取函数的一些信息
+ s = debug.getinfo(函数);
+ print(s.source);   //表明函数被定义的地方
+ print(s.short_src); //source的简短版本
+ print(s.linedefined);//函数被定义之处的行号
+ print(s.what);// 表明是C函数、Lua函数、Lua的主chunk
+ s.name
+ s.namewhat
+ s.nups  //函数的upvalues(外部局部变量)的个数
+ s.func  //函数本身
+
+#以数字的方式调用debug.getinfo(n)
+ 返回在n级栈的活动函数的信息数据。
+ n=0 ,表示C函数getinfo本身
+ n=1 ,表示正在调用的函数的信息
+
+#Hooks,注册一个函数，用来在程序运行中某一事件到达时被调用。
+ debug.sethook(foo,"call"):当Lua调用一个函数的时候，调用foo函数
+ debug.sethook(foo,"return"):当一个函数返回的时候调用foo函数
+ debug.sethook(foo,"line"): 当lua开始执行代码的新行的时候
+ debug.sethook(foo,"count",2):执行两个指令后执行foo函数//?不确定这么用
+ 
+#关掉hooks
+ debug.sethook();
+
+
+
+
+
+
