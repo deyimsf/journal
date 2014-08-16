@@ -497,6 +497,114 @@ lua> print(debug.traceback())
 #关掉hooks
  debug.sethook();
 
+#在C中解析lua文件 以下例子没验证过
+ -------------------->lua文件内容<-----------
+ 	width = 200;
+	height = 300;
+ --------------------------------------------
+ -------------------->C函数<-----------------
+ #include <lua.h>
+ #include <laulib.h>
+ #include <lualib.h>
+
+ void load(char *filename,int *width,int *height){
+ 	lua_State *L = lua_open(); //具体语义以后查文档
+ 	luaopen_base(L); //加载基本库
+	luaopen_io(L);	//加载io库
+	luaopen_string(L);	
+	luaopen_math(L);
+
+	if(luaL_loadfile(L,filename) || lua_pcall(L,0,0,0)){
+		//如果加载文件失败，或者调用失败，则做点什么
+	}	
+
+	//将加载后的文件中得全局变量入栈
+	lua_getglobal(L,"width");
+	lua_getglobal(L,"height");
+
+	//检查入栈的参数是不是数字
+	if(!lua_isnumber(L,-2)){ //检查width变量
+		//不是数字tosomething
+	}
+	if(!lua_isnumber(L,-1)){ //检查height
+		//
+	}	
+
+	//从栈中取出数字供C使用
+	*width = (int)lua_tonumber(L,-2);
+	*height = (int)lua_tonumber(L,-1);
+	
+	//关闭栈
+	lua_close(L);
+ }
+ ----------------------------------------------
+
+#在C中调用lua函数
+ 1.将被调用的函数入栈
+ 2.一次将所有参数入栈
+ 3.使用lua_pcall调用函数
+ 4.从战中获取函数返回的结果
+
+ --------------->lua函数<-----------
+	function f(x,y)
+		return x+y;
+	end
+ -----------------------------------
+ --------------->C函数<-------------
+	double f(double x,double y){
+		double z;
+		
+		//将被调用的函数f入栈
+ 		lua_getglobal(L,"f");
+		//将第一个参数入栈
+		lua_pushnumber(L,x);
+		//将第二个参数入展
+		lua_pushnumber(L,y);
+		
+		//调用函数
+		if(lua_pcall(L,2,1,0) != 0){
+			//调用函数出错
+		}
+	
+	    //检查返回到栈顶得数据是不是数字
+		if(!lua_isnumber(L,-1)){
+			//函数f没有正确返回一个数字
+		}	
+	
+		//拿到栈顶的数字
+		z = lua_tonumber(L,-1);
+		lua_pop(L,1);	//弹出栈顶返回的值
+	
+		return z;
+	}
+
+#lua_pcall可以指定参数的个数和返回结果的个数。第四个参数指定一个
+ 错误处理函数,0代表没有错误函数。lua_pcall执行完后，在将结果入栈
+ 之前，会将站内的所有数据移除掉。如果有多个结果，第一个结果被第
+ 一个入栈，所以如果有两个结果，那么第二个结果在栈中得位置为-2。
+ 如果lua_pcall运行时出现错误，lua_pcall会返回一个非0的结果。在将
+ 错误信息入栈之前，如果有错误函数，那么会先调用错误函数.
+ 注意，如果要指定错误函数，则应该在其他参数入栈之前将错误函数入栈
+ 然后将其在栈中的索引给lua_pcall的第四个参数。
+
+
+#lua调用C函数，需要先注册
+ ----------------------->C函数<--------------------
+	static int l_sin(lus_State *L){ //lua调用该函数时会将参数放入栈中
+
+		double d = lua_tonumber(L,1); //从栈中获取参数
+		lua_pushnumber(L,sin(d));	//结果放入栈中,lua会从栈中拿结果(个人猜测有多少拿多少)
+		
+		return 1;
+	}
+ ---------------------------------------------------
+ 
+ -------------------->C代码<------------------------
+	//将C函数注册到lua中,其中C函数必须是这种格式 typedef int(*lua_CFunction)(lua_State *L);
+	lua_pushfunction(L,l_sin);
+	lua_setglobal(L,"mysin"); //C函数在lua中得名字
+ ----------------------------------------------------
+
 
 
 
