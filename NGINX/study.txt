@@ -1,4 +1,4 @@
-#nginx拦截错误代码
+#nginx拦截错误代码,默认是off
 proxy_intercept_errors on;
 
 ##安装Nginx 

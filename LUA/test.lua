@@ -1,3 +1,10 @@
-print("Hello ");
-print(arg[-1])
-print(arg[1]);
+123abd890fdsa
+456abf
+function aa()
+	print("aa");
+end
+
+function bb()
+	print("bb");
+end
+

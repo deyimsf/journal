@@ -328,7 +328,7 @@ $ new_var=${old_var:-content}
  set hlsearch: 高亮显示查找到的数据
 
 
-#vim多窗口功能 
+#vim多窗口功能 svp
 :sp[filename] 
 [ctrl]+w+j或[ctrl]+w+[向下箭头]  //光标移动到下方的窗口 
 [ctrl]+w+k或[ctrl]+w+[向上箭头]  //光标移动到上方的窗口 
@@ -535,6 +535,9 @@ $ ln -s 源文件[/export/start.sh]  目标文件[start.sh]
 $ netstat -anep | grep 8057 
 输出结果类似这样 tcp 0  0 :::8057   :::*   LISTEN   0  886914  2608/java 
 其中数字2608就是进程 
+
+#查看指定端口被那个进程占用
+$ lsof -i:8080
 
 #解压war包 
 $jar -xvf gaem.war 
