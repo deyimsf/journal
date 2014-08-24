@@ -35,6 +35,7 @@
  print(type(print));				-->function
  print(type(true));					-->boolean 
  print(type(a));					-->nil
+ print(type({}));					-->table
 
 #可以用[[]]表示字符串，里面的内容不用转义
  lua> page=[[<html> </htm> "a"]] 

@@ -534,6 +534,8 @@ C语言编译器gcc
 
 反汇编器objdump可以将目标代码,反汇编成汇编格式的代码
  objdump -d dest.o
+mac用otool工具
+ otool -tV dest.o
 
 CPU八个常用32位寄存器
  EAX : extend accumulator   累加寄存器
