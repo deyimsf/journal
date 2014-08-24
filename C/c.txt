@@ -531,6 +531,12 @@ C语言编译器gcc
  -o  指定输出文件名，默认是a.out
  -m32 32位编译
  -m64 64位编译
+ -std 指定c的版本
+	例如：
+	-std=gnu89			GNU 89
+	-ansi,-std=c89		ANSI,ISO C90
+	-std=c99			ISO	C99
+	-std=gnu99			GNU 99
 
 反汇编器objdump可以将目标代码,反汇编成汇编格式的代码
  objdump -d dest.o
