@@ -40,7 +40,7 @@ Tcp建立连接  mss:Maximum Segement Size  MTU:Maxmum Transmission Unit(链路�
 
 Tcp终止连接
                            |         FIN          |
- 主动关闭 FIN_WAIT_1       |--------------------->|     CLOSE_WAIT 被动关闭
+ 主动关闭   FIN_WAIT_1     |--------------------->|     CLOSE_WAIT 被动关闭
 		       			   |	     ACK          |
  	  		FIN_WAIT_2     |<---------------------|          
            				   |	     FIN          |
@@ -48,6 +48,14 @@ Tcp终止连接
            		   		   |	     ACK          |
 			   			   |--------------------->|      CLOSED
                            |                      |
+			NOTE:对于被动关闭的一端是否发送FIN(CLOSE_WAIT-->LAST_ACK),取决于应用
+				 程序是否调用close()方法，如果不调用则被动关闭端保持CLOSE_WAIT,
+				 对端保持FIN_WAIT2状态。区别在于主动关闭一端的应用程序已经关闭，
+				 剩下的工作已经全权委托操作系统，而被动关闭端的应用程序没有关闭
+				 该链接(socket),或者应用程序异常终止了,没有再向对端发送任何数据.
+			所以根据以上结论，当系统出现大量CLOSE_WAIT时,肯定是应用程序没有调用
+			close()方法。
+
 套接字复位(RST,异常关闭)
  RST报文段不会导致另一端产生任何响应，另一端根本不进行确认。
  收到RST的一方将终止该连接，并通知应用层连接复位。
