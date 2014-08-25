@@ -1,3 +1,34 @@
+#使用gdb调试的程序需要在编译的时候加上 gcc -c参数
+ $ gcc -g test.c aa.c
+
+#启动gdb
+ $ gdb a.out
+
+#查看代码
+ (gdb) l	//该命令可以查看源代码
+ (gdb) list aa.c:1  //从aa.c这个文件的第一行开始看
+
+#打断点
+ (gdb) break 行号|地址
+
+#开始运行程序
+ (gdb) run 	//这个时候会程序会停止在断点处
+
+#打印变量
+ (gdb) print i  //i是程序中得变量
+
+#下一步
+ (gdb) n|next	//执行下一句
+ (gdb) s|step	//执行下一句，如果下一句是个方法则进入,前提是该方法有源代码
+
+#跳过断点继续执行
+ (gdb) c	
+
+#退出gdb
+ (gdb) q
+
+
+
 Command class: aliases
 
 ni -- Step one instruction
