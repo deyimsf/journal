@@ -47,8 +47,22 @@ MySql安装
  >update user set user='masf' where user='';
  >flush privileges;
 
+修改用户密码
+ >update user set password = password("your password") where user='root';
+ >flush privileges; 
+ 
+root密码丢失解决办法
+ $ cd /usr/bin
+ $ mysqld_safe	--skip-grant-tables
+ 
+ $ mysql
+ > use mysql
+ > update user set password=password("you password") where user='root';
+ > flush privileges;
 
- 
- 
+ NOTE:在已安全模式启动mysql前先关闭mysql(/etc/init.d/mysql stop)。
+	  密码修改完后再重启mysql。
+
+
 
 
