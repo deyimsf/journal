@@ -1,5 +1,5 @@
 #从本地导入到代码服务器
- $svn import /My/workspace/eclipse/heron http://svn1.360buy-develop.com/buy/CatalogSystem/branches/heron
+ $svn import /My/workspace/eclipse/heron http://svn.com/branches/heron
 
 #从服务端下载代码
  $svn checkout http://mycode --username=masf --password=123 /My/workspace/eclipse/heron
@@ -13,4 +13,15 @@
  $ svn update
 
 #其它命令帮助
- $svn help <command>
+ $ svn help <command>
+
+#查看版本库列表
+ $ svn list http://svn.com/branches/wares
+
+#从版本库删除一个文件或目录
+ $ svn delete -m "日志信息" http://svn.com/branches/wares/.project
+
+
+
+
+
