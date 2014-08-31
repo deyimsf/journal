@@ -1,0 +1,55 @@
+digraph pool{
+	rankdir="BT";
+	node[shape="record",color="skyblue",width=2]
+
+	//Interface接口
+	ObjectPool[label="{ObjectPool\n(interface)||}"]		
+	PoolableObjectFactory[label="{PoolableObjectFactory\n(interface)||}"];
+	KeyedObjectPool[label="{KeyedObjectPool\n(interface)||}"];	
+	KeyedPoolableObjectFactory[label="{KeyedPoolableObjectFactory\n(interface)||}"];
+	//Deprecated
+	ObjectPoolFactory[label="{ObjectPoolFactory\n(interface/deprecated 2.0)||}"];
+	KeyedObjectPoolFactory[label="{KeyedObjectPoolFactory\n(interface/deprecated 2.0)||}"];
+	node[color="black"];
+	//Class类	
+	//Object
+	BaseObjectPool[label="{BaseObjectPool\n(abstract)||}"];
+    GenericObjectPool[label="{GenericObjectPool\n||}"];	
+	SoftReferenceObjectPool[label="{SoftReferenceObjectPool\n||}"];
+	StackObjectPool[label="{StackObjectPool\n||}"]
+	BasePoolableObjectFactory[label="{BasePoolableObjectFactory\n(abstract)||}"];
+	MyPoolableObjectFactory[label="{MyPoolableObjectFactory\n(自定义类)||}"]
+	//key
+	BaseKeyedObjectPool[label="{BaseKeyedObjectPool\n(abstract)||}"];
+	GenericKeyedObjectPool[label="{GenericKeyObjectPool\n||}"];
+	StackKeyedObjectPool[label="{StackKeyObjectPool\n||}"];
+	BaseKeyedPoolableObjectFactory[label="{BaseKeyedPoolableObjectFactory||}"];
+	MyKeyedPoolableObjectFactory[label="{MyKeyedPoolableObjectFactory\n(自定义类)||}"];	
+
+	//对象池的关系
+	//Object
+	BaseObjectPool->ObjectPool[style="dotted"];
+	GenericObjectPool->ObjectPool[style="dotted"];
+	SoftReferenceObjectPool->ObjectPool[style="dotted"];
+	StackObjectPool->ObjectPool[style="dotted"];	
+	GenericObjectPool->BaseObjectPool;
+	SoftReferenceObjectPool->BaseObjectPool;
+	StackObjectPool->BaseObjectPool;
+	//key
+	BaseKeyedObjectPool->KeyedObjectPool[style="dotted"];
+	GenericKeyedObjectPool->KeyedObjectPool[style="dotted"];
+	StackKeyedObjectPool->KeyedObjectPool[style="dotted"];	
+	GenericKeyedObjectPool->BaseKeyedObjectPool;
+	StackKeyedObjectPool->BaseKeyedObjectPool;
+
+	//池对象的关系
+	//Object
+	BasePoolableObjectFactory->PoolableObjectFactory[style="dotted"];
+	MyPoolableObjectFactory->BasePoolableObjectFactory;
+	//key
+	BaseKeyedPoolableObjectFactory->KeyedPoolableObjectFactory[style="dotted"];
+	MyKeyedPoolableObjectFactory->BaseKeyedPoolableObjectFactory;
+
+	
+}
+
