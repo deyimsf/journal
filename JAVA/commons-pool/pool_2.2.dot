@@ -1,0 +1,62 @@
+digraph pool{
+	rankdir="BT";
+	node[shape="record",color="skyblue",width=2]
+
+	//Interface接口
+	ObjectPool[label="{ObjectPool\n(interface)||}"]		
+	PooledObjectFactory[label="{PooledObjectFactory\n(interface)||}"];
+	PooledObject[label="{PooledObject\n(interface)\n||}"];
+	KeyedObjectPool[label="{KeyedObjectPool\n(interface)||}"];	
+	KeyedPooledObjectFactory[label="{KeyedPooledObjectFactory\n(interface)||}"];
+	SwallowedExceptionListener[label="{SwallowedExceptionListener\n(interface)||}"];
+	TrackedUse[label="{TrackedUse\n(interface)||}"];
+	UsageTracking[label="{UasageTracking\n(interface)\n||}"];
+	GenericObjectPoolMXBean[label="{GenericObjectPoolMXBean\n(interface)||}"];
+	GenericKeyedObjectPoolMXBean[label="{GenericKeyedObjectPoolMXBean\n(interface)||}"];
+
+	node[color="black"];
+	//Class类	
+	//Object
+	BaseObjectPool[label="{BaseObjectPool\n(abstract)||}"];
+    GenericObjectPool[label="{GenericObjectPool\n||}"];	
+	SoftReferenceObjectPool[label="{SoftReferenceObjectPool\n||}"];
+	ProxiedObjectPool[label="{ProxiedObjectPool\n||}"]
+	BasePooledObjectFactory[label="{BasePooledObjectFactory\n||}"];
+	MyPooledObjectFactory[label="{MyPooledObjectFactory\n(自定义类)||}"]
+
+	//key
+	GenericKeyedObjectPool[label="{GenericKeyedObjectPool\n||}"];
+	ProxiedKeyedObjectPool[label="{ProxiedKeyedObjectPool\n||}"];
+	BaseKeyedPooledObjectFactory[label="{BaseKeyedPooledObjectFactory\n||}"];
+	MyKeyedPooledObjectFactory[label="{MyKeyedPooledObjectFactory\n||}"];
+	
+	//pooledObject
+	DefaultPooledObject[label="{DefaultPooledObject\n||}"];
+	PooledSoftReference[label="{PooledSoftReference\n||}"];
+	PooledSoftReference[label="{PooledSoftReference\n||}"];
+		
+	//#########对象池的关系######
+	//Object
+	BaseObjectPool->ObjectPool[style="dotted"];
+	SoftReferenceObjectPool->BaseObjectPool;	
+	GenericObjectPool->ObjectPool[style="dotted"];
+	GenericObjectPool->GenericObjectPoolMXBean[style="dotted"];
+	GenericObjectPool->UsageTracking[style="dotted"];	
+	GenericObjectPool->ObjectPool[style="dotted"];
+	ProxiedObjectPool->ObjectPool[style="dotted"];
+	BasePooledObjectFactory->PooledObjectFactory[style="dotted"];	
+	MyPooledObjectFactory->BasePooledObjectFactory;	
+
+	//key
+	GenericKeyedObjectPool->KeyedObjectPool[style="dotted"];
+	ProxiedKeyedObjectPool->KeyedObjectPool[style="dotted"];
+	GenericKeyedObjectPool->GenericKeyedObjectPoolMXBean[style="dotted"];
+	BaseKeyedPooledObjectFactory->KeyedPooledObjectFactory[style="dotted"];
+	MyKeyedPooledObjectFactory->BaseKeyedPooledObjectFactory;	
+
+	//pooledObject
+	DefaultPooledObject->PooledObject[style="dotted"];
+	PooledSoftReference->PooledObject[style="dotted"];
+	PooledSoftReference->DefaultPooledObject;
+}
+

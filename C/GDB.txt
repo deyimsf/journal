@@ -1,3 +1,8 @@
+
+#gdb安装on mac
+ ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+ brew install https://raw.github.com/Homebrew/homebrew-dupes/master/gdb.rb
+
 #使用gdb调试的程序需要在编译的时候加上 gcc -c参数
  $ gcc -g test.c aa.c
  //mac上需要先gcc -g -c test.c aa.c生成目标文件
