@@ -57,6 +57,7 @@ digraph redis{
 	processCommand[label="redis.c/processCommand"];
 	call[label="redis.c/call"];
 	propagate[label="redis.c/propagate"];
+	feedAppendOnlyFile[label="aof.c/feedAppendOnlyFile"];
 	replicationFeedSlaves[label="replication.c/replicationFeedSlaves"];
 	addReplyBulk[label="networking.c/addReplyBulk"];
 	prepareClientToWriter[label="prepareClientToWriter"];
@@ -65,6 +66,7 @@ digraph redis{
 	processInputBuffer->processCommand[label="执行命令"];
 	processCommand->call[];
 	call->propagate[label="传播命令到从节点\n和AOF文件"];		
+	propagate->feedAppendOnlyFile[label="将命令放入AOF文件\n(缓存server.aof_buf)中"];
 	propagate->replicationFeedSlaves[label="传播到从节点"];
 	replicationFeedSlaves->addReplyBulk;
 	//addReplyBulk->addReplyLen;
