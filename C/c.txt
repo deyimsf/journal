@@ -1356,6 +1356,7 @@ IO多路复用select的例子:
   #include <string.h>
   #include <poll.h>
   #include <unistd.h>
+  #include <fcntl.h>
 
   int main(int argc,char *argv[]){
 	//校验输入参数
@@ -1366,7 +1367,8 @@ IO多路复用select的例子:
 	char *ip = argv[1];
 	int port = atoi(argv[2]);
 	int socketfd = socket(AF_INET,SOCK_STREAM,0);
-	
+	//- int flag = fcntl(socketfd,F_SETFL,O_NONBLOCK); //将文件设置为非阻塞方式	
+
 	struct in_addr inaddr;
 	int ret = inet_aton(ip,&inaddr); //ip地址
 	if(ret == -1){
@@ -1381,8 +1383,13 @@ IO多路复用select的例子:
 	
 	//int connect(int sockfd,struct sockaddr *serv_ddr,int addrlen)
 	ret = connect(socketfd,(struct sockaddr *)&serveraddr,sizeof(serveraddr));
+	//- 如果将socketfd设置为了非阻塞方式,并且链接没准备好
+	//- 那么connect的返回值会是-1
 	if(ret == -1){
-		perror("connect");
+		//- 如果socketfd为非阻塞方式并且打印Operation now in progress
+		//- 那么说明连接正在进行，还没准备好
+		//- 具体返回-1的原因可根据其他方式判断
+		perror("connect"); 
 		return 1;
 	}
 
@@ -1416,6 +1423,9 @@ IO多路复用select的例子:
 
 		//读socket数据
 		if(fds[1].revents & POLLIN){
+			//- 走到这里说明fd数据已经准备好,可以读
+			//- 1.如果是fd是阻塞方式,那么将准备好的数据读完后再读一次则该方法会阻塞
+			//- 2.如果fd是非阻塞方式,准备好的数据读完后再读一次则该方法不会阻塞
 			len = read(socketfd,buf,buffer);
 			if(len < 0){
 				perror("read(socketfd)");
