@@ -1,0 +1,11 @@
+#tomcat在conf/Catalina/localhost目录下配置项目路径,启动时会
+ 直接根据配置去加载项目
+ 例子：
+	在conf/Catlina/localhost下建一个xml文件(名字无所谓),比如
+    =====================demo.xml=========================
+		<?xml version="1.0" encoding="UTF-8"?>
+		<Context path="/" docBase="/export/aa.cc.com">
+		</Context>
+	======================================================
+ 这时候访问localhost:8080/ 就会访问到aa.cc.com这个项目
+
