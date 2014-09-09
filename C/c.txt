@@ -363,6 +363,7 @@ UNIX系统接口
  //fopen返回的是一个文件指针(FILE *fp)
  //name 要打开的文件名
  //flags 打开方式,int类型; O_RDONLY 只读方式, O_WRONLY 只写方式, O_RDWR 读写方式
+		 O_DIRECT 绕过pagecache,直接将数据写入到磁盘
  //perms
  //fd 返回值，如果发生错误，返回-1
  int fd = open(char *name, int flags, int perms);
@@ -1440,4 +1441,31 @@ IO多路复用select的例子:
 	}
  }      
 
-  
+#对mmap的理解
+ 三个空间：
+	用户空间
+	内核空间
+	磁盘空间
+   正常情况我们读写一个文件先用open打开该文件，然后调用read,
+ 当A进程第一调用read方法时,内核会触发缺页处理,将文件从磁盘中
+ 按物理内存page大小映射到内核。如果我们read只一个字节,那么read函数
+ 会将一个字节从内核的pagecache中复制到进程A空间。这个时候如果进程B
+ 也是第一次读该文件,那么会和进程A做同样的操作,这时内核就会有两份该
+ 文件的cache.
+   mmap的的方式是将内核的pagecache映射给用户进程，让用户进程直接对
+ cache部分可见,这样就省掉了read/write在cache和进程的内存相互复制数据。
+ 也就是说mmap的方式仍然用到了OS的cache机制。这种方式在两个进程打开同
+ 一个文件的时候，内核仍然会为每个进程各缓存一份数据.
+   mmap的共享存储映射,当用mmap加上MAP_SHARED配置来映射一个fd时,多个
+ 进程会共享同一份内核cache,这种方式可以轻松解决进程间通信,因为当不同
+ 进程调用mmap来映射相同fd时,返回的地址指向的是同一个内核地址.
+   
+ 总结：
+	mmap不过是让进程对内核cache部分直接可见,至于cache如何跟磁盘沟通就是
+   操作系统的问题了。如果不用这块映射了可以用munmap函数,至于什么时候写
+   磁盘,还是OS管。但可以调用msync函数将这个映射强制写入到磁盘。
+   
+#对open文件时的O_DIRECT的理解
+   和mmap的方式不同,这种方式是直接抛弃OS的cache,也就是说在read/write时是
+ 直接操作磁盘,在read/write时需要是文件系统逻辑块大小的倍数,比如4k.
+   ps:数据库实现应该用的是这个。
