@@ -43,6 +43,11 @@ chown:改变文件/目录所有者
 //也可以同时更改组 
 [masf@www~]$ chown -R masf:users folder 
 
+#数字权限代表的意思
+ 4:读 
+ 2:写
+ 1:执行
+
 chmod改变文件的权限 
 [masf@www~]$ chmod -R 777 folder 
 也可以用符号来改变权限u:user g:group o:others 
