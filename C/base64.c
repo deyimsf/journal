@@ -5,8 +5,8 @@ static char pem_array[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K
 
 static char getCharIndex(unsigned char);	
 
-int main(int argv,char *argc){
-	char *str = "严";
+int main(int argv,char **argc){
+	char *str = "1234567890";
 	int length = 0;
 	char *p = str;
 	while(*p++ != '\0'){
@@ -22,7 +22,7 @@ int main(int argv,char *argc){
 		 char one = str[index];
 		 char two = str[index+1];
 		 char three = str[index+2];
-		 printf("=%d=",one >> 2 & 0xFF);		
+		// printf("=%d=",one >> 2 & 0xFF);		
 		//0x3F 0011 1111
 		//0x30 0011 0000
 		//0x0F 0000 1111
