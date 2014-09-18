@@ -1,18 +1,142 @@
-db.c/propagateExpire
-负责删除过期的键，并且向所有的从传播删除操作，
-函数aeCreateTimeEvent(server.el, 1, serverCron, NULL, NULL)
-会为serverCron创建时间事件，最终serverCron会调用progageteExpire
+###########redis状态参数代表的意思#########
+####该信息有redis.c/genRedisInfoString()方法负责输出
+//Redis 服务器版本
+redis_version:2.8.13
+redis_git_sha1:00000000
+redis_git_dirty:0
+redis_build_id:b73c2fb5048f3cc6
+redis_mode:standalone
+os:Darwin 13.3.0 x86_64
+arch_bits:64 	//架构类型(32 or 64 depending on sizeof(long))
+multiplexing_api:kqueue //IO多路复用方式(epoll是linux)
+gcc_version:4.2.1
+//进程id
+process_id:521
+//服务器的唯一标示符
+run_id:ceb328226963484b956e0565512364e01b826ee0
+//本实例监听的端口号
+tcp_port:6379
+//从启动到现在的时间,单位秒
+uptime_in_seconds:1151
+//从启动到现在的时间,单位天
+uptime_in_days:0
+//serverCron()函数没秒调用的次数
+hz:10
+//时钟
+lru_clock:1760782 //Clock for LRU eviction
+//启动实例的时配置文件路径
+config_file:/My/redis-2.8.13/./redis.conf 
 
-读取、删除、写入等操作会调用db.c/expireIfNeeded
-expireIfNeeded函数会调用propagateExpire来保证先删除过期键，在进行后续操作。
+# Clients
+//连接本实例的客户端个数,不包括从实例
+connected_clients:2  //listLength(server.clients)-listLength(server.slaves)
+//客户端最大(所有客户端中最大)要回复链表的长度
+client_longest_output_list:0 //c->reply,reply是个list
+//客户端最大(所有客户端中最大)查询缓冲区大小 
+client_biggest_input_buf:0   //c->querybuf,请求的内容都会先放到这里
+//阻塞的客户端个数
+blocked_clients:0 //Number of clients blocked by lists
 
 
-db.c/setKey—>lookupKeyWrite—>expireIfNeed—>propagateExpire
+# Memory
+//由redis分配器分配的内存,不包括从服务器的输出缓冲区内存和aof缓冲区内存
+used_memory:2087712
+//同上,单位不同而已
+used_memory_human:1.99M
+//从操作系统的角度,redis已分配的内存.(跟ps,top命令输出一致)
+used_memory_rss:1781760
+//使用内存峰值
+used_memory_peak:2104288
+used_memory_peak_human:2.01M
+//lua引擎使用的内存大小
+used_memory_lua:33792
+//used_memory_rss和used_memory之间的比率,一般大于1
+mem_fragmentation_ratio:0.85
+//
+mem_allocator:libc
 
+# Persistence
+//如果是真则表示正从aof或rdb读数据
+loading:0
+//执行写操作的个数,每次save/bgsave都会对其清零
+rdb_changes_since_last_save:0
+//执行bgsave命令的子进程id
+rdb_bgsave_in_progress:0
+//最后一次完成save的时间
+rdb_last_save_time:1411046531
+//最后一次执行save的状态ok/err
+rdb_last_bgsave_status:ok
+//最近一次执行bgsave耗时
+rdb_last_bgsave_time_sec:0
+//当前bgsave命令已经用了多长时间
+rdb_current_bgsave_time_sec:-1
+//是否开启aof
+aof_enabled:0
+//aof是否在重写
+aof_rewrite_in_progress:0
+//Rewrite once BGSAVE terminates
+aof_rewrite_scheduled:0
+//最后一次aof重写用了多长时间
+aof_last_rewrite_time_sec:-1
+//当前aof重写用了多长时间
+aof_current_rewrite_time_sec:-1
+//最后一次执行bgrewrite结果
+aof_last_bgrewrite_status:ok
 
+aof_last_write_status:ok
 
+# Stats
+//服务器总共收到的请求链接的数量
+total_connections_received:6
+//总共处理命令的个数
+total_commands_processed:16
+//计算服务器最近一秒执行命令数的平均值
+instantaneous_ops_per_sec:0
+//服务器因为客户端数量过多而拒绝客户端连接的次数
+rejected_connections:0
+//执行完整重同步的次数
+sync_full:4
+//执行部分重同步的次数
+sync_partial_ok:0
+//不能执行部分重同步的次数
+sync_partial_err:0
+//过期键的数量
+expired_keys:0
+//因为内存过大,被回收的键的数量
+evicted_keys:0
+//键命中次数
+keyspace_hits:0
+//未命中次数
+keyspace_misses:0
+//dictSize(server.pubsub_channels)
+pubsub_channels:0
+//listLength(server.pubsub_patterns)
+pubsub_patterns:0
+//最后一次执行fork时消耗的时间
+latest_fork_usec:281
 
-当所有的命令执行完后会调用addReply***()函数用来回复命令，改组命令并不会直接回复
-而是为每个调用该命令的客户端注册一个写事件,这个写事件会关联一个命令回复的写处理器
-prepareClientToWrite(c)—>aeCreateFileEvent(server.el, c->fd, AE_WRITABLE,sendReplyToClient, c)
-负责传送命令回复的写处理器networking.c/sendReplyToClient会一直循环知道回复缓冲区为空或者指定条件满足.
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=127.0.0.1,port=0,state=online,offset=0,lag=660
+//偏移量,没接收一个设置命令该值都会增加
+//从服务器在发送psync时会带着自己的offset
+//两者相比较则可以判断从哪里开始部分重同步
+master_repl_offset:1373
+//是否启动复制积压缓存
+repl_backlog_active:1
+//复制积压缓存大小
+repl_backlog_size:1048576
+//复制积压缓存中可被使用的开始偏移量
+repl_backlog_first_byte_offset:2
+//backlog 中数据长度
+repl_backlog_histlen:1372
+
+# CPU
+used_cpu_sys:0.58
+used_cpu_user:0.25
+used_cpu_sys_children:0.00
+used_cpu_user_children:0.00
+
+# Keyspace
+db0:keys=2,expires=0,avg_ttl=0
