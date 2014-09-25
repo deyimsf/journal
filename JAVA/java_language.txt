@@ -37,7 +37,8 @@
 	TypeVariable<?>[] getTypeParameters();
    }
 
-     实现这个接口的类型，可以获取定义在该类型上的TypeVariable(类型变量,如T)   目前实现这个接口的有Class、Constructor、Method三个类型，也就是说我们可
+     实现这个接口的类型，可以获取定义在该类型上的TypeVariable(类型变量,如T) 
+   目前实现这个接口的有Class、Constructor、Method三个类型，也就是说我们可
    以拿到在这三个类型上定义的类型变量。
      比如Class类型，它实现TypeParameters()的时候肯定需要用到类文件中的内
    容，从类文件中拿到这些类型变量(如K,V)同理其他两个类型都需要用到类文件。
@@ -48,7 +49,7 @@
 	Map<String,String>
  带有界通配符的参数化类型：
 	List<? extends Object>
-        List<? extends E> //E被定义的类型变量 
+    List<? extends E> //E被定义的类型变量 
 
 #类型编译时会被擦除
 
