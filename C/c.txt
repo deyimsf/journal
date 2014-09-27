@@ -61,6 +61,18 @@ a[i] = i++; 存在同样的问题
          确定是否定义了函数。C语言中不会存在同名的函数。
 
 指针和指针变量
+ int* x;  //int型指针
+ void* y; //任意类型指针,实际用的时候可以强转成具体的类型指针
+ //为指针分配空间并使用
+ x = malloc(sizeof(int));
+ *x = 5;
+
+ y = malloc(sizeof(int));
+ *y = 5; //错误,void*类型的指针使用时需要转换成具体类型
+ x = (int*)y;
+ x = 5;  //正确
+
+
  #include <stdio.h>
  main(){
 	int  x=2;
