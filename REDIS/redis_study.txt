@@ -141,5 +141,47 @@ used_cpu_user_children:0.00
 # Keyspace
 db0:keys=2,expires=0,avg_ttl=0
 
+#redis数据结构
+  动态字符串
+  链表
+  字典:键值的抽象结构,底层用哈希表(dict.h/dictht)实现
+  跳跃表
+  整数集合
+  压缩列表:类似于链表,所有节点在一个连续的空间中,每个节点记
+	    录了前一个节点的字节长度、自己的数据类型(几个字节)、
+        内容.	   
 
+#数据库中每个键值对都是有对象组成的
+ 1,Key总是一个字符串对象
+ 2,Value可以是：
+	字符串对象：int、raw、embstr
+ 	列表对象：ziplist、linkedlist
+	哈希对象：ziplist、hashtable
+	集合对象：intset、hashtable
+	有序集合对象：ziplist、skiplist
+	
+#对象结构定义
+ typedef struct redisObject{
+	//类型,表明自己是那种对象(上面的5种)
+	//string、list、hash、set、zset;
+    //TYPE命令会输出以上5种字符,如:
+	//6379>TYPE key
+	//6379>list   //表示该key的value是list对象
+	unsigned type:4;
 
+	//表明该对象是什么数据结构
+    //可以用OBJECT ENCODING命令输出具体结构
+	//int、embstr、raw、hashtable、linkedlist、ziplist、intset、skiplist
+	unsigned encoding:4;
+
+	//指向具体数据结构的指针
+	void *ptr;
+
+	//对象最后一次被访问的时间
+    //可用OBJECT IDLETIME命令输出
+    unsigned lru:REDIS_LRU_BITS;
+
+	//该对象被引用的个数
+	//用OBJECT REFCOUNT命令获取
+	int refcount;	
+ }
