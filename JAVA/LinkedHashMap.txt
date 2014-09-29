@@ -1,0 +1,19 @@
+public static void main(String args[]){
+	//第三个参数为accessOrder为true - 排序模式
+	//则在map.get(key)时 modCount会加一,并将其重新放入到最后
+	LinkedHashMap<String,Object>  map = new LinkedHashMap(7,7,true); 
+	map.put("a", 1);
+	map.put("b", 2);
+	map.put("c", 3);
+	map.put("d", 4);
+
+	for(Entry<String, Object> entry : map.entrySet()){ 
+		//这种方式不会引起modCount增加，所以不会出现问题
+		System.out.println("key:"+entry.getKey()+"   "+" value:"+ entry.getValue());
+	}
+
+	for(String key : map.keySet()){
+		//这种方式会引起modCount增加，所以第二次就会报异常
+		System.out.println("key:"+key+"   "+" value:"+ map.get(key));
+	}		
+}
