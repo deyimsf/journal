@@ -1,0 +1,23 @@
+digraph exception{
+	rankdir="BT";
+	node[shape="record",width=2];
+
+	throwable[label="{Throwable\n||}"];
+	error[label="{Error\n||}"];
+	exception[label="{Exception\n||}"];
+	
+	error->throwable;
+	exception->throwable;
+
+	virtualMachineError[label="{VirtualMachineError\n||}"];
+	threadDeath[label="{ThreadDeath\n||}"];
+	transformerFactoryConfigurationError[label="{javax.xml.transform\nTransformerFactoryConfiguRationErro\n||}"];
+	serviceConfigurationError[label="{ServiceConfigurationError\n|java.util|}"];
+	linkageError[label="{LinkageError\n||}"];
+	ioError[label="{IOError\n|java.io|}"];
+	factoryConfigurationError_p[label="{javax.xml.parsers\nFactoryConfigurationError\n||}"];
+	factoryConfigurationError_s[label="{javax.xml.stream\nFactoryConfigurationError\n||}"];
+	coderMalfunctionError[label="{java.nio.charset\nCoderMalfunctionError\n||}"];
+	awterror[label="{AWTError\n||}"];	
+	assertionError[label="{AssertionError}"];
+}
