@@ -1,0 +1,65 @@
+digraph map{
+   // rankdir=LR;	
+	node[shape="record"];
+ 	node[shape="plaintext",width=2];	
+	mapkey[label=<
+		<table border="0" cellborder="1" cellspacing="0">
+			<tr><td>   map   </td></tr>
+			<tr><td port="1">1</td></tr>
+			<tr><td	port="2">2</td></tr>
+			<tr><td	port="3">3</td></tr>
+			<tr><td	port="4">4</td></tr>
+		</table>
+	>];
+	value1[label=<
+		<table border="0" cellborder="1" cellspacing="0">
+			<tr><td port="node_">node</td></tr>
+			<tr><td>id=1</td></tr>
+			<tr><td>name="A"</td></tr>
+			<tr><td> fatherId=null </td></tr>
+			<tr><td port="list">list*</td></tr>
+		</table>
+	>];
+	value2[label=<
+		<table border="0" cellborder="1" cellspacing="0">
+			<tr><td port="node_">node</td></tr>
+			<tr><td>id=2</td></tr>
+			<tr><td>name="b"</td></tr>
+			<tr><td>   fatherId=1   </td></tr>
+			<tr><td port="list">list*</td></tr>
+		</table>
+	>];
+	value3[label=<
+		<table border="0" cellborder="1" cellspacing="0">
+			<tr><td port="node_">node</td></tr>
+			<tr><td>id=3</td></tr>
+			<tr><td>name="c"</td></tr>
+			<tr><td>   fatherId=1   </td></tr>
+			<tr><td port="list">list*</td></tr>
+		</table>
+	>];
+	value4[label=<
+		<table border="0" cellborder="1" cellspacing="0">
+			<tr><td port="node_">node</td></tr>
+			<tr><td>id=4</td></tr>
+			<tr><td>name="d"</td></tr>
+			<tr><td>   fatherId=2   </td></tr>
+			<tr><td port="list">list*</td></tr>
+		</table>
+	>];
+
+	//value2[label="{node|id=2|name=\"b\"|fatherId=1|<list2>list*}"];
+	//value3[label="{node|id=3|name=\"c\"|fatherId=1|<list3>list*}"];
+	//value4[label="{node|id=4|name=\"d\"|fatherId=2|<list4>list*}"];
+
+	mapkey:1->value1:node1;
+	mapkey:2->value2:node2;
+	mapkey:3->value3:node3;
+	mapkey:4->value4:node4;
+
+	value1:list->value2:node_[style="dashed"];
+	value1:list->value3:node_[style="dashed"];
+	value2:list->value4:node_[style="dashed"];
+
+	
+}
