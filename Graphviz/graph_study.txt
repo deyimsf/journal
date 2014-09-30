@@ -10,15 +10,17 @@
  2,向图中添加顶点和边
  3,为顶点和边添加样式
 
-st_table_entry[shape="record",label="{<head>st_stable_entry|hash|key|record|<next>next}"];
- 上面的例子，顶点的形状为shape=record，label中<>括起来的时锚点
+#例子
+ st_table_entry[shape="record",label="{<head>st_stable_entry|hash|key|record|<next>next}"];
+ 上面的例子，顶点的形状为shape=record,label中<>括起来的时锚点
+ 用冒号使用锚点,st_table_entry:head
 
 #画子图
-	digraph abc{
-		layout="circo";	
+  digraph abc{
+	layout="circo";	
 
-		subgraph cluster_cd{ //子图名字必须以cluster开头 
+	subgraph cluster_cd{ //子图名字必须以cluster开头 
 			lable="子图";
-		}
 	}
+  }
 	
