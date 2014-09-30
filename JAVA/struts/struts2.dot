@@ -1,0 +1,52 @@
+digraph pool{
+	//rankdir="BT";
+	node[shape="record",color="skyblue",width=2]
+
+
+	//Class类	
+	//Object
+	Filter[label="{Filter\n(interface)||}"];
+    StrutsStatics[label="{StrutsStatics\n(interface)||}"];	
+	StrutsPrepareAndExecuteFilter[label="{StrutsPrepareAndExecuteFilter\n||}"];
+	
+	StrutsPrepareAndExecuteFilter->StrutsStatics[style="dotted"];
+	StrutsPrepareAndExecuteFilter->Filter[style="dotted"];
+	
+	init[label="StrutsPrepareAndExecuteFilter.init(FilterConfig filterConfig)"];
+	prepare[label="prepare = new PrepareOperations(filterConfig.getServletContext(), dispatcher)"];
+	execute[label="execute = new ExecuteOperations(filterConfig.getServletContext(), dispatcher)"];
+	
+	init->prepare[label="创建Http预处理对象"];
+	init->execute[label="创建Http处理执行对象"];
+
+
+	doFilter[label="StrutsPrepareAndExecuteFilter.doFilter(ServletRequest req, ServletResponse res, FilterChain chain)"];
+	setEncodingAndLocale[label="PrepareOperations.setEncodingAndLocale(request, response)"];
+	createActionContext[label="PrepareOperations.createActionContext(request, response)"];	
+	executeAction[label="ExecuteOperations.executeAction(request, response, mapping)"];
+	
+	doFilter->setEncodingAndLocale;
+	doFilter->createActionContext[label="创建ActionContext"];
+	doFilter->executeAction;
+	
+	serviceAction[label="Dispatcher.serviceAction(request, response, servletContext, mapping)"]
+	createActionProxy[label="createActionProxy(namespace, name, method, extraContext, true, false)"];
+  executeProxy[label="ActionProxy.execute()"];
+  invoke[label="ActionInvocation.invoke()"];
+  intercept[label="Interceptor.intercept(ActionInvocation)"];
+  invokeActionOnly[label="ActionInvocation.invokeActionOnly()"];
+	executeResult[label="DefaultActionIncocation.executeResult()"];
+
+	executeAction->serviceAction;
+	serviceAction->createActionProxy[label="创建代理"];
+	serviceAction->executeProxy[label="执行代理"];
+	executeProxy->invoke;
+	
+	invoke->intercept[label="用链的方式"];
+	intercept->invoke[label="调用所有的拦截器"];
+	invoke->invokeActionOnly[label="拦截器执行完后\n调用action"];
+	
+	invoke->executeResult[label="执行struts自定义的一些result,这个result最终会调用response的send*方法\n或者servlet中RequestDispatcher类的相关方法,如forward(request,response)"];
+	
+}
+
