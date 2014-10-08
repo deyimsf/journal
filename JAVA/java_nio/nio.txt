@@ -1,0 +1,228 @@
+#通道(channel)和流的不同
+ 流只能单独读或者写.通道既可以读就可以写。
+ 通道可以异步读写
+ 通道通过buffer传递数据
+
+#NIO中重要的通道的实现
+ FileChanel
+ DatagramChannel
+ SocketChannel
+ ServerSocketChannel
+
+#Buffer种类
+ ByteBuffer
+ CharBuffer
+ DoubleBuffer
+ FloatBuffer
+ IntBuffer
+ LongBuffer
+ ShortBuffer
+
+#Buffer的几个标记位
+ capacity:缓冲容量一般对应Buffer的allocate()方法指定.
+ position:位址,读或写的开始位址,开始是零.
+ limit:限制
+ mark:标记
+ capacity >= limit >= position >= mark >= 0.
+
+#Buffer.filp()方法
+ 调用方法会将limit设置为position,随后将positon设置为零.
+ 当buffer中已经写入数据后，如果想读出数据,调用此方法。
+
+#Buffer.rewind()方法
+ 该方法将positon设置为0且limit保持不变,可以重复读buffer
+ 中的数据。
+
+#Buffer.clear()和compact()方法
+ clear用于清空buffer,该方法会将position设置为0,limit设置
+ 为capacity.如果buffer中有未读取的数据,则将被清除。
+
+ compact会将还未读取的数据拷贝到buffer开始处,然后将position
+ 设置到最后一个未读元素的后面(limit+1),limit设置成capacity.
+ 这时候可以向buffer中继续写入数据了。
+
+#Buffer.mark()和reset()方法
+ mark方法会把mark设置为当前的position。
+ reset方法会把position设置为mark。
+ 通过这两个方法的配合我们可以反复读取buffer中的部分数据。
+
+
+#Scatter(分散)和Gather(聚集)
+ ScatteringByteChannel:分散接口,实现该接口的Channel都支持Scatter.
+ GatheringByteChannel:聚集接口,实现该接口的Channel都支持Gather.
+ 对于需要将传输数据分开处理的场合该功能很有用，例如有消息头和消息
+ 体组成的消息，可以将消息头和消息体分散在不同的buffer中.
+
+ Scatter(分散)从Channel中读取数据时可以将Channel中的数据,
+ 顺序的读到指定的buffer[]中。
+ 示例:
+	ByteBuffer header = ByteBuffer.allocate(20);
+	ByteBuffer header = ByteBuffer.allocate(30);
+	
+	ByteBuffer[] buffers = {header,body};
+	channel.read(buffers);
+ buffer会顺序的将数据放入到buffers中,并且只有当前一个buffe被
+ 填满后才会向下一个buffer填数据，所以Scatter适合消息大小固定
+ 的消息。
+
+ Gather(聚集)向Channel中写入数据时,可以顺序的将buffer[]中的数据
+ 写入到Channel中。
+ 示例:
+ 	channel.write(buffers);
+ buffers中得数据会被顺序的写入到channel中。
+
+#FileChannel通道
+ 获取一个FileChannel只能通过InputStream、OutputStream或RandomAccessFile
+ 来获取
+ 
+ 从FileChannel中读数据:
+	ByteBuffer buf = ByteBuffer.allocate(20);
+	int readed = fileChannel.read(buf);
+ 返回-1，表示到了文件末尾。
+
+ 向FileChannel中写数据:
+	String data = "hello world";
+	ByteBuffer buf = ByteBuffer.wrap(date.getBytes());
+	while(buf.hasRemaining()){
+		fileChannel.write(buf);
+	} 
+    //关闭通道
+    fileChannel.close();
+
+#SocketChannel
+ 这是一个连接到TCP网络套接字的通道。
+ 通过open方法创建该通道,创建后通道处于打开状态,但尚未连接
+ 需要调用connect方法连接该通道。
+ 
+ 如果通道被创建并设置为非阻塞模式,通过connect方法发起连接后
+ 必须调用finishConnect方法完成该连接。
+ 
+ 可以调用shutdownInput和shutdownOutput来单独关闭输入端和输出端
+ 另外该通道也支持异步关闭,也就是通过其它线程进行关闭.
+	 
+ 创建一个SocketChannel并设置为非阻塞模式:
+	SocketChannel socketChannel = SocketChannel.open();
+	socketChannel.configuraeBlocking(false);
+	socketChannel.connect(new InetSocketAddress("127.0.0.1",80));
+
+#ServerSocketChannel
+ 该通道可以监听一个TCP连接。
+
+ 非阻塞的例子:
+	 ServerSocketChannel serverChannel = ServerSocketChannel.open();
+	 serverChannel.configureBlocking(false);
+	 //1024是可接收得客户端的积压长度 
+	 serverChannel.socket().bind(new InetSocketAddress(local_ip),1024); 
+	 serverChannel.accept();
+ 这个时候accept方法会立即返回.
+ 
+#DatagramChannel 
+ 该通道用于无连接的UDP协议。
+
+ 在8080端口上接收数据包
+	DatagramChannel channel = DatagramChannel.open();
+	channel.socket().bind(new InetSocketAddress(8080));
+ 接收数据:
+	ByteBuffer buf = ByteBuffer.allocate(20);
+	//将接收到的数据放入到buffer中,多余的丢弃
+	channel.receive(buf);
+ 发送数据:
+	ByteBuffer buf = ByteBuffer.wrap("Hello World".getBytes());
+	int send = channel.send(buf,new(InetSocketAddress("127.0.0.1",80)));
+ 
+ 或者用connect方法指定一个地址,就可以像平常通道一样使用read和write
+ 例如：
+	channel.connect(new InetSocketAddress("145.231.10.2",80));
+ 可以锁住该通道，让其只能从该地址收发数据。
+
+#Pipe
+ Pipe是两个线程之间的单向数据连接。Pipe中得source
+ 通道可读,sink通道可写。
+
+ 使用的过程中A线程向sink中写，B线程通过source读.
+ 创建管道:
+	Pipe pipe = Pipe.open();
+ 线程A向管道写数据：
+	Pipe.SinkChannel sink = pipe.sink();
+	ByteBuffer buf = ByteBuffer.wrap("Hello".getBytes());
+	whie(buf.hasRemaining()){
+		sink.write(buf);
+	}
+	sink.close();
+ 线程B通过管道读数据:
+	Pipe.SourceChannel source = pipe.source();
+	ByteBuffer buf = ByteBuffer.allocate(20);
+	int read = source.read(buf);
+	source.close();  
+ 
+#Selector
+ 向Selector注册通道	
+	Selector selector = Selector.open();
+	SelectionKey key = channel.register(selector,Selectionkey.OP_READ);
+ 可以向Selector注册Channel感兴趣的事件。有四种类型的事件:
+	SelectionKey.OP_CONNECT
+	SelectionKey.OP_ACCEPT
+	SelectionKey.OP_READ
+	SelectionKey.OP_WRITE
+
+#SelectionKey的相关属性
+ interest集合
+ 该集合中注册了所有感兴趣的事件
+	int interSet = selectionKey.interstOps();
+	boolean isAccept = (interSet & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT;
+ 
+ ready集合
+ 该结合包含通道已经就绪的事件
+	boolean isAccept selectionKey.isAcceptable();//和上面的方法有同样的效果
+
+ Channel和Selector
+	Channel channel = selectionKey.channel();
+	Selector selector = selectionKey.selector();
+
+ 附加对象
+ 可以将某个对象设置到SelectionKey上,从而将这个对象和这个通道相关联,
+ 比如处理tcp半包问题时,可以将读到的数据全部放到该关联对象中,就像redis
+ 的redisClient有一个querybuf(所有读到的数据都会放入到该缓冲区中).
+ 两种使用方式:
+	1,SelectionKey key = channel.register(selector,OP_READ,attachObject);
+    2,selectionKey.attach(attachObject);
+ 
+#Selector
+ 通过open方法创建选择器.
+ 通过SelectionKey来表示Channel到Selector的注册。
+ Selector维护了三种SelectionKey集合:
+  1.keySet(键集),表示注册到此选择器上的通道关联的key。keys()。
+  2.selectedSet(已选择键集),表示每个键关联的通道有一个操作准备就绪。
+  3.cancelSet(已取消键集),已经被取消但尚未被注销的键的集合。
+ 
+ 通关调用键的cancel方法和关闭键的通道的方法,都可以取消该键。在下一次
+ 选择操作期间,取消键集中的键将被注销,注销后的键将从所有键集中移除。
+
+ 选择已就绪的键需要用到select()、select(long)、selectNow()方法,这些
+ 方法可以将键添加到已就绪键集中。可通过键集的remove方法或者从该键集
+ 中获得的iterator的remove方法从已选择键集中移除该键,其他方式都不行。
+ 也就是说,如果不主动从已选择键集中remove某个键,那么每次调用select方法
+ 都会再次返回该键。
+ 这些方法执行步骤如下:
+  1.将已取消键从所见键集中移除.
+  2.将已准备就绪的通道的键放入到已选择键集中.
+    在该过程中如果该键集没有在已选择键集中,则通道的readySet(已就绪事件集)
+    将被重置。
+    如果该通道的键已经在已选择键集中,则修改readySet集并保留以前的信息。 
+    (从这句话看,好像一个键可以同时让isReadable和isWritable为true,但是实验
+     没有做出来。????????)
+
+ select():阻塞到至少有一个通道在你注册的事件上就绪了。
+ 如果有线程调用wakeup()方法，则返回零.
+ select(long timeout):和select一样，但是有一个时间限制。
+ 超时返回零。
+ selectNow():不会阻塞,不管是否有通道就绪都立刻返回.
+ 如果没有就绪通道则返回零。
+
+#wakeup()
+ 调用Selector.wakeup()会将阻塞在select()方法上的线程立刻返回。
+ 如果调用wakeup方法是没有线程阻塞在select()方法上，那么下次
+ 调用select()方法的线程会立刻醒来。
+
+#close()
+ 该方法会无效Selector上的所有SelectionKey实例。但通道不会关闭。
