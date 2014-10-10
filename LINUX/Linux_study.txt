@@ -1125,3 +1125,21 @@ $ iostat -xk
 
  /proc/目录其实就代表系统内存
 
+#tcpdump命令
+ -i: 针对特定网口抓包,比如eth0
+ -c: 抓取指定数据的包
+ -w: 将抓取的包记录到一个文件；
+	 这种方式抓取的数据可以被wiresharp等软件直接分析
+ -r: 读取用-w参数保存的文件
+ -n: 默认本地ip地址用域名localhost等显示,该参数强制用ip地址。
+ -ttt: 抓包结果中将包含抓包日期
+ [ip,arp,tcp,udp,ip6,wlan等] 之抓取指定的协议。
+ port: 指定抓取的端口
+ dst: 指定抓取的目标ip地址 
+ src: 指定抓取来源ip地址
+
+ 例子:
+ $tcpdump -i eth0 -c 800 tcp port 80 -w test.pcap
+ 抓取eth0网口 抓800个包 抓tcp协议 抓80端口 抓取结果放入test.pcap文件
+
+
