@@ -1,0 +1,2 @@
+#Mac OS在标题栏上显示目录完整路径
+ defaults write com.apple.finder _FXShowPosixPathInTitle -bool YES
