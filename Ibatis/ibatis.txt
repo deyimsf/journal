@@ -1,0 +1,80 @@
+
+#ibatis SqlMapConfig.xml <settings>配置
+ <settings 
+	cacheModelsEnabled="true" 
+	enhancementEnabled="true" 
+	lazyLoadingEnabled="true" 
+	maxRequests="32" 
+	maxSessions="10" 
+	maxTransactions="5" 
+	useStatementNamespaces="false" 
+ />
+
+#maxRequests 默认512
+ 最大Sql(Statement)并发数,同时执行sql的最大线程数。不同的数据库有不同的限制。
+ 该限制是确保程序请求不高于数据库的限制,跟数据源无关。
+
+#maxSessions 默认128
+ 最大session并发数,比如SqlMapClient实例获取的session
+
+#maxTransactions 默认32
+ 同时进入SqlMapClient.startTransaction()的最线程数。不同数据库有不同限制。
+ 
+#以上三个值必须如下关系
+ maxRequests>maxSessions>maxTransactions
+
+#cacheModelsEnabled 默认true
+ 是否使用缓存
+ 例子：
+ ----------------sqlmap/suit.xml----------------
+ 	<sqlMap>
+		<cacheModel id="cache_a" type="LRU">
+			<flushInterval hours="1"/>
+			<flushOnExecute statement="updateSuit"/>
+			<property name="size" value="500"/>
+			<!--propeyty name="reference-type" value="WEAK"/-->
+		</cacheModel>
+			
+		<select id="querySuit" resultClass="Suit" cacheModel="cache_a">
+			select * from suit
+		</select>
+
+		<update id="updateSuit">
+			//..
+		</update> 
+	</sqlMap>
+ ------------------------------------------------
+
+#lazyLoadingEnabled 默认true
+ 是否启用延迟加载,类似hibernate中的一对多查询,当用多的一方时是
+ 不会加载的。
+ 直接写sql是不会延迟加载的。
+ 例子:
+ ---------------------sqlmap/user.xml----------------
+ 	//...
+	
+	<resultMap id="UserMap" class="User">
+		<result property="userId" column="userId"/>
+		<!--list是User对象中的属性 -->
+		<result property="list" select="queryList" column="userId"/>
+	</resultMap>
+
+    <select id="queryUsers" resultMap="UserMap">
+		select userId from users
+	</select>
+   
+    <select id="queryList" resultClass="Book">
+		select * from Book
+		where userId= #value#
+	</select>
+ ------------------------------------------------------
+
+#enhancementEnabled 默认false
+  是否针对POJO启用字节码增强机制以提升 getter/setter 的调用效能，
+  避免使用Java Reflect所带来的性能开销。
+
+#useStatementNamespaces 默认fasle
+  是否限制必须使用命名空间
+  <sqlMap namespace="userdao"> </sqlMap>
+
+
