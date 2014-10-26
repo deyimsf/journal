@@ -47,6 +47,8 @@
  a and b	--如果a为false，则返回a,否则返回b
  a or b		--a为true返回a，否则返回b
 
+#Lua中除了nil和false都是true
+
 #表的构造
  days={"sunday","monday","tuesday"}
  等价于
