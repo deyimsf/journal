@@ -192,3 +192,42 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   location xxx{ 
   rewrite a b; 将a替换为b，例如：rewrite ^/search/(.*)$ /search.php?q=$1; 
   } 
+
+
+
+#----------------HttpRedis2Module----------
+#指令
+ #redis2_connect_timeout
+  和redis建立链接的超时时间,默认单位秒.
+  支持单位:s(秒)、ms(毫秒)、y(年)、M(月)、w(周)、d(天)、h m 
+
+ #redis2_send_timeout
+  发送请求命令到redis的超时时间. ?非阻塞模式下如何计算的,貌似通过系统参数设置
+  如：TCP_USER_TIMEOUT
+
+ #redis2_read_timeout
+  从redis接收响应的超时时间.
+
+ #redis2_buffer_size
+  从redis读取响应的缓存大小
+
+ #redis2_next_upstream
+  指定失败条件,这个条件成立后，请求转发到另一个server.
+  前提是redis2_pass 后面的upstream有多个server。
+
+#链接池
+ 例子：
+	upstream backend{
+		server 127.0.0.1:6379
+		keepalive 1024; //池大小
+	}
+	
+    server{
+		location = /redis{
+			redis2_pass backend;	
+		}
+	}
+
+
+
+
