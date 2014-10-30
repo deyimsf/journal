@@ -155,7 +155,7 @@ C中变量作用域
 	#include <stdio.h>
 	#define aa int   //预处理的时候使用，遇见aa直接替换为int
 
-	typedef int bb;  //运行时候使用？编译时？
+	typedef int bb;  //运行时候使用？编译时
 	int main(int argc, char **argv){
 	    aa cc = 9; // 用预处理声明的int变量
 	    bb hh =10; // 用类型定义声明的int变量
