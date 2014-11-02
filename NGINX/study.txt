@@ -193,6 +193,64 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   rewrite a b; 将a替换为b，例如：rewrite ^/search/(.*)$ /search.php?q=$1; 
   } 
 
+#nginx变量
+ nginx的变量在配置被加载的时候创建;在请求实际处理的时候才会赋值。
+ 所以无法在请求时动态的创建变量,并且使用未被定义的变量会无法启动。
+ 例子：
+	location  /var {
+		echo 	"var = $var";
+	}
+ 由于$var未定义所以启动失败.
+ 
+ 一旦变量被创建，则整个nginx配置都可见，但并不意味着该变量值被共享，
+ 每个请求都有自己对这个变量赋值的副本，相互不受影响.
+ 例子：
+	location /var {
+		echo	"var = $var";
+	}
+    location /var2 {
+		set $var "var";
+		echo "var = ${var}2";
+	}
+ 如果对其访问，则
+	/var输出    var = 
+	/var2输出	var = var
+ 
+ nginx变量的生命周期存在于一个请求内，包括内部跳转,与其它无关
+	location /var {
+		set $var "var";
+		echo_exec	/var2;
+		#rewrite ^	/var2;
+	} 
+	location /var2 {
+		echo	"var = -- $var --"
+	}
+ 输出结果:
+	var = -- var --
+
+ 以上是自定义变量，还有一些各个模块的内置变量，比如核心模块
+ 的$arg_xx、$args、$sent_http_xx等.
+ 大部分内置变量是不能修改的，但有些可以，如$args,该变量存放
+ 请求的querystring(未解码),如:
+	location /args {
+		echo "args=[$args]";
+	}
+ 用url /args?a=b&c=11中11 访问则会输出:
+	args=[a=b$c=11%E4%B8%AD11]
+ 
+ 像arg_xx内部变量会args从解析出对应的xx变量值,比如
+	location /args {
+		set		$orig_args	$args;	
+		set 	$args "a=1&b=2";
+		echo	"orig_args=[$orig_args]";
+		echo 	"args=[$args]";
+	}
+ 用url /args?a=3&b=4 访问该location,则输出:
+	orig_args=[a=3&b=4]
+	args=[a=1&b=2]
+
+
+
 
 
 #----------------HttpRedis2Module----------
