@@ -42,7 +42,58 @@
     3)从最低位开始填充x,结果为: 11100100 10111000 10101101
  从而可以得出,中字的utf-8编码为E4B8AD
 
+UNICODE转utf-8的例子:
+	static int codepoint_to_utf8(char *utf8, int codepoint)
+	{
+    	/* 0xxxxxxx */
+    	if (codepoint <= 0x7F) {
+        	utf8[0] = codepoint;
+        	return 1;
+    	}
+
+    	/* 110xxxxx 10xxxxxx */
+    	if (codepoint <= 0x7FF) {
+       	 utf8[0] = (codepoint >> 6) | 0xC0;
+       	 utf8[1] = (codepoint & 0x3F) | 0x80;
+       	 return 2;
+    	}
+
+    	/* 1110xxxx 10xxxxxx 10xxxxxx */
+    	if (codepoint <= 0xFFFF) {
+       	 	utf8[0] = (codepoint >> 12) | 0xE0;
+       		 utf8[1] = ((codepoint >> 6) & 0x3F) | 0x80;
+        	utf8[2] = (codepoint & 0x3F) | 0x80;
+        	return 3;
+    	}
+
+    	/* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+    	if (codepoint <= 0x1FFFFF) {
+        	utf8[0] = (codepoint >> 18) | 0xF0;
+        	utf8[1] = ((codepoint >> 12) & 0x3F) | 0x80;
+        	utf8[2] = ((codepoint >> 6) & 0x3F) | 0x80;
+        	utf8[3] = (codepoint & 0x3F) | 0x80;
+        	return 4;
+   		 }
+
+   		 return 0;
+	}
+
+
 那么中文到底在UTF-8编码中用几个字节
  从http://www.unicode.org/charts/PDF/U4E00.pdf可以看到,表示中文最小的
  unicode代码点为4E00,根据以上规则可知,中文在utf-8中最少需要用3个字节表
  示一个字符。
+
+
+GB2312(1980)共收录7445个字符，6763个汉字和682个其他字符。
+ 汉字的编码范围：高位B0-F7,低位A1-FE,占用72*94=6768。D7FA-D7FE是空位。
+
+GBK(2000)共收录21886个字符.
+ 汉字编码范围: 8140 - FEFE,剔除xx7F码位，供23940个码位.
+
+GB18030收录27484个汉字.
+
+由于GB类的编码都是向下兼容的，这里就有一个问题，因为GB2312的两个自己
+的高位都是1,符合这个条件的码位只有128*128=16384个。GBK和GB18030都大于
+这个数，所以这两个编码的低位字节的最高位不可能是1。不过不影字符流的解析
+，在读取时，只要遇到高位为1的字节，就认为这是一个两字节字符就可以。
