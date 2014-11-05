@@ -249,9 +249,33 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	orig_args=[a=3&b=4]
 	args=[a=1&b=2]
 
+ 标准ngx_map模块的map配置指令
+	map $args $foo {
+		default		a;
+		debug		b;
+	} 	
+    server {
+		listen 80;
+		
+		location /test {
+			echo	"args=[$args]";
+			echo	"foo=[$foo]";
+		}
+	}
+ 以上表示将$args对$foo的一个映射，但并不是将$args的值给$foo
+ 而是说当$args这个变量的值是debug时,$foo的值是b,否则是a.
+  	 $curl	'http://localhost/test?debug'
+	  --> args=[debug]
+	  --> foo=[b]
+ map指令在只能在server外部，执行过程大概如下描述：
+  当请求过来后，ngxin去调用函数去取args参数的值，在取得过程中
+  会map指令做考虑(猜测,为看源码). 
 
 
 
+
+ 
+  
 
 #----------------HttpRedis2Module----------
 #指令
