@@ -54,6 +54,9 @@
  等价于
  days={[1]="sunday",[2]="monday",[3]="tuesday"}
 
+#创建一个表
+ tab={["n1"]="n1",n2="n2",add=function() return 1;  end}
+
 #赋值
  a,b,c = 0,1;
  print(a,b,c);   -->0,1,nil
@@ -609,7 +612,14 @@ lua> print(debug.traceback())
  ----------------------------------------------------
 
 
-
+#require(modname) 查找模块的顺序
+ 1)去package.loaded 表中查找是否有该modname,如果有则返回
+ 2)通过package.loaders中的4个方法去决定从哪里查找模块
+ 3)第一个方法是先去package.preload[modname]中找,如果返回
+     一个值(这个值应该是一个函数),那这个值就是loader。
+ 4)第二个从package.path指定的路径去加载.lua的文件,成功则返回。
+ 5)第三个从package.cpath指定的路径去加载.so的问文件,成功则返回。
+ 6)第四个方法用all-in-one ?
 
 
 
