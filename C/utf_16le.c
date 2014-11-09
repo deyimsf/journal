@@ -2,7 +2,7 @@
 
 void decode_utf_16le(char *cc,int length);
 
-int main(int argc ,char *argv){
+int main(int argc ,char **argv){
 	//utf-16le编码			unidoce值 
 	//朱: 0x3167			6731
 	//, : 0x2C00			2C
@@ -29,7 +29,7 @@ void decode_utf_16le(char *cc,int length){
 			return;
 		}
 
-                short w1_h = cc[index+1]; //高8位
+        short w1_h = cc[index+1]; //高8位
  		short w1_l = cc[index]; //低8位
 		w1 = ((w1_h << 8 & 0xFF00)+(w1_l & 0xFF));
 
