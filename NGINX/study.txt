@@ -230,7 +230,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 
  以上是自定义变量，还有一些各个模块的内置变量，比如核心模块
  的$arg_xx、$args、$sent_http_xx等.
- 大部分内置变量是不能修改的，但有些可以，如$args,该变量存放
+ 大部分内置变量是不能修改的,有些可以,如$args,$arg_xx,该变量存放
  请求的querystring(未解码),如:
 	location /args {
 		echo "args=[$args]";
@@ -271,8 +271,87 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   当请求过来后，ngxin去调用函数去取args参数的值，在取得过程中
   会map指令做考虑(猜测,为看源码). 
 
+ 子请求,就是不是通过客户端请求来的,但也不是内部跳转，内部跳转使用
+ 的变量和整个请求共享，但是子请求一般不共享变量。也有共享的如
+ ngx_auth_request模块,一般都会禁用其父子共享变量。
+ 例子:
+	location /main {
+		echo			"main[$args]";
+		echo_location /sub1;
+		echo_location /sub2 "a=1&b=2";
+	}
 
+	location /sub1 {
+		echo  "sub1[$args]";
+	}
+	location /sub2 {
+		echo   "sub2[$args]";
+	}
+ 访问/main?c=3,则会串行执行并输出,不管对错。
+   	main[c=3]
+	sub1[]
+    sub2[a=1&b=3]
+ 同时我们也看到各个请求之前的变量相互独立。
 
+ 但不是所有的内置变量都作用于当前请求。指作用于第一次的请求,以后的
+ 子请求只用之前的值,比如核心模块的$request_method变量。
+ 例子：
+	location /main {
+		echo "main method=[$request_method]";
+		echo_location /sub1;
+	}
+	location /sub1 {
+		echo "sub method=[$request_method]";
+	}
+ 用POST方式访问输出结果:
+	main method=[POST]
+	sub method=[POST]
+ 用GET方式访问输出结果:
+	main method=[GET]
+	sub  method=[GET]
+ 因为echo_location 是按GET方式请求的,所以根据结果可得知，
+ $request_method变量无法获取子请求的method。为了获取子请求的method
+ 我们可以使用第三方ngx_echo模块提供的$echo_request_method变量。
+ 
+ 注意:以上说的所谓子请求并不是真正的发出HTTP请求,只是在nginx内部调用
+  几个函数,并没有走socket之类的网络。
+
+ Nginx中的变量有三种值:字符串、无效值、not found。
+ 比如$var这个变量只创建但并未赋值时,则$var就是无效的(invalid);如果请求
+ 中根本没有arg_xxx这个参数，则就是not found.
+
+#Nginx指令的执行顺序
+ nginx在处理用户请求的时候都是按不同阶段一次处理的。
+ nginx模块提供的配置指令一般都会注册在某个处理阶段,但并非所有
+ 的指令都会绑定某个阶段，比如geo指令和map指令属于声明性的，不
+ 直接产生某种动作。
+ nginx请求处理阶段有11个，执行的时候按阶段先后顺序依次处理在该
+ 阶段绑定的指令。11个阶段依次如下：
+	post_read
+ 	server_rewrite
+	find_config
+	rewrite
+	post_rewrite
+	preaccess
+	access
+	post_access
+	try_files
+	content
+	log
+
+ 看下面的例子：
+	location /test {
+		set  $a 1;
+		echo $a;
+	
+		set  $a 2;
+		echo $a;
+	}
+ 访问 /test 输出
+ 	2
+    2
+ 因为set指令绑定在rewrite阶段,echo指令绑定在content阶段
+ 所以会先执行完set指令后再指令echo指令。
 
 #----------------ngx_http_geo_module------------------
  该模块用客户端的ip地址创建变量
@@ -284,7 +363,8 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 		127.0.0.1/32    "d";		
  	}
  如果客户端ip地址是127.0.0.1则优先匹配最长的子网掩码,
- 没写子网掩码则默认是32,并且优先于有子网掩码的。
+ 没写子网掩码则默认是32,并且优先于有子网掩码的。实际上
+ 以上的配置除啦127.0.0.1其他都没什么意义。
  所以上面例子$geo变量值是b,如果没有这个配置,则变量值为d。
 
  默认情况nginx从$remote_addr获取IP地址；可以让其从其他变量
