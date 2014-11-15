@@ -271,9 +271,10 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   当请求过来后，ngxin去调用函数去取args参数的值，在取得过程中
   会map指令做考虑(猜测,为看源码). 
 
- 子请求,就是不是通过客户端请求来的,但也不是内部跳转，内部跳转使用
- 的变量和整个请求共享，但是子请求一般不共享变量。也有共享的如
+ 子请求,就是不是通过客户端请求来的不走HTTP协议的请求,但也不是内部跳转,
+ 内部跳转使用的变量和整个请求共享但是子请求一般不共享变量。也有共享的如
  ngx_auth_request模块,一般都会禁用其父子共享变量。
+ 注意:内部跳转会重新走一遍nginx定义的11个阶段.
  例子:
 	location /main {
 		echo			"main[$args]";
@@ -333,7 +334,8 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	rewrite
 	post_rewrite
 	preaccess
-	access
+	access 运行在该阶段的指令多是执行访问控制性质的任务,比如检查
+		   用户的访问权限,检查用户的来源Ip地址是否合法等。
 	post_access
 	try_files
 	content
@@ -352,6 +354,18 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
     2
  因为set指令绑定在rewrite阶段,echo指令绑定在content阶段
  所以会先执行完set指令后再指令echo指令。
+
+
+
+
+
+
+
+
+
+
+
+
 
 #----------------ngx_http_geo_module------------------
  该模块用客户端的ip地址创建变量
@@ -373,8 +387,8 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 		default			"a";
 		192.168.195.1   "b";
     }
- 
-  
+
+
 
 #----------------HttpRedis2Module----------
 #指令
@@ -409,6 +423,168 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 		}
 	}
 
+#nginx中引用文件指令的当前路径
+ 在安装Nginx的时候有一个prefix参数,比如我本机安装时用的是:
+ 	--prefix=/My/work/nginx/nginx
+ 
+ include的指令的当前路径在conf目录下,范围在server、http、location等
+ 区域,没什么限制.
+    location /path {
+        include   domains/cc.conf;  //domains目录必须在--prefix/conf/下。
+    }
+
+ content_by_lua_file指令的当前目录和conf同目录,范围location、location if
+	location /path {
+		content_by_lua_file	path.lua; //path.lua一定和--prefix 同目录。
+	}
+
+#指令set和set_by_lua混合使用的例子
+  location /test {
+		set $a	10;
+		set $b	20;
+		set_by_lua $c "return ngx.var.a + ngx.var.b";
+		set $content "$a + $b = $c";
+	
+		echo $content;	
+  }
+ 访问 /test 输出结果
+	10 + 20 = 30
+ 从上面可以看到,属于不同模块的指令,有序的执行了。因为nginx中只有
+ 字符串,所以用到了lua对加数自动类型转换的特性,这样就计算出了两个
+ 数字的和,然后再利用nginx的”变量插值“将字符串输出。
+ 
+ 第三方模块ngx_lua的set_xx指令之所以能和ngx_rewrite模块的set指令混合使用
+ ,并且指令执行顺序和配置指令的顺序相同,是不仅因为这两个指令都在rewrite阶
+ 段,因为它借助了第三方模块ngx_devel_kit,将自己的配置指令融合到了ngx_rewrite
+ 模块中。也就是说,如果第三方模块A和B的指令也在rewrite阶段,但是并没有使用
+ ngx_devel_kit模块进行融合,那么不管他们的配置指令是否交叉,指令执行的时候
+ 一定是先执行完一个模块的指令后在执行另一个模块的指令。(具体哪个模块的指令
+ 向执行,一般有模块的加载顺序决定,有例外)。
+
+#more_set_input_headers指令(属ngx_headers_more模块)
+ 该指令总是运行在rewrite阶段的末尾,用于操纵当前请求的请求头,还可以
+ 在请求头不存在时自动创建。
+ 例子:
+	location /text {
+		set $value	 aaa;
+		more_set_input_headers   "Head-Masf:$value";
+		set $value	 bbb;
+	
+		echo "Head-Masf:$http_head_masf";
+	}
+ 这个例子是在修改或创建请求头Head-Masf的值.另外$http_xxx变量在匹配请求头时
+ 会自动将请求头的字母转换为小写字母,同时把"-"转换为"_",所以匹配请求头Head-Masf
+ 需要用$http_head_masf变量.最后因为more_set_input_headers指令总在rewrite末尾
+ 执行,所以输出结果为 Head-Masf:bbb
+ 
+ 这个例子证明了即使运行在同一个请求处理阶段,所属不同模块的指令也可能会分开
+ 独立运行.
+ ps:rewrite_by_lua指令也运行在rewrite的末尾阶段.
+
+#标准模块ngx_access的allow和deny指令用于控制哪些Ip地址可以访问,哪些不可以
+ 这两个指令运行在access阶段.
+ 例子:
+	location /test {
+		allow	127.0.0.1;
+		deny	all;
+
+		echo "hello";
+	}
+ 访问 /test 如果远端ip地址不是127.0.0.1则返回403状态.
+
+#单个阶段同时运行多个模块的指令问题
+ 一般情况下,单个阶段绑定的不同模块的指令可以同时使用,但是content
+ 阶段则例外.大多数模块在向content阶段注册指令时,都是在当前的location
+ 配置块中注册content handler(内容处理程序). 值得注意的是每个location
+ 只能有一个content handler,因此当同时有多个模块向content阶段注册指令
+ 时,只会成功一个,具体哪个成功则不确定。但是同一个模块的不同指令没限制。
+ 例如:
+	location /test {
+		echo 	hello;
+		content_by_lua 'ngx.say("world hello")';
+		echo	world;
+	}
+ 访问 /test 可能输出
+      hello
+      world
+ 这个例子中,echo和content_by_lua指令同属content阶段但不属同一个模块,
+ 因此只有一个指令可以注册成功.
+
+ 如果想看到我们预期的输出,可以使用echo_before_body等指令,例如:
+	location /test {
+		echo_before_body	hello;
+		content_by_lua	'ngx.say("world hello")';
+		echo_after_body		world;
+	} 
+ 访问 /test 则输出
+	 hello
+	 world hello
+	 world
+ 之所输出这样的结果,因为Nginx在输出响应体数据时调用"输出过滤器",这两
+ 条指令就在数据输出之前和之后调用。需要注意的是"输出过滤器"并不属于
+ Nginx定义的11个阶段。 
+	
+#content阶段的静态资源服务模块
+ Nginx会在该阶段安排三个静态资源服务块,当在content阶段没有注册任何指令
+ 的时候,也就是说在 location / {} 块中没有配置任何content阶段的指令时会
+ 相应的触发ngx_index、ngx_autoindex、ngx_static模块.
+
+ ngx_index和ngx_autoindex 只会作用于URI以 / 结尾的请求,例如GET /cc/,
+ 如果不是以 / 结尾则把控制权交给下一个模块。而ngx_static模块值处理
+ 不以 / 结尾的请求。
+ 例如:
+	location /bb/ {
+		root /var/www/;
+		index index.htm  index.html; 
+	}
+ 访问 /bb/ 查找顺序如下:
+	1)在/var/www/bb/目录下首先查找index.htm,如果存在则直接发起内部跳转
+      到/bb/index.htm这个地址.
+    2)如果不存在则在给定的目录下查找index.html,存在则直接发起内部跳转.
+    3)如果以上都没有找到则放弃处理权,交给content阶段的下一个模块.
+ 注意:在上面我们提到了,当找到指定文件后并不是直接输出,而是就发起了
+ 一个内部跳转,但是如果这个时候我们有这样一个locaiton：
+    location /bb/index.htm {
+		echo "ccccccc";
+	}		
+ 那么最终输出给客户端的数据是cccccc,因为location在匹配的时候用的是"贪婪"
+ 匹配,所以会先匹配/bb/index.htm,结果就被截胡了。
+
+#ngx_static模块(content阶段的垫底模块)
+ 看这样一个例子:
+	location / {
+		root  /My/work/nginx/nginx/html/ ;
+	} 
+ 在/html/目录下有hello.html index.html两个文件,且内容同文件名.
+ 我们访问 /hello.html 则输出
+	hello
+ 他的执行顺序是这样的:
+	首先,因为我们的location没有配置任何运行在contenet阶段的指令,所以
+    location的content handler(内容处理程序)就没有被注册,这时候处理权
+    落到了content阶段的三个静态资源服务模块中。首先运行的ngx_index和
+    ngx_autoindex模块并没有看到以 / 结尾的URI,所以直接放弃,接着处理权
+    落到了ngx_static模块。该模块根据root指令的配置,确认/html/hello.html
+    文件是否存在,如果存在则将他们的内容输出,并自动设置Content-Type、
+    Content-Length以及Last-Modified等响应头。
+ 如果上面的location下没有配置root指令,那么默认用--prefix的目录
+
+ 另外一个需要注意的是如果你的location并不是在提供静态服务,一定注意在
+ location 下是不是这是了 content 阶段的指令,如果没有的话就会走静态模块。
+ 例如：
+	location /get {
+		set	$a = b;
+	}
+ 如果访问 /get 则该请求最终会交给ngx_static模块处理,该模块会去文件系统
+ 上找 [--prefix目录]/get 这个文件,如果你的目录下没有get这个文件,那么就
+ 会抛出404错误。
+
+
+ 
 
 
 
+
+
+
+
+  
