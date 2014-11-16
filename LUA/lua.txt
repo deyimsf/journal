@@ -622,4 +622,29 @@ lua> print(debug.traceback())
  6)第四个方法用all-in-one ?
 
 
+#冒号(:)和点(.)的区别
+ lua中冒号不管是用在定义方法上,还是调用方法上,都是表示自动加上self参数.
+ 例子:
+	Person = {};
+	Person._index = Person; 
+ 
+    function Person:new(x,y)
+		local temp = {};		
+		setmetatable(temp,Person); //为temp设置元表
+		temp.x = x;
+		temp.y = y;
+		
+		return temp;
+	end
+
+    //上面方法的定义等同于如下方法的定义:
+	function Person.new(self,x,y)
+		local temp = {}
+		//...
+		return temp;
+	end
+
+    //以下两个方法调用等价
+    local person1 = Person:new(10,20);    
+    local person2 = Person.new(self,10,20);
 
