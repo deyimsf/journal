@@ -1142,4 +1142,11 @@ $ iostat -xk
  $tcpdump -i eth0 -c 800 tcp port 80 -w test.pcap
  抓取eth0网口 抓800个包 抓tcp协议 抓80端口 抓取结果放入test.pcap文件
 
+#curl命令
+ //指定请求头
+ $curl -H 'X-My-Head:123' localhost/test
+
+
+
+
 
