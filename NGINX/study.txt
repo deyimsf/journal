@@ -274,7 +274,10 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  子请求,就是不是通过客户端请求来的不走HTTP协议的请求,但也不是内部跳转,
  内部跳转使用的变量和整个请求共享但是子请求一般不共享变量。也有共享的如
  ngx_auth_request模块,一般都会禁用其父子共享变量。
- 注意:内部跳转会重新走一遍nginx定义的11个阶段.
+ #--------------------------------------------------------------------
+ 注意:所谓的内部跳转就是强行将当前阶段退回到find-config阶段,这样就可以
+      让URI重新和location块进行匹配.
+ #--------------------------------------------------------------------
  例子:
 	location /main {
 		echo			"main[$args]";
@@ -328,16 +331,20 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  直接产生某种动作。
  nginx请求处理阶段有11个，执行的时候按阶段先后顺序依次处理在该
  阶段绑定的指令。11个阶段依次如下：
-	post_read
- 	server_rewrite
-	find_config
+	post-read 当nginx读取并解析完请求头后开始运行
+ 	server-rewrite
+	find-config 该阶段不支持模块注册,而是由ngxin核心来完成请求与location
+                配置的匹配工作,也就是说再次之前没有任何请求与location配置
+ 	            块相关联。所以对于运行在该阶段之前的阶段,他们的指令应该配
+	            置在location块之外,否则不起作用。
 	rewrite
-	post_rewrite
+	post-rewrite 不接受注册,如果在rewrite阶段指定了要做内部跳转,那么该阶段
+		    	 就会将当前请求强制退回到find-config阶段。
 	preaccess
-	access 运行在该阶段的指令多是执行访问控制性质的任务,比如检查
-		   用户的访问权限,检查用户的来源Ip地址是否合法等。
-	post_access
-	try_files
+	access 		 运行在该阶段的指令多是执行访问控制性质的任务,比如检查
+		   		 用户的访问权限,检查用户的来源Ip地址是否合法等。
+	post-access  不接受注册,主要用于配合access阶段实现核心模块的satisfy功能
+	try-files	 不接受注册,专门用于实现try_files指令的功能
 	content
 	log
 
@@ -542,9 +549,9 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
       到/bb/index.htm这个地址.
     2)如果不存在则在给定的目录下查找index.html,存在则直接发起内部跳转.
     3)如果以上都没有找到则放弃处理权,交给content阶段的下一个模块.
- 注意:在上面我们提到了,当找到指定文件后并不是直接输出,而是就发起了
- 一个内部跳转,但是如果这个时候我们有这样一个locaiton：
-    location /bb/index.htm {
+ 注意:在上面我们提到了,当找到指定文件后并不是直接输出,而是就发起了一个内部
+  跳转,但是如果这个时候我们有这样一个locaiton：
+     location /bb/index.htm {
 		echo "ccccccc";
 	}		
  那么最终输出给客户端的数据是cccccc,因为location在匹配的时候用的是"贪婪"
@@ -578,8 +585,73 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  上找 [--prefix目录]/get 这个文件,如果你的目录下没有get这个文件,那么就
  会抛出404错误。
 
-
+#set_real_ip_from指令,ngx_realip标准模块默认未开启,--with-http_realip_module
+ 这个指令在第一个阶段post-read执行,该指令也注册到了preaccess阶段
+ 例子: 	
+	set_real_ip_from 127.0.0.1;
+	real_ip_header	Real-Ip;
+ 	location /real_ip {
+		echo "from:[$remote_addr]";
+	}
+ 本机访问/real_ip 并指定请求头Real-Ip
+   $curl -H 'Real-Ip:192.18.1.1' /real_ip
+ 输出
+	from:[192.18.1.1]
  
+#rewrite指令,属ngx_rewrite模块
+ 该指令只是在做简单的URI重写,不会立即进行内部跳转,而是简单的指定有必要
+ 在随后的post-rewrite阶段发生内部跳转。
+ 例子:
+ 	location /foo {
+		rewrite ^ /bar;
+		rewrite ^ /baz;
+
+		echo 	"aaa";
+	}
+	location /bar {
+		echo 	"bbb";
+	}
+	location /baz {
+		echo 	"ccc";
+	}
+ 访问 /foo 执行完两个rewrite指令后,URI最终被修改为/baz,之后进入post-rewrite
+ 阶段,该阶段执行内部跳转将请求强行退回到find-config阶段,然后最终匹配到/baz
+ 这个location,输出结果
+	ccc
+ 从执行顺序可以看到/foo中的 echo 指令因为在content阶段,所以根本没有机会执行
+
+#satisfy指令,属于核心标准模块
+ 该指令主要用于对注册在 access 阶段的各个模块的程序进行协调。
+ 例子:
+	location /test {
+		satisfy 	all;
+	
+		deny 		all; //该指令注册在access阶段	
+		access_by_lua 'ngx.exit(ngx.OK)'; //注册在access阶段
+
+		echo 	"hello";
+	} 
+ 上面的例子表示,只用在access阶段的指令都同意先下走时,才会输出 hello 字符.
+ 对于上面,因为deny 指令总是拒绝先下走,所以会直接返回403。
+ 如果将例子中的 satisfy 赋值 any 则表示只要有一个access阶段的指令同意就可以
+ 输出 hello字符。注意:默认satisfy的值是all。
+
+#try_files指令,属标准核心模块
+ 该指令接收两个以上的参数,每个参数都是一个URI,如果指定的URI后面带有"/"则
+ 会直接抹掉这个斜杠。
+ 例子:
+	root /var/www/;
+	location /test {
+		try_files /foo /bar/ /barz;
+		echo "uri:$uri";
+	}
+ 执行顺序是这样的,该指令会依次把前n-1个参数映射为文件系统上的对象,然后检查
+ 是否存在.如果遇见存在的就不在向后检查,会把当前URI改写为对应的URI,比如访问
+ /test 时如果/var/www/foo这个文件存在,那么URI就会被改写为/foo,然后走向下一
+ 个阶段。如果直到检查完第n-1个参数都没有发现对应的文件,该指令就会立即跳转到
+ 第N个参数所指定的URI,对于上面的例子会内部跳转到/barz这个URI。
+
+
 
 
 
