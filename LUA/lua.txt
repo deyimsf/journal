@@ -648,3 +648,62 @@ lua> print(debug.traceback())
     local person1 = Person:new(10,20);    
     local person2 = Person.new(self,10,20);
 
+#lua中协程间的通信
+  1.协程第一次被启动时,传递给coroutine.resume的参数将传递给协程主程序。
+  2.协程挂起时,传递给coroutine.yield的参数将作为启动它的resume的返回值返回。
+  (注意,这里说的是resume的返回值,并不是yield的返回值,挂起后yield还没有返回值)
+  3.协程被再次启动时,传递给resume的参数,将作为上次挂起它的yield的返回值返回。
+  (再次启动时,yield方法才会有返回值,并且就是启动它的resume的参数).
+  4.协成死亡时,最后一次启动它的resume的返回值,就是主程序的返回值.
+ 
+  总结:
+	大概的意思就是,挂起时给yield传递的是什么值,resume返回的就是什么值.
+    从挂起点启动时,给resume传递的什么值,这个挂起点(yield)返回的就是什么值。
+	
+	还有一点要注意的是,主函数的入参变量,在通过resume启动时只会赋值一次,随后
+    的启动可以认为不算是一次方法调用,更像一次线程上下文切换。
+    所以挂起后再次调用resume时传递的参数,并不会对主函数的入参变量赋值,只是
+    用来给挂起点(yield)当返回值用的。
+
+  例子：
+	local co = coroutine.create(function(a,b)
+					local x,y = coroutine.yield(a,b);  --1
+          			print(x,y);                        --2
+			
+					local x,y = coroutine.yield(a,b);  --3
+					print(x,y);                        --4
+					
+					return "end";                      --5
+               end)
+
+    //1.协程第一次启动,会把传递给resume的参数(1,2)传递给主函数,
+    //  这时候主函数开始执行,但是在--1处遇到了yield方法,所以这时
+    //2.协程挂起,并且把传递给yield的参数(1,2)作为resume的返回值返回.
+    //  所以会打印出"true 1 2"。打印true是说明resume执行成功.
+    print(coroutine.resume(co,1,2));
+    --> true 1 2
+
+    //3.再次启动协程,这时候程序会从挂起点--1处开始执行,并把传递给resume
+    //  的参数(3,4),作为挂起点--1处的yield方法的返回值。直到这一步我们
+    //  才看到yield方法的返回值。
+    //  对于yield的返回可以这样理解:
+    //    1.挂起时的返回是替resume返回的
+    //    2.从挂起点启动时的返回才是替自己返回的
+    //  所以这时候第一个 local x,y 才被赋值 3,4并打印  
+
+    //4.打印完3,4后,协成再次挂起时,传递给yield的参数仍然是局部变量a,b(1,2)
+    //  所以把1,2作为resume的返回值。
+    print(coroutine.resume(co,3,4));
+    -->3,4
+    -->true 1,2
+   
+    //5.再次启动,这时候和步骤3相似,从挂起点--3出开始执行,并把传递给resume
+    //  的参数5,6作为yield的返回值,赋值给第二个local x,y,随后打印5,6并将
+    //  主函数的返回值"end"作为resume的返回值返回。
+    print(coroutine.resume(co,5,6));
+	-->5,6
+    -->true end
+  
+
+
+
