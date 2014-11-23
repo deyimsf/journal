@@ -31,7 +31,7 @@
 
 #获取数据类型
  print(type("hello world"));		-->string
- print(type(20*3));					-->number
+ print(type(20*3));					-->number //lua中数字都是double类型的
  print(type(print));				-->function
  print(type(true));					-->boolean 
  print(type(a));					-->nil
@@ -451,8 +451,10 @@ lua> print(debug.traceback())
 
 #对完全I/O模式的读写要用冒号
  //读整个文件
- f = io.open("foo.lua");
+ f = io.open("foo.lua","a");
  t = t:read("*all");
+ f:write("abc\n");
+ f:flush();//刷新缓冲区
  f:close();	//关闭文件  
 
 #发送错误信息到标准错误输出

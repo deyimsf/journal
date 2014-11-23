@@ -468,7 +468,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  一定是先执行完一个模块的指令后在执行另一个模块的指令。(具体哪个模块的指令
  向执行,一般有模块的加载顺序决定,有例外)。
 
-#more_set_input_headers指令(属ngx_headers_more模块)
+#more_set_input_headers指令(属第三方ngx_headers_more模块)
  该指令总是运行在rewrite阶段的末尾,用于操纵当前请求的请求头,还可以
  在请求头不存在时自动创建。
  例子:
