@@ -10,6 +10,14 @@ C语言的几种基本数据类型
  signed
  unsigned
 
+const用该关键字修饰的变量是只读的(但不是常量)
+ const int a = 3; //对该变量修改会报错
+ const char str[] = "hello";
+	str[0] = 'a'; //错误,变量的内容是只读的
+ const char *str = "hello";
+	str = "abc"; //正确,没有修改变量的内容
+ 	
+ 
 '\000' 用八进制表示一个字符 如'\013'
 '\xhh' 用十六进制表示一个字符 如'\xb'
 

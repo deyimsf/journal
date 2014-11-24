@@ -601,7 +601,8 @@ lua> print(debug.traceback())
 	static int l_sin(lus_State *L){ //lua调用该函数时会将参数放入栈中
 
 		double d = lua_tonumber(L,1); //从栈中获取参数
-		lua_pushnumber(L,sin(d));	//结果放入栈中,lua会从栈中拿结果(个人猜测有多少拿多少)
+		lua_pushnumber(L,sin(d));	//结果放入栈中,lua会从栈中拿结果
+		lua_pushstring(L,"sucess"); //第二个返回值
 		
 		return 1;
 	}
