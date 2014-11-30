@@ -512,7 +512,7 @@ lua> print(debug.traceback())
  --------------------------------------------
  -------------------->C函数<-----------------
  #include <lua.h>
- #include <laulib.h>
+ #include <lauxlib.h>
  #include <lualib.h>
 
  void load(char *filename,int *width,int *height){
@@ -707,6 +707,77 @@ lua> print(debug.traceback())
 	-->5,6
     -->true end
   
+
+#lua支持gbk编码的len和sub方法的例子
+********************************************************
+ //返回字符串的长度
+ function len(str)
+ 	local len = string.len(str);
+ 	local n = 0;
+ 	local i = 1;
+ 	
+ 	while i<=len do	
+ 		local b = string.byte(str,i,i);
+ 		if (b>128) and (b<255) then
+ 			i=i+2;
+ 			n=n+1;
+		else
+			n=n+1;
+			i=i+1;
+ 		end 		
+ 	end
+ 	
+ 	return n;
+ end
+ 
+ print(len("123,中国abc中"));
+ 
+ //截取字符串,从第j个字符开始,到第k个字符
+ function sub(str,j,k)
+ 	local len = string.len(str);
+ 	
+ 	if k >= len then
+ 		return string.sub(str,1,-1);
+ 	end
+ 	
+ 	local n = 0;
+ 	local i = 1;
+ 	local old_i = 1;
+ 	local tmpj = 0;
+ 	local tmpk = 0;
+ 	
+ 	while i<=len do
+ 		local b = string.byte(str,i,i);
+ 		if (b>128) and (b<255) then
+ 			n=n+1;
+ 			old_i = i;
+ 			i=i+2;
+		else
+			n=n+1;
+			old_i = i;
+			i = i+1;
+ 		end 	
+ 		
+ 		if j==n then
+ 			tmpj = old_i;
+ 		end	
+ 		
+ 		if k==n then
+ 			tmpk = i-1;
+ 			break;
+ 		end
+ 	end
+ 	
+ 	if tmpk == 0 then
+ 		tmpk = -1;
+ 	end
+ 	
+ 	return string.sub(str,tmpj,tmpk);
+ end
+ 
+ print(sub("abc中国.,fds人",1,9));
+
+******************************************************
 
 
 
