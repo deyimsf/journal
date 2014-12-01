@@ -559,6 +559,23 @@ C语言编译器gcc
 	-ansi,-std=c89		ANSI,ISO C90
 	-std=c99			ISO	C99
 	-std=gnu99			GNU 99
+ -I  指定头文件的目录
+ -nostdinc 编译器不在系统缺省目录中找头文件
+
+gcc查找头文件的路径
+ 1.对于#include "a.h"这种形式,gcc在当前路径下找。
+ 2.对于#include <a.h>这种形式,gcc的寻找顺序如下:
+	a)从gcc指定的路径中查找,如：
+		$gcc -I /abc
+      则从/abc下找a.h这个头文件
+    b)从gcc的环境变量中找:
+		C_INCLUDE_PATH/CPLUS_INCLUDE_PATH/OBJC_INCLUDE_PATH
+    c)从系统缺省目录中找
+		/usr/include	
+		/usr/local/include
+    	/usr/lib/gcc/x86_64-redhat-linux/4.4.4/include
+      注意:最后一个路径是gcc程序的库文件地址,不同的系统上可能不一样
+     
 
 反汇编器objdump可以将目标代码,反汇编成汇编格式的代码
  objdump -d dest.o
