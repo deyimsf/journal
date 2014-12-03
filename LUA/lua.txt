@@ -54,8 +54,38 @@
  等价于
  days={[1]="sunday",[2]="monday",[3]="tuesday"}
 
-#创建一个表
- tab={["n1"]="n1",n2="n2",add=function() return 1;  end}
+#表table
+ table的一般定义法:
+	local tab = {[key1]=value2,[key2]=value2}
+ 其中key可以是除了nil的任何lua类型,value可以任意lua类型
+
+ 例子1:key是字符串
+    local tab = {["name"]="abc",["age"]=23};
+	print(tab.name); 	-->abc
+	print(tab["name"]); -->abc
+ 另外,lua对于key是字符串的表,创建的时候可以省略中括号和双引号
+	local tab = {name="abc",age=23};
+	print(tab.age);    -->23
+	print(tab["age"]); -->23
+
+ 例子2:key是数字
+	local tab = {[1]="a",[2]="b"};
+	print(tab[1]); -->a
+ lua对于key是数字的表,还可以省略其key值,且key值从1开始
+	local tab = {"a","b"} 
+	print(tab[1]); -->a
+ 
+ 例子3:key是表、函数
+	local t = {};
+	local tab = {[t]="a"};	
+	print(tab[t]); -->a
+
+
+	function fa() end;
+	local f = function() end;
+	local tab = {[f]="a",[fa]="b"};
+	print(tab[f]);   -->a
+	print(tab[fa]);  -->b
 
 #赋值
  a,b,c = 0,1;
