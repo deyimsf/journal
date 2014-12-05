@@ -1,0 +1,15 @@
+#hello world例子:
+  /******************cc.sh*****************/
+ 	#!/bin/bash
+ 
+	 if [ "a"=="a" ]; then
+ 		echo "hello world"
+ 	fi
+  /****************************************/
+ 执行
+	sh ./cc.sh
+ 输出
+	hello world
+ 注意:
+	[ expression ] 中括号[]和expression之间必须有空格。
+	并且第一个中括号[前面必须有空格.
