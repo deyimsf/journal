@@ -1506,3 +1506,20 @@ IO多路复用select的例子:
    和mmap的方式不同,这种方式是直接抛弃OS的cache,也就是说在read/write时是
  直接操作磁盘,在read/write时需要是文件系统逻辑块大小的倍数,比如4k.
    ps:数据库实现应该用的是这个。
+
+#查看程序都依赖于那些库
+ $ldd ./sbin/nginx
+	linux-vdso.so.1 =>  (0x00007ffffddff000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f1a40ea4000)
+	libcrypt.so.1 => /lib64/libcrypt.so.1 (0x00007f1a40c6d000)
+	libpcre.so.1 => /usr/local/lib/libpcre.so.1 (0x00007f1a40a50000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007f1a4083a000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f1a404a7000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f1a410c7000)
+	libfreebl3.so => /lib64/libfreebl3.so (0x00007f1a40244000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f1a40040000)
+ 以上是nginx在linux下依赖的库。
+ ld-linux-x86-64.so.2只有在64为系统上才有。
+
+
+
