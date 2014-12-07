@@ -1,0 +1,158 @@
+#用make命令可以覆盖Makefile中指定的值
+ 例如:
+  //-----------------Makefile-------------------
+   LUA_INCLUDE_DIR = /usr/local/include 
+   echo:
+		@echo "LUA_INCLUDE_DIR=$(LUA_INCLUDE_DIR)"
+  //--------------------------------------------
+ 
+ 当前文件下输入make,则输出
+	LUA_INCLUDE_DIR=/usr/local/include
+ 如果make后加上参数,如:
+	make LUA_INCLUDE_DIR=/abc
+ 则输出
+	LUA_INCLUDE_DIR=/abc
+
+#make查找xxxfile文件的顺序,Linux区分大写,Mac不区分
+ 1.GNUmakefile
+ 2.makefile
+ 3.Makefile
+ 
+#Makefile的基本格式
+ <target>:[<condition>]
+ <Tab><command>
+ target:目标(可以有多个,以空格分隔),用户自定义的字符,其中all是make自己的.
+ condition:需要依赖的文件(可以有多个,以空格分隔),如果要换行可以使用\符号.
+ Tab:tab制表符,不能用空格代替,每个command前面必须以这个开头。在makefile中
+     只要以Tab制表符开头就会被当成命令解释。
+ command:你要做的事情,比如gcc等.如果要换行可以使用\符号.
+
+ 例子: 编译一个.c文件 	
+   //--------------------Makefile-------------
+	all:main.o part1.o part2.o
+		gcc main.o part1.o part2.o -o mybin
+	
+	main.o: main.c
+		gcc -c main.c
+	
+	part1.o: part1.c
+		gcc -c part1.c
+	
+	part2.o: part2.c
+		gcc -c part1.c
+   //-------------------------------------------
+ 在该文件所在的目录下执行不加参数的make命令,执行顺序如下:
+	1)make命令在当前目录下找相应的xxxfile文件如果都没找到就报错.
+	2)在xxxfile文件中找all这个目标,如果没有则执行第一个目标。
+    3)查找all后面的三个文件是否存在,如果存在就执行下面的action。
+      如果不存在,就把第一个main.o作为目标,查找文件中是否有该目标,
+      如果有,就执行该目标并最终得到需要的main.o文件。
+    4)得到main.o后就接着去处理part1.o和part2.o,方法和得到main.o一样。
+
+#make命令
+ -f:指定xxxfile,用它之后就不会选择默认的makefile了
+ --file=xxx: 同-f
+ --makefile=xxx: 同-f
+ -d: 调试makefile文件,将文件的执行过程打印出来.
+ -p: 查看make支持的隐式规则,比如从.c到.o的转换(.c.o:)
+
+
+ 例子:从.c到.o的隐式转换
+    all: main.o part.o
+		gcc main.o part.o -o mybin
+    
+    main.o: main.c
+	part.o: part.c
+ 由于make支持.c.o:转换,所以只要xxx.c文件存在,则可以执行成功.
+
+#make中得宏(变量)
+  :=      该符号用来定义变量
+  $()|${} 这两个符号用来展开变量
+ 
+ 例子:
+	CC		:=	gcc		//编译命令的变量
+    LD		:=  gcc	    //链接命令的变量
+    CFLAGS  :=  -g -W -std=c99 -c //编译用到的参数
+    LDFLAGS :=  -lcurses  //链接用到的参数
+
+    all: MyC
+
+	Myc: main.o part.o
+		$(LD) $(LDFLAGS) main.o part.o -o my
+
+    main.o: main.c main.h
+		$(CC) $(CFLAGS) -o main.o main.c
+    part.o: part.c part.h
+		$(CC) $(CFLAGS) -o part.o part.c
+
+#make中常用的自动变量
+ 自动变量可以自动取用一条规则中目标和条件的元素.
+ $@		目标的文件名
+ $<		第一个条件的文件名
+ $?		时间戳在目标之后的所有条件(文件),并以空格隔开
+ $^		所有条件的文件名,以空格隔开,且排除了重复的条件(文件)
+ $+		与$^类似,没有排重
+ $*		目标的主文件名,不包含扩展名?
+
+ 例子:
+	all: MyC
+	MyC: main.o part.o part.o
+		@echo \$$@=[$@]
+		@echo \$$\<=[$<]
+		@echo \$$?=[$?]
+		@echo \$$^=[$^]
+		@echo \$$+=[$+]
+		@echo \$$*=[$*]
+    main.o: main.c
+		gcc -c main.c
+	part.o: part.c
+		gcc -c part.c
+
+ 输出结果如下:
+	$@=[MyC]
+	$<=[main.o]
+	$?=[main.o part.o]
+	$^=[main.o part.o]
+	$+=[main.o part.o part.o]
+	$*=[]
+ 
+#make中的模式规则
+   CC		:=  gcc
+   LD		:=  gcc
+   CFLAGS	:=  -g -W -std=c99 -c
+   LDFLAGS	:=	-lcurses
+	
+   all:TinyEdit
+   
+   TinyEdit: main.o line.o
+		$(LD) $(LDFLAGS)    $^     	  -o      $@
+		#gcc  -lcurses  main.o line.o -o TinyEdit
+ 
+   %.o:%.c  //模式规则中的目标target与条件condition是一对一关系
+		$(CC) $(CFLAGS) 		-o  $@     $<
+   #main.o: main.c 
+		#gcc -g -W -std=c99 -c	-o  main.o main.c
+   #line.o: line.c
+		#gcc -g -W -std=c99 -c   -o  part.o part.c 
+  
+ 例子中的模式规则(%.o:%.c)百分号代表任意字符.
+ 它在工作的时候首先会用模式规则的目标(%.o)和当前执行的目标(TinyEdit)
+ 的条件进行匹配,之后会用匹配到的部分,一对一的替换掉模式规则中条件模式
+ 的百分号。
+ 
+ 从上面的例子可以看到,模式规则匹配完后就构成了一个显示的模式。
+ 实际上之前说到的隐式规则其实就是因为make内置了很多的模式规则,所以
+ 如果遇到了不支持的隐式规则,我们就可以通过模式规则手动创建。另外
+ 因为模式规则(%.o:%.c) 变量(CC LD CFLAGS LDFLAGS)等已经被make内置了,
+ 并且内置模式中也会用到这些变量,所以删掉这个模式规则得到结果一样。
+ 也是一样的。
+  
+
+
+
+
+
+
+
+
+
