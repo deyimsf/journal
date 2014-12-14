@@ -1,3 +1,8 @@
+#如果对一个变量有多次赋值,那么优先顺序如下:
+  命令行赋值优先级最高;
+  Makefile自身的赋值次之;
+  顶层Makefile传递过来的最低,上层Makefile传递过来的命令行除外;
+
 #用make命令可以覆盖Makefile中指定的值
  例如:
   //-----------------Makefile-------------------
@@ -65,7 +70,7 @@
 	part.o: part.c
  由于make支持.c.o:转换,所以只要xxx.c文件存在,则可以执行成功.
 
-#make中得宏(变量)
+#make中的变量
   :=      该符号用来定义变量
   $()|${} 这两个符号用来展开变量
  
@@ -133,7 +138,7 @@
    #main.o: main.c 
 		#gcc -g -W -std=c99 -c	-o  main.o main.c
    #line.o: line.c
-		#gcc -g -W -std=c99 -c   -o  part.o part.c 
+		#gcc -g -W -std=c99 -c  -o  part.o part.c 
   
  例子中的模式规则(%.o:%.c)百分号代表任意字符.
  它在工作的时候首先会用模式规则的目标(%.o)和当前执行的目标(TinyEdit)
@@ -147,9 +152,176 @@
  并且内置模式中也会用到这些变量,所以删掉这个模式规则得到结果一样。
  也是一样的。
   
+ 注意:
+	用make -p 命令可以查看都内置了那些变量和模式规则.
+
+#虚假目标 .PHONY
+ 首先在make中条件condition一定是文件,如果找不到这个文件则把条件看
+ 成目标进行查找,找到之后就会执行目标.但是如果项目中存在一个文件和
+ 这个目标同名,那么这个目标就不会被执行,为了解决这个问题,make中引入
+ 了假目标.PHONY。它的作用就是不把它后面的条件看成文件.
+ 例如:	
+	.PHONY: install uninstall
+	
+	install: 
+		@echo "hello install";
+	
+	uninstall:
+		@echo "hello uninstall";
+
+ 执行make install,如果当前目录中有install文件,并且我们没有.PHONY
+ 这个假目标,则就不会输出hello install.
+
+#路径搜索VPATH和vpath
+ VPATH 用来指定用于搜索文件的路径
+ 例如:
+	VPATH	:= src	include
+	
+	all:my
+	
+	my:main.o part.o
+		@echo "hello"
+  
+    main.o:main.c
+	part.o:part.c
+
+ 执行make后,如果在当前目录找不到main.c等文件就会去VPATH指定目录去
+ 找,并且只匹配第一个找到的.
+
+ vpath 同VPATH但是这个更灵活,可以按模式指定
+ 例如:
+	vpath %.c src
+	vpath a.h include
+
+    all:my
+	
+	my:main.c part.c
+		@echo "hello"
+ 执行过程同样是先找当前的,然后可以分开指定.c的从src目录找,a.h从include目录找。
+
+#文件包含include
+ 格式:
+	include file1 file2 ...
+ 当make遇见include指令后回去读取后面指定的文件,如果找不到只是抱怨一下,并继续
+ 读后面的文件,最后在把没找到的文件作为目标去执行.
+
+ 例如:
+   //-----------common.mk文件------------
+	  CC		= gcc
+	  CFLAGS	= -g -w
+   //------------------------------------
+ 
+   //----------define.mk文件-------------
+	  CFLAGS	+= -std=c99    //+=追加
+   //------------------------------------
+
+   //-----------Makefile文件-------------
+	 include common.mk define.mk
+	 all:my
+	
+	 my:main.c part.c
+		$(CC) $(CFLAGS) $^ -o my
+   //------------------------------------
+
+ 注意: include指令找文件顺序
+	如果是绝对路径,就直接读绝对路径。如果给的是相对路径就先找相对路径,如果
+    找不到就按照make -I 指定的路径去找。如果还没找到就把inlude的文件作为目标
+    去执行。
+
+#命令command
+ Makefile中命令只能单行处理shell脚本,也就是说一个命令只能一行写完。但是
+ 可以有多行命令,如果想换行只能使用 \ 符号.
+ 命令只能出现在规则和变量的赋值中.
+
+ 例如:
+	list.txt:     //将a b 目录中内容输出到list.txt文件中
+		@echo	"start"
+		@for d in a b;  \
+		 do			    \
+		 	echo $$d/*; \
+		done> $@	    \   //$@代表规则的目标,这里就是list.txt 
+
+ 例如:变量赋值
+	FILE_LIST	:=	`for d in a b; do echo $$d/*; done`
+
+#命令修饰符
+ @  要求不输出命令
+ -  要求命令忽略错误
+ +  要求只显示命令,不去执行
+
+#变量赋值符号
+ :=  经简单扩展的变量
+   这个符号和平常的赋值符号没什么区别
+   比如:
+	  VAR	:= $(CC) -c
+   如果CC这个变量有值,那么VAR就是CC的值加上 -c
+   如果CC没有定义,那么VAR就是空格<space> 加上 -c
+
+ = 经递归扩展的变量
+   这个符号只是把右边的值不经计算的搬给左边
+   例如:
+	  CC	= 	gcc
+	  VAR	= 	$(CC) -c
+   这里VAR变量的值并不是 gcc -c而是$(CC) -c,只有在实际使用时才是前者.
+      echo $(VAR)		-->gcc -c
+      CC 	=	acc
+      echo $(VAR)		-->acc -c
+   从上面的例子可以看到,变量的赋值类似于"懒加载"
+
+ ?= 附带条件的变量赋值运算符
+    左边的变量被定义过就赋值,没有就跳过		
+
+ += 变量拼接符号
+	
+#目标专属变量
+ 类似于局部变量,只有某个目标可以用
+ 例子:
+	CC		:= gcc
+	CFLAGS	:= -std=c99 -c
+
+	all:my
+	
+	my:CFLAGS += -g    //执行这个目标的时候增加一个变量
+	my:main.c part.c
+		$(CC) $(CFLAGS) main.c part.c -o my
+
+#make的专有变量
+ MAKE_VERSION	GNU make的当前版本号
+ CURDIR			make的当前工作路径
+ MAKEFILE_LIST	make所读入的所有Makefile文件的列表,包括include的
+ MAKECMDGOALS   在make命令中给定的要生成的目标
+ VARIABLES		所有已定义的变量名列表,不包括目标专有变量
+
+#宏和函数
+ 宏定义:
+ 	define cc
+		@echo "hello"
+ 	endef
+ 使用:
+	$(cc)
+
+ 函数定义:
+	define cc
+		@echo "hello $1"
+    endef
+ 使用: 用make的内置函数call调用自定义的函数
+	$(call cc,"world")
+
+#条件指令,和C的预编译指令很想
+ if-condition
+	...
+ else
+	...
+ endif
+
+ if-condition: ifdef、ifndef、ifeq、ifneq
 
 
 
+
+ 
+	 
+	
 
 
 
