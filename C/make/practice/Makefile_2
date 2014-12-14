@@ -1,0 +1,17 @@
+CC		:=	gcc
+LD		:=  gcc
+CFLAGS	:= -g -W -std=c99
+LDFLAGS := -lcurses
+
+.PHONY: MyC
+all: MyC
+
+MyC:
+	@echo "aa";
+
+b:
+	@echo "hello world";
+
+
+clean:
+	rm -rf ./*.o

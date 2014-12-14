@@ -1,0 +1,22 @@
+CC		:=	gcc
+LD		:=  gcc
+CFLAGS	:= -g -W -std=c99
+LDFLAGS := -lcurses
+#VPATH	:= src include
+vpath  main.c src
+vpath  part.c src
+
+all: MyC
+
+MyC: main.o part.o
+	@echo "111"	
+
+main.o: main.c
+	$(CC) $(CFLAGS) -c $<
+
+part.o: part.c
+	$(CC) $(CFLAGS) -c $<
+
+
+clean:
+	rm -rf ./*.o
