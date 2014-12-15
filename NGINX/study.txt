@@ -488,6 +488,11 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  独立运行.
  ps:rewrite_by_lua指令也运行在rewrite的末尾阶段.
 
+ //清理响应头
+ more_clear_headers 'Content-Type';
+ //设置响应头
+ more_set_headers   'Content-Type: text/plain'
+
 #标准模块ngx_access的allow和deny指令用于控制哪些Ip地址可以访问,哪些不可以
  这两个指令运行在access阶段.
  例子:
