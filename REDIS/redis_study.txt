@@ -20,7 +20,7 @@ tcp_port:6379
 uptime_in_seconds:1151
 //从启动到现在的时间,单位天
 uptime_in_days:0
-//serverCron()函数没秒调用的次数
+//serverCron()函数每秒调用的次数
 hz:10
 //时钟
 lru_clock:1760782 //Clock for LRU eviction
@@ -119,7 +119,7 @@ latest_fork_usec:281
 role:master
 connected_slaves:1
 slave0:ip=127.0.0.1,port=0,state=online,offset=0,lag=660
-//偏移量,没接收一个设置命令该值都会增加
+//偏移量,每接收一个设置命令该值都会增加
 //从服务器在发送psync时会带着自己的offset
 //两者相比较则可以判断从哪里开始部分重同步
 master_repl_offset:1373

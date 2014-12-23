@@ -20,7 +20,7 @@ digraph redis{
 	aeCreateFileEvent->initAcceptHandler[label="设置有socket可接收\n时要调用的方法"];
 	
 	//循环处理事件
-	aeMain[label="redis.c/aeMain"];
+	aeMain[label="ae.c/aeMain"];
 	aeProcessEvents[label="ae.c/aeProcessEvents\n(事件分派器)"];
 	redis->aeMain;
 	aeMain->aeProcessEvents[label="循环处理就绪事件"];
@@ -45,7 +45,7 @@ digraph redis{
 	aeCreateFileEvent_1[label="aeCreateFileEvent"];
 	acceptTcpHandler->acceptCommonHandler[label="为接收的socket绑定事件"];
 	acceptCommonHandler->createClient;
-	createClient->aeCreateFileEvent_1[label="创建AE_READBLE事件\n绑定readQueryFromClient\n(命令请求处理器)"];
+	createClient->aeCreateFileEvent_1[label="创建AE_READBLE事件\n绑定readQueryFromClient\n(处理命令请求的方法)"];
 
 	//命令请求处理器
 	readQueryFromClient[label="networking.c/readQueryFromClient"]
@@ -73,7 +73,7 @@ digraph redis{
 	addReplyBulk->addReply;
 	addReply->prepareClientToWriter;
     addReply->"_addReplyToBuffer\n_addReplyObjectToList"[label="命令放入回复缓存区"];
-	prepareClientToWriter->aeCreateFileEvent_2[label="创建AE_WRITABLE事件\n绑定sendReplyToClient\n(命令回复器)"];
+	prepareClientToWriter->aeCreateFileEvent_2[label="创建AE_WRITABLE事件\n绑定sendReplyToClient\n(处理命令回复的方法)"];
 
     
  	//命令回复器
