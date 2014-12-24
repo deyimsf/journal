@@ -1104,13 +1104,39 @@ $ iostat -xk
       该值接近100%说明IO系统已经满负荷.
 
 #查看内存状态
- $ free 
-	   	total	 used	free	shared	buffers	 cached
-   Mem: 400084	387164  12920      0      7304	  41532
+ $ free -m   //按M单位显示,默认是KB
+              total       used       free     shared    buffers     cached
+ Mem:         15951       1355      14595          0        263        197
+ -/+ buffers/cache:        894      15056
+ Swap:         8191          0       8191
+ 
+ 第一行: 从操作系统(OS)的角度来看
+	total: 总物理内存
+	used:  OS认为使用了多少内存
+	free:  OS认为有多少空闲的内存
+	total = used + free
 
-   shared:进程间共享的内存,比如mmap映射时加MAP_SHARED标记
-   buffers:用于缓存目录、inode等信息,比如目录有什么内容、权限等。
-   cached:用于缓存打开的文件(pagecache),按页大小。
+	shared:进程间的共享内存,如mmap映射时加MAP_SHARED标记
+	buffers:用于缓存目录、inode等信息,比如目录有什么内容、权限等
+		A buffer is something that has yet to be "written" to disk.
+		(buffer代表还没有"写"入磁盘的数据)
+    cached:用于缓存打开的文件(pagecache),按页大小
+		A cache is something that has bean "read" from the disk and stored for later use.
+        (cache代表从磁盘和存储设备上读到的数据)
+
+ 第二行: 从用户程序的角度看内存使用情况
+	used: 程序认为系统用掉了多少内存
+	free: 程序认为系统还有多少内存可以申请
+
+	used = Mem[used] - Mem[buffers] - Mem[cached] - Mem[shared]
+	(程序认为已用内存 =	OS已用内存 - OS已buffer内存 - OS已cache内存 - 共享内存)
+	free = Mem[free] + Mem[buffers] + Mem[cached]
+	(程序认为可用内存 = OS认为空闲内存 + OS已buffer内存 + OS已cache内存)
+
+ 第三行: 交换分区
+	total: 交换分区大小
+	used:  使用的交换分区大小
+    free:  可用的交换分区
 
 #释放系统cache
  //释放所有缓存(pagecache、dentries、inodes)
