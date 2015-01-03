@@ -185,3 +185,61 @@ db0:keys=2,expires=0,avg_ttl=0
 	//用OBJECT REFCOUNT命令获取
 	int refcount;	
  }
+
+#二进制安全(Binary-safe)
+ 二进制安全是一种,描述处理字符串函数的术语.一个二进制安全的函数,
+ 会将输入作为一个原始的无任何特殊格式的数据流。
+ 
+ 如果一个函数使用特殊格式的字符作为标记，那么它就不是二进制安全的.
+ 比如一些函数把某些特殊的字符当做转义码等。
+
+#统一请求协议
+ 请求格式:
+ 	*<参数数量>CRLF
+	$<参数1的字节数量>CRLF
+	<参数1的数据>CRLF
+	...
+	$<参数n的字节数量>CRLF
+	<参数N的数据>CRLF
+
+#回复格式
+  状态回复(status reply)第一个字节是"+"
+	+OK
+
+  错误回复(error reply)第一个字节是"_"
+	-ERR unknown command 'ccc'
+	-WRONGTYPE Operation against a key holding the wrong kind of value
+   
+    在"-"之后和第一个空格或新行之间的内容表示返回的错误类型.    	
+
+  整数回复(integer reply)第一个字节是":"
+	:100
+
+  批量回复(bulk reply)第一个字节是"$"
+	如GET命令:
+	$5
+	hello
+	
+	空批量回复(null bulk reply):
+	$-1
+	
+  多条批量回复(multi bulk reply)第一个字节是"*"
+	如hmget命令:
+	*2
+	$5
+	hello
+	$5
+	world
+
+    也可以包含不同类型的批量回复
+	如hmget命令:
+	*3		//多条回复
+	$5		//批量回复
+	hello	//数据
+	:100	//整数回复
+    $5		//批量回复
+	world	//数据
+	
+
+
+	

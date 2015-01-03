@@ -113,33 +113,34 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   
     例子1：请求http://website.com/document 
     server{ 
-    server_name website.com; 
-    location /doc{ 
-    ... 
-    } 
-    location ~* ^/document${ 
-    #会匹配该配置，因为可以精确匹配"document" 
-    } 
+    	server_name website.com; 
+    	location /doc{ 
+    		... 
+    	} 
+
+    	location ~* ^/document${ 
+    		#会匹配该配置，因为可以精确匹配"document" 
+    	} 
     } 
    例子2:请求http://website.com/document 
    server{ 
-   server_name website.com; 
-   location /document{ 
-   #会匹配该配置，因为是精确匹配并且没有修饰符的location区段(精确匹配)优先级比正则(精确匹配)高 
-   } 
-   location ~* ^/document${ 
-   ... 
-   } 
+	    server_name website.com; 
+	    location /document{ 
+   	   	   #会匹配该配置，因为是精确匹配并且没有修饰符的location区段(精确匹配)优先级比正则(精确匹配)高 
+   	    } 
+   		location ~* ^/document${ 
+   			... 
+   		} 
    } 
    例子3:请求http://websit.com/document 
    server{ 
-   server_name website.com; 
-   location ^~ /doc{ 
-   #匹配该配置，^~的优先级比~或~*高 
-   } 
-   location ~* ^/document${ 
-   ... 
-   } 
+   		server_name website.com; 
+   		location ^~ /doc{ 
+   			#匹配该配置，^~的优先级比~或~*高 
+   		} 
+   		location ~* ^/document${ 
+   			... 
+   		} 
    } 
   
 
@@ -604,6 +605,8 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	from:[192.18.1.1]
  
 #rewrite指令,属ngx_rewrite模块
+ 语法: rewrite regex replacement [flag];
+
  该指令只是在做简单的URI重写,不会立即进行内部跳转,而是简单的指定有必要
  在随后的post-rewrite阶段发生内部跳转。
  例子:
