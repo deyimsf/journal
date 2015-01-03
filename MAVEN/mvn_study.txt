@@ -1,0 +1,8 @@
+#查看项目依赖
+  $ mvn dependency:analyze
+ 
+#查看项目直接和传递依赖
+  $ mvn dependency:tree 
+
+#查看maven构建时有效的pom
+  $ mvn help:effective-pom 
