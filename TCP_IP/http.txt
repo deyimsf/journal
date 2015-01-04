@@ -106,16 +106,16 @@ HTTP首部报文格式
 HTTP/1.1通用首部字段：
 	Cache-Control：If-Modified-Since字段似乎会覆盖Cache-Control
 		缓存请求指令:
-		  指令		参数	说明
+		  指令			参数	说明
 		------------------------------------------------------
-		no-cache	无	强制向源服务器再次验证
-		no-store	无	不缓存请求或响应的任何内容
+		no-cache		无		强制向源服务器再次验证
+		no-store		无		不缓存请求或响应的任何内容
 		max-age=[秒]	必须	响应的最大age
 		max-stale(秒)   可省略	接收已过期的响应
 		min-fresh[秒]	必须	期望在指定时间内的响应仍有效
-		no-transform	无	代理不可更改媒体类型
-		only-if-cached	无	从缓存获取资源
-		cache-extension	-	新指令标记
+		no-transform	无		代理不可更改媒体类型
+		only-if-cached	无		从缓存获取资源
+		cache-extension	-		新指令标记
 	
 		缓存响应指令
 		  指令		参数	说明
@@ -135,7 +135,7 @@ HTTP/1.1通用首部字段：
 			
 		指令public：
 		  当指定public指令时，则表明其他用户也可利用缓存。
-                指令private：
+        指令private：
 		  响应只以特定用户作为对象，也就是只有特定用户才能利用改缓存。
 		指令no-cache: 注意该字段对应于缓存服务器
 		   如果是请求首部，则明确告诉缓存服务器，我不要你的缓存数据，要从源服务器拿。
