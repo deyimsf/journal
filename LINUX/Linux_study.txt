@@ -333,10 +333,12 @@ $ new_var=${old_var:-content}
  set hlsearch: 高亮显示查找到的数据
 
 
-#vim多窗口功能 svp
-:sp[filename] 
+#vim多窗口功能 
+:sp[filename]  //上下窗口
 [ctrl]+w+j或[ctrl]+w+[向下箭头]  //光标移动到下方的窗口 
 [ctrl]+w+k或[ctrl]+w+[向上箭头]  //光标移动到上方的窗口 
+
+:vsp[filename] //左右
 
 #vim移动光标到指定行 
 :set 3 
