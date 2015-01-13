@@ -1175,6 +1175,19 @@ $ iostat -xk
  $curl -H 'X-My-Head:123' localhost/test
 
 
+#col筛选换行符
+ -b Do not output any backspaces,printing only the last character written to each column position.
+    不输出任何退格键
+ -f 过滤RLF字符
+ -h Do not output multiple spaces instead of tabs(default).
+    用tabs代替多个空格
+ -l<num> 至少num行缓存在内存中.默认128行。
+ -p Force unknown control sequences to be passed through unchanged.
+    强制通过不知道的控制字符
+ -x Output multiple spaces instead of tabs.
+ 
+#过滤到man重定向字符重叠问题
+ man cc | col -b >c_man.txt
 
 
 
