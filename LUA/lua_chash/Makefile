@@ -5,7 +5,7 @@ CFLAGS			:=		-O3 -Wall -g -std=c99 -pedantic
 CHASH_CFLAGS 	:=		-fPIC
 CHASH_LDFLAGS	:=		-shared
 LUA_INCLUDE_DIR	:=		/usr/local/include
-PREFIX			:=		/export/servers/nginx
+PREFIX			:=		/my/servers/nginx
 CHASH_DEST_DIR	:=		$(PREFIX)/conf/lualib
 
 TARGET	:=	chash.so
