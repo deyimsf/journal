@@ -545,6 +545,8 @@ C语言中对于任意整数值x,有 -x = ~x +1;
 
 C语言编译器gcc
  gcc -O1 -S code.c
+ -Wall 打开所有类型的语法警告
+ -pedantic 允许发出ansi/iso c标准列出的所有警告
  -O1 告诉编译器用一级优化
  -O2 二级优化
  -S  获取C语言编译器产生的汇编代码(.s)
@@ -566,6 +568,23 @@ C语言编译器gcc
 	例子:
 	$gcc -MM strbuf.c
      strbuf.o: strbuf.c strbuf.h
+ -D<macro> 定义宏
+	例子:
+	$gcc -Dabc
+     相当于C中的 #define abc
+    
+    $gcc -Dabc=444
+	 ---> #define abc=444
+ -U<macro> 取消宏定义
+	例子:
+	$gcc -Umacro
+	 ---> #undef macro
+ -l<library> 指定编译的时候使用的库
+ 	例子:
+	$gcc -lcurses hello.c
+	使用ncurses库编译程序
+ -L<dir> 指定编译时搜索库的路径; -I是搜索.h用的。
+
 
 gcc查找头文件的路径
  1.对于#include "a.h"这种形式,gcc在当前路径下找。
@@ -1512,7 +1531,7 @@ IO多路复用select的例子:
  直接操作磁盘,在read/write时需要是文件系统逻辑块大小的倍数,比如4k.
    ps:数据库实现应该用的是这个。
 
-#查看程序都依赖于那些库
+#查看程序都依赖于那些库(mac上用otool -L)
  $ldd ./sbin/nginx
 	linux-vdso.so.1 =>  (0x00007ffffddff000)
 	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f1a40ea4000)
@@ -1524,7 +1543,16 @@ IO多路复用select的例子:
 	libfreebl3.so => /lib64/libfreebl3.so (0x00007f1a40244000)
 	libdl.so.2 => /lib64/libdl.so.2 (0x00007f1a40040000)
  以上是nginx在linux下依赖的库。
- ld-linux-x86-64.so.2只有在64为系统上才有。
-
+ =>左边是该程序需要连接的共享库.so名称,右边是在共享库文件中的具体位置。
+ 默认情况下,/etc/ld.so.conf文件中包含有默认的共享库搜索路径。
+ 
+ 注意:如果使用ldd命令时没有找到对应的共享库文件和位置:
+	1.共享库没有安装在该系统中。
+    2.共享库保存在/etc/ld.so.conf 文件列出的搜索路径之外的位置。
+	比如linux系统下/etc/ld.so.conf.d/usr-local-lib.conf 文件中包含了/usr/local/lib
+    所有ldd命令会从这里找,如果有些程序把自己的共享库放到了/usr/local/bin下,那么ldd
+    就找不到了,需要修改/etc/ld.so.conf文件,然后运行ldconfig,这个命令用来刷新系统的
+    共享库缓存即/etc/ld.so.cache文件。
+  
 
 
