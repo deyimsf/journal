@@ -1,3 +1,24 @@
+#三字母转义序列
+  ??=  #
+  ??/  \
+  ??'  ^
+  ??(  [
+  ??<  {
+  ??!  |
+  ??)  ]
+  ??>  }
+  ??-  ~	
+
+#极限值
+ <limits.h>: 定义了数据类型的极限值
+  类型			下限	    	上限
+  int 		   INT_MIN	  	  INT_MAX
+  long		   LONG_MIN		  LONG_MAX	
+
+ <float.h>: 定义了浮点数的极限值
+  float		   FLT_MIN		  FLT_MAX
+  double 	   DBL_MIN		  DBL_MAX
+
 C语言的几种基本数据类型
  char 字符型，一个字节
  int 整形，通常反映所用机器中整数的最自然长度，至少16位
