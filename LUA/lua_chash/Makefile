@@ -5,6 +5,7 @@ CFLAGS			:=		-O3 -Wall -g -std=c99 -pedantic
 CHASH_CFLAGS 	:=		-fPIC
 CHASH_LDFLAGS	:=		-shared
 LUA_INCLUDE_DIR	:=		/usr/local/include
+
 PREFIX			:=		/my/servers/nginx
 CHASH_DEST_DIR	:=		$(PREFIX)/conf/lualib
 
@@ -16,10 +17,10 @@ OBJS	:=	lua_chash.o
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFAGS) $(CHASH_LDFLAGS) -o $@ $^
+	$(LD) $(LDFLAGS) $(CHASH_LDFLAGS) -o $@ $^
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(CHASH_CFLAGS) -I$(LUA_INCLUDE_DIR) -o $@ $<	
+	$(CC) -c $(CFLAGS) $(CHASH_CFLAGS) -I$(LUA_INCLUDE_DIR) -o $@ $<
 
 install:
 	mkdir -p $(CHASH_DEST_DIR)

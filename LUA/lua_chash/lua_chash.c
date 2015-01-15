@@ -29,6 +29,9 @@ static int mod(lua_State *L){
 
 //将这个c函数注册到lua中
 int luaopen_chash(lua_State *L){
+
+	//lua_register(L,"mod",mod);
+
 	//所有要注册到lua中的c函数放到luaL_Reg数组中
 	const luaL_Reg methods[] = {
 						{"mod",mod},
@@ -38,7 +41,7 @@ int luaopen_chash(lua_State *L){
 	//注册c方法到lua
 	//此时栈顶的值是chash
 	luaL_register(L,"chash",methods);
-	
+
 	//设置chash.null的值
 	lua_pushlightuserdata(L,NULL); //此时栈顶元素是NULL
 	//将栈顶的值,放置到栈顶第二个位置的null属性中,然后弹出栈顶
