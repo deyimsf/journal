@@ -282,10 +282,47 @@ a[i] = i++; 存在同样的问题
 		printf("分配内存失败");	
 	 }
 #stdlib.h/free()释放内存
- 释放的地址必须是分配时的地址,假设pv是分配是的地址
+ 释放的地址必须是分配时的地址,否则结果是不确定的,假设pv是分配是的地址
 	free(pv);
 	pv = NULL; 
+
+#stdlib.h/calloc()分配内存
+ 该函数分配的内存会把所有的位初始化为0,例如分配25个int大小的内存
+	int *pv = (int *)calloc(25,sizeof(int));
+	if(pv == NULL){
+		printf("内存分配失败");
+	}
+
+#stdlib.h/realloc()重新分配内存
+ 该函数可以扩展以前用malloc()、calloc()、realloc()分配的内存.
+ 两个参数:
+	一个是以前有上面三个函数返回的指针地址;
+	另一个是要分配的新内存的字节数,该值可以大于之前的值,也可以小于之前的值.
+	当扩大一块内存空间时,realloc()视图直接从原空间后面获取连续的附加字节,如果
+    可以满足则直接扩大空间,否则就需要重新分配一块新的内存,并把原数据考过来.
+ 例子:
+	#include <stdio.h>
+    #include <stdlib.h>
+  
+    int main(){
+       int *pv = (int *)realloc(NULL,5*sizeof(int));
+       printf("%p\n",pv); //新分配的内存
+   
+       int *npv = (int *)realloc(pv,10*sizeof(int));
+       printf("%p\n",npv);//如果pv后面有连续的5个int型大小的字节,则npv等于pv
  
+       int *nnpv = (int *)realloc(npv,8*sizeof(int));
+       printf("%p\n",nnpv);//缩小内存,所以nnpv等npv
+    }
+    
+ realloc()失败时返回NULL,并且原来的内存不变,不释放也不移动
+ 	
+ 如果第一个参数是NULL,那么它就等同于malloc()函数:
+	int *npv = (int *)realloc(NULL,50*sizeof(int));
+ 如果第一个参数不是NULL,也不是之前分配的地址,或者指向已释放的内存,
+ 则结果是不确定的。
+
+
 
 #C中变量作用域	
  连接器如何解析多重定义的全局符号
@@ -776,12 +813,15 @@ C语言编译器gcc
 	例子:
 	$gcc -Umacro
 	 ---> #undef macro
- -l<library> 指定编译的时候使用的库
+ -l<libname> 指定编译的时候使用的库名字,当使用的库文件不在默认路径下时
+    可以配合-L参数一起使用.
  	例子:
-	$gcc -lcurses hello.c
-	使用ncurses库编译程序
- -L<dir> 指定编译时搜索库的路径; -I是搜索.h用的。
-
+	$gcc -llua hello.c
+	使用liblua.so或liblua.a库文件编译程序
+ -L<dir> 指定编译时搜索库文件的路径; -I是搜索.h用的。
+	如:
+	$gcc -L/my/path -labc hello.c
+    该程序在链接时会先从指定路径中搜abc.so或abc.a库文件
 
 gcc查找头文件的路径
  1.对于#include "a.h"这种形式,gcc在当前路径下找。
@@ -796,7 +836,18 @@ gcc查找头文件的路径
 		/usr/local/include
     	/usr/lib/gcc/x86_64-redhat-linux/4.4.4/include
       注意:最后一个路径是gcc程序的库文件地址,不同的系统上可能不一样
-     
+
+gcc查找库文件的路径
+ 1.从gcc指定的目录中搜索,如:
+   $gcc -L /my/path
+ 2.如果找不到则从gcc的环境变量LIBRARY_PATH中找
+ 3.从以下目录中找
+   /lib
+   /usr/lib
+   /usr/local/lib
+
+ ??为什么自己写的chash在mac下需要指定-llua参数,在linux下就不需要?? 
+	     
 
 反汇编器objdump可以将目标代码,反汇编成汇编格式的代码
  objdump -d dest.o
