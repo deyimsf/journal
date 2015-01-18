@@ -6,8 +6,12 @@ CHASH_CFLAGS 	:=		-fPIC
 CHASH_LDFLAGS	:=		-shared
 LUA_INCLUDE_DIR	:=		/usr/local/include
 
-PREFIX			:=		/my/servers/nginx
-CHASH_DEST_DIR	:=		$(PREFIX)/conf/lualib
+#Macos
+LUA_LIB_DIR    :=		/My/work/lua-5.1.5/src
+CHASH_LDFLAGS  +=		-L$(LUA_LIB_DIR) -llua
+
+PREFIX          :=		/my/servers/nginx
+CHASH_DEST_DIR  :=		$(PREFIX)/conf/lualib
 
 TARGET	:=	chash.so
 OBJS	:=	lua_chash.o
