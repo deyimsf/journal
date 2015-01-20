@@ -543,25 +543,41 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  相应的触发ngx_index、ngx_autoindex、ngx_static模块.
 
  ngx_index和ngx_autoindex 只会作用于URI以 / 结尾的请求,例如GET /cc/,
- 如果不是以 / 结尾则把控制权交给下一个模块。而ngx_static模块值处理
- 不以 / 结尾的请求。
+ 如果不是以 / 结尾则把控制权交给下一个模块。而ngx_static模块值处理不以 / 结尾的请求。
+ ngx_index模块主要用于在文件系统目录中自动查找指定的首页文件。
  例如:
 	location /bb/ {
-		root /var/www/;
-		index index.htm  index.html; 
+		root /var/www/;    //用root来指定"首页"所在的目录
+		index index.htm  index.html shouye.ht; //用index指定"首页"文件名
+	    #autoindex on;   //自动生成目录索引,默认off
 	}
- 访问 /bb/ 查找顺序如下:
-	1)在/var/www/bb/目录下首先查找index.htm,如果存在则直接发起内部跳转
-      到/bb/index.htm这个地址.
-    2)如果不存在则在给定的目录下查找index.html,存在则直接发起内部跳转.
-    3)如果以上都没有找到则放弃处理权,交给content阶段的下一个模块.
- 注意:在上面我们提到了,当找到指定文件后并不是直接输出,而是就发起了一个内部
-  跳转,但是如果这个时候我们有这样一个locaiton：
-     location /bb/index.htm {
-		echo "ccccccc";
+ 访问 /bb/ 因为以 / 结尾所以ngx_index模块会起作用,执行顺序如下:
+	在/var/www/bb/ 目录下按顺序查找index指令指定的文件名,假设第一个文件index.htm
+    存在,则直接发起"内部跳转"到 /bb/index.htm 这个新的uri,然后重新匹配location。
+     
+    如果我们没有 location /bb/index.htm {} 这样的location,那么就会重新匹配到我们的
+    location /bb/ {},这次因为不是以 / 结尾的,所以ngx_index模块不再起作用。然后交给
+    content阶段的下一个模块,如果ngx_autoindex模块的autoindex 指令是on则就会自动生成
+    一个当前目录的索引,然后就可以在浏览器上看到当前目录都有哪些内容。
+
+    因为我们这里没有设置autoindex指令,所以这里下一个模块是ngx_static。 
+     
+    ngx_static模块会根据root指令的配置确认.../bb/index.htm文件是否存在,如果存在则
+    直接输出,并附加上一些响应头信息。如果不存在则抛出404。
+
+    ngx_static模块是content阶段默认垫底的最后一个模块,该模块才是真正把静态文件展示
+    出去的功臣。
+
+    如果遍历到最后都没有在指定的目录下找到index 配置的文件名,则交给content阶段的下一
+    个模块。
+
+ 注意:在上面我们提到了,当找到指定文件后并不是直接输出,而是就发起了一个内部跳转,但是
+ 如果这个时候我们有这样一个locaiton：
+    location /bb/index.htm {
+	    echo "ccccccc";
 	}		
- 那么最终输出给客户端的数据是cccccc,因为location在匹配的时候用的是"贪婪"
- 匹配,所以会先匹配/bb/index.htm,结果就被截胡了。
+ 那么最终输出给客户端的数据是cccccc,因为location在匹配的时候用的是"贪婪"匹配,所以会先
+ 匹配/bb/index.htm,又因为存在content阶段的指令echo,所以不会触发静态模块结果就被截胡了。
 
 #ngx_static模块(content阶段的垫底模块)
  看这样一个例子:
@@ -572,13 +588,14 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  我们访问 /hello.html 则输出
 	hello
  他的执行顺序是这样的:
-	首先,因为我们的location没有配置任何运行在contenet阶段的指令,所以
-    location的content handler(内容处理程序)就没有被注册,这时候处理权
-    落到了content阶段的三个静态资源服务模块中。首先运行的ngx_index和
-    ngx_autoindex模块并没有看到以 / 结尾的URI,所以直接放弃,接着处理权
-    落到了ngx_static模块。该模块根据root指令的配置,确认/html/hello.html
-    文件是否存在,如果存在则将他们的内容输出,并自动设置Content-Type、
-    Content-Length以及Last-Modified等响应头。
+	首先,因为我们的location没有配置任何运行在contenet阶段的指令,所以location的
+	content handler(内容处理程序)就没有被注册,这时候处理权落到了content阶段的三
+	个静态资源服务模块中。
+	
+	首先运行的ngx_index和ngx_autoindex模块并没有看到以 / 结尾的URI,所以直接放弃,
+	接着处理权落到了ngx_static模块。该模块根据root指令的配置,确认.../html/hello.html
+    文件是否存在,如果存在则将他们的内容输出,并自动设置Content-Type、Content-Length
+    以及Last-Modified等响应头。
  如果上面的location下没有配置root指令,那么默认用--prefix的目录
 
  另外一个需要注意的是如果你的location并不是在提供静态服务,一定注意在
