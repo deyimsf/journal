@@ -886,4 +886,46 @@ lua> print(debug.traceback())
 	}
 //----------------------------------
 
+#luaL_setfuncs  5.2才有
+ /**
+  * 把数组reg中所有的C函数注册到栈中的一个表中,如果nup等于0,则这表就在栈顶中. 
+  * 如果不等于0,则该表在nup个upvalue之下,并且reg数组中的所有函数都会关联上这
+  * 几个upvalue.
+  * 最后所有的upvalue都会被弹出,只剩栈顶的表.
+  *
+  * L 栈
+  * reg 要注册的函数
+  * nup upvalue的个数,如果nup不为0,则调用该方法前必须将nup个upvalue压入栈中.
+  * 
+  * @see /ngx_openresty-1.7.2.1/bundle/lua-cjson-2.1.0.1/lua_cjson.c/luaL_setfuncs()
+  */
+ void luaL_setfuncs(lua_State *L,const luaL_Reg *reg,int nup)
+
+ 例子:
+	luaopen_abc(lua_State *l){
+        //要注册的C方法数组
+		luaL_Reg reg[] = {
+			{"add",add},
+			{"sum",sum},
+			{NULL,NULL}	
+		};
+		
+        //创建一个空表并压入栈顶
+		lua_newtable(l); //记作t
+        
+        //将reg中所有的C函数注册到栈顶的表中,我们这里没有使用upvalue
+        //所以nup等于0.
+		luaL_setfuncs(l,reg,0);//成功后栈顶元素是t
+
+        //向栈顶压入一个字符串
+        lua_pushliteral(l,"0.0.1"); //成功后栈顶的下一个元素是t
+       
+        //为栈中-2位置元素的VERSION属性赋值为栈顶的值
+        //即 t.VERSION="0.0.1"
+        setfiled(l,-2,"VERSION"); //成功后栈顶元素为t
+
+		//该函数有一个返回值,即栈顶元素t
+		return 1;		
+	}
+
 
