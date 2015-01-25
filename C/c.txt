@@ -628,14 +628,14 @@ C数组指针
  bb指向的是一个长度是13的int型的数组;
  bb+1 的地址跨度是13*4个字节;
 
-C语言结构体
+#C语言结构体
  定义结构:
-	struct point{ //定义了一个叫point的结构
+	struct Point{ //定义了一个叫Point的结构
 		int x;
 		int y;
 	};
  声明一个结构变量
-	struct point cc; //声明了一个cc变量，这个变量是一个结构，这个结构名字是point;
+	struct Point cc; //声明了一个cc变量，这个变量是一个结构，这个结构名字是Point;
  使用结构： 
 	cc.x=12; //为结构成员变量赋值
 	cc.y=15;
@@ -643,6 +643,27 @@ C语言结构体
  匿名结构
 	struct {int x; int y;} a={3,4},b={7},c;
  上面这条语句声明了三个变量，每个变量都是一个结构体，结构体中有两个整形的成员变量;
+
+ 初始化结构体:
+	struct Point point = {15,20};  //需要和结构成员顺序一致
+	struct Point point = {.y=20,.x=15}; //不需要顺序一致
+	
+    //-----例子---------
+    typedef struct Point Point;
+	struct Point{
+		int x;
+		int y;
+		int z;
+	};
+
+	int main(void){
+		Point p1 = {1,2};
+		Point p2 = {.y=2,.x=1};
+
+		printf("%d %d\n",p1.x,p1.y);
+		printf("%d %d\n",p2.x,p2.y)
+	}
+
 
 C结构和函数
  结构在函数传递的过程中仍是按值传递: 
@@ -704,7 +725,7 @@ C结构和函数
 
 C实现的头文件，在unix系统中一般放在 /usr/include 目录中
 
-C文件操作
+#C文件操作
  FILE 文件结构，包括：缓冲区位置，缓冲区中当前字符的位置、文件的读写状态、
  是否出错或是否已经到达文件结尾等。
 
