@@ -713,8 +713,8 @@ lua> print(debug.traceback())
 					local x,y = coroutine.yield(a,b);  --1
           			print(x,y);                        --2
 			
-					local x,y = coroutine.yield(a,b);  --3
-					print(x,y);                        --4
+					local x,y,z = coroutine.yield(a,b);  --3
+					print(x,y,z);                        --4
 					
 					return "end";                      --5
                end)
@@ -741,10 +741,10 @@ lua> print(debug.traceback())
     -->true 1,2
    
     //5.再次启动,这时候和步骤3相似,从挂起点--3出开始执行,并把传递给resume
-    //  的参数5,6作为yield的返回值,赋值给第二个local x,y,随后打印5,6并将
-    //  主函数的返回值"end"作为resume的返回值返回。
+    //  的参数5,6,7作为yield的返回值,赋值给第二个local x,y,z随后打印5,6,7并
+    //  将主函数的返回值"end"作为resume的返回值返回。
     print(coroutine.resume(co,5,6));
-	-->5,6
+	-->5,6,7
     -->true end
   
 
