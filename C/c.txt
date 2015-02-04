@@ -44,10 +44,31 @@
     函数都具有幂等性。
 
 #纯函数式编程语言
-  Hashell	Miranda
+  #强静态类型
+ 	 Hashell
+	 Miranda
+	 Concurrent Clean
+  #弱类型
+	 Lazy K
 #非纯函数式编程语言
-  Scala		Erlang LISP R	
+  #强静类型
+	F#
+    ML
+	OCaml
+    Scala	
+  #强动态类型
+	Erlang 
+    LISP 
+    R	
+    LOGO
+    Scheme
+	Clojue
+	Mathematica
+  #弱类型
+    Unlambda 
 
+  动态类型语言是在运行是确定数据类型的语言.
+  变量使用之前不需要类型声明,通常变量的类型就是被赋值的类型.
 
 #运算符及其优先级
  --------------------------------------------------------------
