@@ -1,0 +1,284 @@
+#在ghci中通过 :t 来检查表达式的类型
+ ghci> :t 'a'
+ 'a' :: Char     -->字符类型
+ ghci> :t "a"    
+ "a" :: [Char]   -->字符列表类型
+ ghci> :t True
+ True :: Bool    -->布尔类型
+ ghci> :t (True,'a')
+ (True,'a') :: (Book,Char)  --> 元组类型
+
+ 注意:
+ 	:: 读作 "它的类型为"。凡是明确的类型,其首字母必须为大写。
+ 元组与列表不同,每个不同长度的元组都有其独立的类型. 
+
+#函数类型声明
+  //这是一个函数声明,声明这个函数有三个Int类型的参数
+  //最后一个Int代表函数的返回类型
+  func :: Int->Int->Int ->Int
+  //该函数的定义
+  func x y z = x + y + z
+
+#函数类型声明,使用类型约束符 =>
+  func :: Num a => a->a->a->a
+  func x y z = x + y + z
+	
+  不能使用具体类型来约束,如Int a => a->a 是错误的.
+  可以有多个类型约束,如:
+  func :: (Integral a,Num b) => a->b
+
+#函数名的第一个字母必须小写
+
+#用ghc装载一个文件
+  //----------------------hash.hs------------------
+    //该函数需要两个入参
+    //返回值是两个入参相加后再加3
+    mysum x y = x + y + 3  //函数名的第一个字母必须小写 
+
+  //------------------------------------------------
+ 
+ 加载hash.hs并调用mysum函数
+ ghci>:l hash
+ ghci>mysum 1 2
+ ghci>6 
+  
+#常见类型
+ Int 有界整数,GHC编译器规定Int的界限与机器相关,如64位CPU,那么Int用64位表示
+ Integer 无界整数,效率没比Int高
+ Float 单精度浮点数
+ Double 双精度浮点数
+ Bool 布尔值 True和False
+ Char 表示一个Unicode字符
+ 元组 他的类型取决于当中的项的类型及数目,最多62个,最少0个
+
+#类型变量
+ 例子: demo.hs文件
+  mysum :: Int->Int->Int-Int    //函数类型声明,三个Int入参一个Int返回值
+  mysum x y z = x + y + z       //函数定义
+
+ 在ghci中加载demo.hs文件名查看类型
+ ghci> :l demo
+ ghci> :t mysum 
+ ghci> mysum :: Int -> Int -> Int //可以看到和声明的一致
+
+ 列子2: 对上面的函数不做声明
+  mysum x y z = x + y + z      //没有声明，直接定义
+ 
+ 加载demo.hs并查看类型
+  ghci> :l demo
+  ghci> :t mysum
+  ghci> mysum :: Num a => a -> a -> a -> a 
+ 可以看到和例子1稍有不同,这里a是个类型变量,表示任意类型.并不是具体类型
+ 因为具体类型首字母必须大写.
+ 其中 => 符号叫做类型约束符,表示a是一个Num类型的实例
+
+ #类型类(typeclass)
+   类型类是定义类型行为的接口.如果一个类型(比如 数字)是某个类型类(比如 Eq)的实例
+   ,那么它就必须实现该类型类所描述的行为(函数)。
+   比如Eq类型类就必须实现 == 和 /= 这两个函数 
+ 
+  Eq是定义相等性的类型类,例如查看下 == 函数的声明:
+  	//该函数的名字是一个特殊字符,所以查看它的类型必须用括号括起来
+    ghci> :t (==) 
+	
+    //==函数的类型为:接收两个相同类型的参数,并返回一个布尔类型,并且a这个类型
+    //是Eq这个类型类的实例
+    ghci> (==) :: Eq a => a -> a -> Bool
+
+  Eq这个类型类提供了判断相等性的接口,凡是可以比较相等性的类型必须是Eq类的实例.
+  所以Haskell中所有的标准类型都是Eq类的实例.
+
+ #Eq类型类
+  Eq类型类,要求它的实例必须实现 == 和 /= 两个函数
+
+ #Ord类型类
+  Ord类型类用于定义可比较大小的类型的行为.比如它的实例必须实现<,>,<=,>=等函数
+  例如:
+	ghci> "abc" < "bcd"     //说明String([Char])实现了 < 函数
+    ghci> True
+
+    ghci> 5 >= 2            //Int或Integer等实现了 >= 函数
+    ghci> True
+
+ #Show类型类
+  Show类型类的实例为可以表示为字符串的类型,show函数可以操作Show的实例,
+  该函数接收一个Show的实例,然后将其转换为一个字符串
+  例如:
+	ghci> show 3
+      "3"
+    ghci> show 5.22
+      "5.22"
+
+ #Read类型类
+  可以看做和Show相反,将字符串转换为具体类型,用read函数
+  例如:
+	ghci> read "4" + 5  //自动将"4"转换为数字并和5相加
+    ghci> 9
+   
+    ghci> read "3" + "4"
+    ghci> 7
+
+    ghci> "4"   //错误,因为read无法推断出"4"到底是Show的那个实例(Int或Float等)
+    
+  使用类型注释可以告诉read该字符串到底是那种类型:
+    ghci> read "4" :: Int  //说明 "4" 的类型是 Int
+      4 
+    ghci> read "4" :: Float
+      4.0
+    ghci> read "(3,'a')" :: (Int,Char)
+      (3,'a')
+    ghci> read "[1,2,3,4]" :: [Int]
+      [1,2,3,4]
+
+ #Enum类型类 
+  Enum的实例类型都是有连续顺序的,每个值都有相应的后继和前驱,可以通过succ和pred
+  两个函数得到. 该类型类包含的类型主要有(),Bool,Char,Ordering,Int,Integer,Float
+  和Double.
+  例如:
+	ghci> ['a' .. 'e']
+     "abcde"
+    ghci> succ 'b'  //取'b'的后继
+     'c'
+
+ #Bounded类型类
+  Bounded类型类的实例都有一个上限和下限,可以通过maxBound和minBounde连个函数得到.
+  例如:
+	ghci>minBound :: Int
+     -9223372036854775808
+    ghci>maxBound :: Bool
+     True
+
+ #Num类型类
+  他的实例类型都具有数的特征,比如Int,Integer,Float,Double
+  例子:
+	ghci>:t 20
+    20 :: (Num t) => t //20他的类型是一个t,这个t是一个Num类型的数值
+
+  例子2: 查看 +  这个函数的类型
+    ghci>:t (+)
+    (+) :: Num a => a -> a -> a
+  可以看到 + 这个函数,它的类型是可以接收两个参数a,返回一个a,这个a是一个
+  Num类型的值.
+  所以如果我们用 4 :: Int + 4.0 就会报错.
+
+ #Floating类型类
+  该类型类仅包含Float和Double两种浮点类型.
+
+ #Integeral类型类
+  该类型类只包含Int和Integer两个实例类型。函数fromIntegral,它的类型声明如下:
+	fromIntegral :: (Integral a,Num b) => a->b
+  接收一个a参数,返回一个b。其中a的类型被约束为Integral,b的类型约束为Num。
+
+ #类型类总结
+  类型类是一个抽象的接口,一个类型可以作为多个类型类的实例,一个类型类可以含有
+  多个类型作为实例.
+  比如Char类型就是Ord和Eq类型类的实例。
+
+#模式匹配
+ 例子:
+	syaMe :: Int -> String //声明一个函数,接收一个Int参数返回Sring值
+    sayMe 1 = "one"  // 定义参数值是1时要返回的值
+    sayMe 2 = "two"  // 定义参数值是2是要返回的值
+    sayMe 3 = "three"
+    sayMe x = "not between 1 and 3" //匹配所有参数的函数定义
+
+  调用syaMe方法时会自动从上到下寻找可以匹配的函数,一旦匹配就不在向下匹配
+    ghci>syaMe 3
+     "three"
+
+ 例子2:递归
+    factorial :: Int -> Int
+    factorial 0 = 1
+    factorial n = n * factorial (n-1)
+
+#元组模式匹配
+ 例子:
+   first :: (a,b,c)->a   //获取三元组的第一个值
+   first (x,_,_) = x     //_也代表一个变量,不过我们不需要它
+   
+   second :: (a,b,c)->b  //取三元组的第二个值
+   second (_,y,_) = y
+
+#列表模式匹配
+ [1,2,3] 本质是 1:2:3:[]的语法糖. :运算符用于把前面的值插入到后面列表的头部
+ 例如 1:[2,3] 结果是 [1,2,3]
+ 例子:
+	tell :: (Show a) => [a] -> String  //接收一个列表,返回一个字符串,a是Show实例
+    tell [] = "The list is empty"; //匹配空列表
+    tell (x:[]) = show x;   //绑定多个变量需要用括号括起来 
+    tell (x:y:z[]) = show y; //只匹配三个元素的列表,返回第二个元素
+    tell (x:y:z) = show y;  //返回第二个,z匹配后面所有的
+    ?如何定义返回前面所有的,如[1,2,3,4]只返回[1,2,3]
+
+    tell [1,2,3]  --> "2"
+  
+#As模式
+ 例子:
+	tell (x:y:z) = show x
+    tell all@(x:y:z) = show x
+ 这两个匹配模式相等,唯一的区别就是all就代表(x:y:z)类似一个别名
+
+
+#哨卫
+ 哨卫跟在竖线 | 符号的右边,一个哨卫就是一个布尔表达式,如果为True,就选择对应的
+ 函数体. 每条哨卫语句至少缩进一个空格.
+ 例子:
+	func :: Int->Int ->String
+    func a b
+        | a > b  =  "a > b";
+        | a < b  =  "a < b";
+        | otherwise = "a == b";  
+ otherwise捕获所有条件, 如果各个哨卫都没有成立且没有otherwise,则取匹配后续的模式.
+
+#where关键字
+ 在一个函数中 where 放在函数的最后,对包括所有哨卫在内的整个函数可见,只对当前函数
+ 可见.
+ 例子:
+	initials :: String->String->String
+    initials first last = [f]
+        where (f:_) = first    //定义一个变量,将函数的第一个参数赋值给f
+
+    greet :: String->String
+    greet name = prefix ++ " " name
+          where prefix = "Hello"
+
+    ghci> greet "zhangsan"
+    "Hello zhangsan" 
+ where中定义函数: where关键字要用在函数中,这里为了省略没写包含它的函数
+	where what [] = "empty" //和定义变量差不多,第一个关键字是函数名,后面的是参数和返回值	
+          mysum x y = x + y //定义一个名字为mysum的函数
+
+#let是个表达式
+ let表达式的格式为:
+	let <bindings> in <expressions>
+ 在let中绑定的名字仅对于in部分可见,所以不同于where,let不能跨越不同的哨卫
+ 例子:
+	ghci> 4 * (let a = 9 in a + 1) + 2
+     42
+ let是个表达式,总会有返回值
+
+#直接在GHCi中定义函数和变量时,let的in部分可以省略
+ 例子:
+	ghci>let zoot x y = x * y
+    ghci> zoot 1 2
+	 2
+    ghci>let zoot1 x y = x * y in zoot1 2 3
+     6
+    ghci> zoot1 2 3  //直接报错,已经超出in的范围
+
+#case表达式 表达式总会有返回值,可以用在任何地方
+ 格式:
+	case expression of pattern1 -> result
+					   pattern2 -> result
+					   ...
+ 实际上函数定义中得模式匹配本质上不过就是case表达式的语法糖.
+ 比如下面两段代码完全等价:
+	head_ :: [a]->a
+    head_ [] = error "empty"
+    head_ (x:_) = x
+
+    head_ :: [a] -> a
+    head_ xs = case xs of [] -> error "empty"
+				          (x:_)-> x
+
+
