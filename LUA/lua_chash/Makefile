@@ -4,14 +4,14 @@ CFLAGS			:=		-O3 -Wall -g -std=c99 -pedantic
 
 CHASH_CFLAGS 	:=		-fPIC
 CHASH_LDFLAGS	:=		-shared
-LUA_INCLUDE_DIR	:=		/usr/local/include
+LUA_INCLUDE_DIR	:=		/My/work/nginx/luajit/include/luajit-2.1/include
 
-#Macos
-LUA_LIB_DIR    :=		/My/work/lua-5.1.5/src
-CHASH_LDFLAGS  +=		-L$(LUA_LIB_DIR) -llua
+#
+LUA_LIB_DIR    :=		/My/work/nginx/luajit/lib
+CHASH_LDFLAGS  +=		-L$(LUA_LIB_DIR) -lluajit-5.1.2
 
 #install to 
-PREFIX          :=		/my/servers/nginx
+PREFIX          :=		/My/work/nginx/nginx
 CHASH_DEST_DIR  :=		$(PREFIX)/conf/lualib
 
 TARGET	:=	chash.so
