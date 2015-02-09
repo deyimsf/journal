@@ -995,6 +995,18 @@ $ netstat
 #安装rz sz 
 $ yum install lrzsz -y
 
+#用yum查看openssl
+$ yum search openssl
+
+#安装openssl开发包
+$ yum install -y openssl-devel
+
+#Mac下用Homebrew,如下方式安装它
+ $ ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)"
+
+#使用Homebrew安装wget
+ $ brew install wget
+
 #sha1校验和
 $ sha1sum filename
  -b, --binary //用二进制格式读取文件
