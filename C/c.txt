@@ -2059,5 +2059,31 @@ IO多路复用select的例子:
     就找不到了,需要修改/etc/ld.so.conf文件,然后运行ldconfig,这个命令用来刷新系统的
     共享库缓存即/etc/ld.so.cache文件。
   
+#查看Mac上ngx_openresty都依赖什么库
+ $ otool -L  /My/servers/nginx/sbin/nginx
+ /My/servers/nginx/sbin/nginx:
+ 	  /My/work/nginx/luajit/lib/libluajit-5.1.2.dylib (compatibility version 2.1.0, current version 2.1.0)
+	  /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1197.1.1)
+	  /usr/lib/libssl.0.9.8.dylib (compatibility version 0.9.8, current version 0.9.8)
+	  /usr/lib/libcrypto.0.9.8.dylib (compatibility version 0.9.8, current version 0.9.8)
+	  /usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.5)
 
+ 可以看到Mac上依赖的库的后缀名都为dylib。openresty依赖lua不是原生的lua库,而是luajit-5.1.2,
+ 所以如果要将自己的.so文件嵌入到openresty,链接的时候要指定使用liblua-5.1.2这个库。
+ 另外核心C库libc被Mac吸收到了自己的libSystem.B.dylib中,并且这个库还包含了原本有libm和
+ libpthread以及其他一些库提供的功能.
+ 
+ 查看mac都有哪些库:
+	$ ll /usr/lib 
+ 可以看到libc.dylib指向libSystem.dylib,而libSystem.dylib又指向了libSystem.B.dylib  
+
+ 用luajit运行lua程序:
+	$ cd /My/work/nginx/luajit/bin
+    $ ./luajit-2.1.0-alpha 
+    LuaJIT 2.1.0-alpha -- Copyright (C) 2005-2014 Mike Pall. http://luajit.org/
+	JIT: ON SSE2 SSE3 SSE4.1 fold cse dce fwd dse narrow loop abc sink fuse
+    > print(1)
+     1
+    >
+ 
 

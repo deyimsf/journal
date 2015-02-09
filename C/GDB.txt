@@ -12,6 +12,14 @@
 #启动gdb
  $ gdb a.out
 
+ 调试程序的时候也可以先启动gdb,然后再attach某个进程号
+ $ gdb
+ (gdb) attach <pid>
+
+#图形方式启动gdb
+  $ gdb -tui a.out
+ 加tui方式debug源代码会展示在窗口的上方
+
 #查看代码
  (gdb) l	//该命令可以查看源代码
  (gdb) list aa.c:1  //从aa.c这个文件的第一行开始看
