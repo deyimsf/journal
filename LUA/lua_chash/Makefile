@@ -10,6 +10,7 @@ LUA_INCLUDE_DIR	:=		/usr/local/include
 LUA_LIB_DIR    :=		/My/work/lua-5.1.5/src
 CHASH_LDFLAGS  +=		-L$(LUA_LIB_DIR) -llua
 
+#install to 
 PREFIX          :=		/my/servers/nginx
 CHASH_DEST_DIR  :=		$(PREFIX)/conf/lualib
 
@@ -28,7 +29,7 @@ $(TARGET): $(OBJS)
 
 install:
 	mkdir -p $(CHASH_DEST_DIR)
-	cp $(TARGET) $(CHASH_DEST_DIR)
+	install $(TARGET) $(CHASH_DEST_DIR)
 
 clean:
 	rm -f *.o $(TARGET)

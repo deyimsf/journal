@@ -5,7 +5,7 @@
 typedef unsigned long long uint64_t;
 
 static uint64_t murmurhash64A(const void *key,int len,uint64_t seed);
-
+static void setfuncs (lua_State *l, const luaL_Reg *reg, int nup);
 
 //mod(key,num) 取摸
 static int mod(lua_State *L){
@@ -40,7 +40,9 @@ int luaopen_chash(lua_State *L){
 
 	//注册c方法到lua
 	//此时栈顶的值是chash
-	luaL_register(L,"chash",methods);
+	////luaL_register(L,"chash",methods);
+	lua_newtable(L);
+    setfuncs(L,methods,0);	
 
 	//设置chash.null的值
 	lua_pushlightuserdata(L,NULL); //此时栈顶元素是NULL
@@ -52,8 +54,26 @@ int luaopen_chash(lua_State *L){
 	lua_pushliteral(L,"0.0.1");
 	//demo.version=0.0.1
 	lua_setfield(L,-2,"version");
-	
+
+    //返回栈顶的表	
 	return 1;
+}
+
+/**
+ * 把数组reg中所有的函数注册到栈顶的表中
+ * 并指定upvalue的个数   lua 5.2中的代码
+ */
+static void setfuncs (lua_State *l, const luaL_Reg *reg, int nup){
+     int i; 
+
+     luaL_checkstack(l, nup, "too many upvalues");
+     for (; reg->name != NULL; reg++) {  /* fill the table with given functions */
+         for (i = 0; i < nup; i++)  /* copy upvalues to the top */
+             lua_pushvalue(l, -nup);
+         lua_pushcclosure(l, reg->func, nup);  /* closure with those upvalues */
+         lua_setfield(l, -(nup + 2), reg->name);
+     }
+     lua_pop(l, nup);  /* remove upvalues */
 }
 
 
@@ -96,7 +116,4 @@ static uint64_t murmurhash64A(const void *key,int len,uint64_t seed){
 
 	return h; 
 }
-
-
-
 
