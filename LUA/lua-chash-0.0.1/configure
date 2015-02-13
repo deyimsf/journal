@@ -1,0 +1,68 @@
+
+} elsif ($opt eq '--without-lua_cjson') {
+	$resty_opts{no_lua_cjson} = 1;
+
+} elsif ($opt eq '--with-lua_chash') {
+	$resty_opt{lua_chash} = 1;
+
+} elsif () {
+    .......
+}
+
+
+unless ($opts->{no_lua_cjson}) {	
+	....
+}
+
+if ($opts->{lua_chash}) {
+	my $dir = auto_complete 'lua-chash';
+    if (!defined $dir) {
+        die "---------No lua-chash found-----------";
+    }    
+    
+    my $lua_inc;
+    if ($opts->{luajit} || $opts->{luajit_path}) {
+        $lua_inc = $ENV{LUAJIT_INC};
+    
+    } else {
+        $lua_inc = $ENV{LUA_INC};
+    }    
+    
+    my $extra_opts = " DESTDIR=\$(DESTDIR) LUA_INCLUDE_DIR=$lua_inc " .
+        "LUA_CMODULE_DIR=$lualib_prefix LUA_MODULE_DIR=$lualib_prefix";
+    
+    if ($on_solaris) {
+        #$extra_opts .= " INSTALL=$root_dir/build/install";
+        if ($opts->{debug}) {
+            $extra_opts .= " CHAHS_CFLAGS=\"-g -O -fpic -DUSE_INTERNAL_ISINF\"";
+    
+        } else {
+            $extra_opts .= " CHAHS_CFLAGS=\"-g -fpic -DUSE_INTERNAL_ISINF\"";
+        }    
+    
+    } else {
+        if ($opts->{debug}) {
+            $extra_opts .= " CHAHS_CFLAGS=\"-g -O -fpic\"";
+        } else {
+            $extra_opts .= " CHAHS_CFLAGS=\"-g -fpic\"";
+        }    
+    }    
+    
+    if ($platform eq 'macosx') {
+        $extra_opts .= " CHAHS_LDFLAGS='-bundle -undefined dynamic_lookup'";
+    }
+    
+    if (defined $cc) {
+        $extra_opts .= " CC='$cc'";
+    } else {
+        $extra_opts .= " CC=cc";
+    }
+    
+    push @make_cmds, "cd $root_dir/build/$dir && ".
+        "\$(MAKE)$extra_opts";
+    
+    push @make_install_cmds, "cd $root_dir/build/$dir && " .
+        "\$(MAKE) install$extra_opts";
+} 
+
+
