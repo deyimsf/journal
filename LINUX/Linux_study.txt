@@ -546,6 +546,9 @@ $ netstat -anep | grep 8057
 #查看指定端口被那个进程占用
 $ lsof -i:8080
 
+#查看某个进程打开的所有fd
+$ ls -al /proc/<pid>/fd
+
 #解压war包 
 $jar -xvf gaem.war 
 
@@ -567,6 +570,13 @@ cd /etc/yum.repos.d/
    $ yum clean all 
    $ yum makecache 
    $ yum update 
+
+#用yum模糊查找
+ $ yum search tomcat  //查找所有yum中可用的tomcat
+ 
+#yum本地安装
+ $ yum localinstall ./libicu-devel-4.2.1-9.1.el6_2.x86_64.rpm 
+
 
 #查看防火墙状态： 
 /etc/init.d/iptables status 
@@ -591,26 +601,56 @@ top后按1可以查看不同cpu的负载
 
 #####根据CPU消耗定位问题代码 
 #查看进程id，线程id;下面这条命令可以得出哪个线程对应哪个进程 
-ps -eo pid,lwp -L 
-e:显示所有的进程 
-o:自定义显示 
-f:全格式 
-h:不显示标题 
-l:长格式 
-w:宽输出 
-a:显示终端上的所有进程，包括其他用户的进程 
-u:有效用户 
-r:只显示正在运行的进程 
-x:显示没有控制终端的进程 
+ps -eo pid,lwp,%cpu -L 
+SIMPLE PROCESS SELECTION
+ -A,-e:显示所有的进程 
+ -N:degate selection
+ -a:显示所有的进程,不包括session leader(STAT)和非终端用户
+ -d:显示所有进程,不包括session leader
+  T:显示当前终端上的所有进程
+  a:显示所有进程,包括其它用户的
+  r:只显示正在运行的进程 
+  x:显示没有控制终端的进程 
+  --deselect :显示所有的进程,排除该参数指定的条件
 
-pid:进程id 
-lwp:线程id 
-ruser:用户id 
-ppid:父进程id 
-psr:运行该线程的CPU的序号 
-args:命令行参数 
+ PROCESS SELECTION BY LIST 
+ 这些选项接收一个单独的参数,这个参数可以是一个空白符分割的,也可以是逗号分割的.
+ 这些选项可以被多次使用.
+ 例如: ps -p "1 2" -p 3,4 显示进程号是1 2 3 4的进程
+  -C <命令名字列表,如nginx,tomcat>
+  -G <group id list>
+   U <user id list>
+  -U <user id list> U和-U都是指定用户id显示进程,两者稍有差别
+  -g <group id list> 用户组id
+  -p,p <pid list>
+  -s <session id>
+   t <tty list>
+  -t <tty list>
+  -u <user list>
+  --pid <pid list> 等同 -p 和 p
+  --ppid <ppid list>
+  --sid <session id list> 等同-s
+  -123 等同 --sid 123
+   123 等同 --pid 123
 
-L:显示进程，并尽量显示LWP和NLWP(线程个数) 
+ OUTPUT FORMAT CONTROL 输出格式控制   
+   o <pid,ppid等>自定义显示 
+  -o <pid,ppid等>自定义显示
+   s 显示信号格式
+   u 显示有效用户格式
+   v 显示虚拟内存格式  display virtual memory format
+   l display BSD long format
+  -l long format. The -y option is often userful with this.
+  
+   L:显示进程，并尽量显示LWP和NLWP(线程个数) 
+
+ Header标头代表的意义
+  pid:进程id 
+  lwp:线程id 
+  ruser:用户id 
+  ppid:父进程id 
+  psr:运行该线程的CPU的序号 
+  args:命令行参数 
 
 #查看线程占用CPU情况 
 $ top 
@@ -1202,4 +1242,19 @@ $ iostat -xk
  man cc | col -b >c_man.txt
 
 
+#vagrant用法,需要先安装VirtualBox
+ $ vagrant box add <name> http://xxx.box|./xxx.box   //增加一个box,通过http或本地
+ $ vagrant global-status //查看所有box状态,用返回的ID可以ssh上这个虚拟机
+ 
+ $ vagrant init <name>    //刚开始安装后,初始化<name>的环境
+ $ vagrant up <空|ID>     //启动
+
+ $ vagrant ssh <ID>   //ssh上这个虚拟机
+ $ vagrant halt <?>     //关闭虚拟机
+ $ vagrant reload <?>   //重启虚拟机
+ $ vagrant status <?>   //查看虚拟机状态
+ $ vagrant destroy <?>  //销毁当前虚拟机
+
+ $ vagrant box list     //查看当前安装的box
+ $ vagrant box remove   //删除一个box
 
