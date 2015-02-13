@@ -677,11 +677,66 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  第N个参数所指定的URI,对于上面的例子会内部跳转到/barz这个URI。
 
 
+#nginx做本地缓存(模拟cdn?)
+ 配置文件如下:
+ 	http{
+		#模拟后端应用,比如tomcat
+       	server {
+			listen 8080;
+		
+			location ~* ^/app.action {
+                #设置前端可以缓存的时间,对于http/1.1协议,下面两个头都可以,但
+ 				#max-age的优先级高; 对于1.0则只识别Expires头.
+				Expires: Fri, 13 Feb 2016 13:30:27 GMT;  
+				Cache-Control: max-age=60;
+				
+				#设置Last-Modified头,决定客户端是否返回304
+ 				Last-Modified: Fri, 13 Feb 2015 13:30:27 GMT	
+				
+ 				#输出内容
+				content_by_lua 'ngx.say(os.clock())';
+			}
+		}        
 
+        
+		#--------------------华丽的分割线-----------------------
+		#后端应用
+		upstream tomcat_ {
+			server 127.0.0.1:8080 weight=1;
+		}
+	
+	    #分别代表:缓存的文件存入磁盘的位置; 存入文件深度;  共享内存的名字和大小
+		proxy_cache_path /My/work/nginx/nginx/ccc levels=1:2 keys_zone=abc:1m;	
 
+	    #前端代理nginx
+		server {
+			listen 80;
+			server_name test;
+		
+			location ~* ^/cdn {
+				rewrite /  /app.action break;  #rewrite到后端应用
 
+				#指定共享缓存名字
+				proxy_cache abc;       
+				#指定缓存key,如果当前参数name=zs, 那么
+                #这个缓存key就是 test/app.actionzs
+				proxy_cache_key  $host$uri$arg_name 
+				#指定对那种响应状态码缓存,以及缓存时间,
+				#这里的时间可以被后端应用的Expires和Cache-Control:max-age=60覆盖 				
+				proxy_cache_valid 200 301 302  1s;
+				#使用HTTP/1.1协议请求后端应用
+				proxy_http_version 1.1;
 
+				proxy_pass http://tomcat_;
+			}
+		} 
+	}  
 
-
-
-  
+   注意:使用proxy_cache指令,缓存虽然过期了,但是并没有被删除,可以用purge模块的 
+     proxy_cache_purge 指令去删除缓存。
+	 例如:
+		location ~ /purge {
+			#abc是共享缓存的名字
+			proxy_cache_purge abc $arg_key;
+		}	
+ 
