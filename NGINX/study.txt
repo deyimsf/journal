@@ -30,16 +30,16 @@ proxy_intercept_errors on;
 ##启动nginx 
 $ /usr/local/nginx/sbin/nginx 
 
-##立即停止守护进程(使用TERM信号) 
+##立即停止守护进程(使用SIGTERM信号) 
 $ /usr/local/nginx/sbin/nginx -s stop 
 
-##温和地停止守护进程(使用QUIT信号) 
+##温和地停止守护进程(使用SIGQUIT信号) 
 $ /usr/local/nginx/sbin/nginx -s quit 
 
-##重新打开日志 
+##重新打开日志(使用SIGUSR1信号)
 $ /usr/local/nginx/sbin/nginx -s reopen 
 
-##重新载入配置文件 
+##重新载入配置文件(使用SIGHUP信号)
 $ /usr/local/nginx/sbin/nginx -s reload 
 
 ##配置文件默认位置 
