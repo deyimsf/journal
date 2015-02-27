@@ -1049,6 +1049,7 @@ C语言编译器gcc
  -o  指定输出文件名，默认是a.out
  -E  仅对代码做预处理不编译。将头文件包含和宏定义展开。
      如果没有用-o指定输出文件名则将预处理的结果输出到控制台。
+ -v  打印运行阶段执行的命令,编译器预处理器版本号,还有include查找路径顺序
  -m32 32位编译
  -m64 64位编译
  -g  生成用于debug的信息
@@ -1095,19 +1096,19 @@ gcc查找头文件的路径
     b)从gcc的环境变量中找:
 		C_INCLUDE_PATH/CPLUS_INCLUDE_PATH/OBJC_INCLUDE_PATH
     c)从系统缺省目录中找
-		/usr/include	
 		/usr/local/include
-    	/usr/lib/gcc/x86_64-redhat-linux/4.4.4/include
-      注意:最后一个路径是gcc程序的库文件地址,不同的系统上可能不一样
+ 		/usr/lib/gcc/x86_64-redhat-linux/4.4.7/include
+ 		/usr/include
+	  注意:第二个路径是gcc程序的库文件地址,不同的系统上可能不一样
 
 gcc查找库文件的路径
  1.从gcc指定的目录中搜索,如:
    $gcc -L /my/path
  2.如果找不到则从gcc的环境变量LIBRARY_PATH中找
  3.从以下目录中找
-   /lib
-   /usr/lib
    /usr/local/lib
+   /usr/lib
+   /lib
 
  ??为什么自己写的chash在mac下需要指定-llua参数,在linux下就不需要?? 
 	     
