@@ -1195,9 +1195,9 @@ $ iostat -xk
 #释放系统cache
  //释放所有缓存(pagecache、dentries、inodes)
  $ sysctl -w vm.drop_caches=3
- //清空dentries、inodes
+ //清空dentries、inodes(目录文件、inodes)
  $ sysctl -w vm.drop_caches=2
- //清空pagecache
+ //清空pagecache (页面缓存)
  $ sysctl -w vm.drop_caches=1
 
  或者直接修改/proc/sys/vm/drop_caches文件
@@ -1258,3 +1258,178 @@ $ iostat -xk
  $ vagrant box list     //查看当前安装的box
  $ vagrant box remove   //删除一个box
 
+
+#**********************Linux目录**************************
+# /bin目录
+ 该目录下包含了用户命令文件,也就是shell命令。
+ /bin目录不得包含任何子目录,有些文件可能是一个符号。
+
+# /boot目录
+ 该目录包含了Linux启动过程所需要的所有内容,如内核、引导加载器等。
+
+# /dev
+ 放置设备文件
+
+# /etc
+ 放置配置文件,如/etc/hosts
+
+# /lib
+ 共享库和内核模块,如果是在x86_64系统下,这个目录的部分功能会转移到lib64目录下。
+ lib目录会保留i386的兼容性使用,但内核模块只会使用/lib目录。modules子目录必须
+ 存在于/lib目录下,它是内核可装载模块的存放位置。
+
+# /opt
+ 附加软件包,每个软件包会在/opt下拥有一个自己的目录
+
+# /sbin
+ 必备的系统软件。
+ 用于系统维护的软件和某些只限root用户使用的命令存储在
+
+# /usr
+ 全称Unix System Resource,放软件程序
+
+# /usr/bin
+ 大部分用户命令。系统中的绝大多数可执行文件都放置在这里。
+
+# /usr/include
+ C/C++程序头文件目录
+
+# /usr/lib
+ 放置库和目标文件,都是二进制文件
+
+# /usr/local
+ 供系统管理员安装局域性软件使用的。
+ 下面的目录或符号链接必须出现在该目录中:
+	bin	  	局域性可执行文件
+	etc   	软件的配置文件目录
+    include	C头文件
+    lib     程序库
+    man     在线指南
+    sbin	系统管理可执行文件
+    share   体系结构无关数据
+    src     软件源代码
+
+# /usr/sbin
+ 用于还原、更新、修复系统,以及挂接/usr目录的系统管理程序必须放置在该目录下
+
+# /var
+ 该目录包含着系统中绝大多数随时变化着的数据
+
+# /var/cache
+ 该目录的内容来自应用程序的缓存数据。
+ 为缓存数据单独划分一个目录,就可以让系统管理员将他们设置在其他磁盘上。
+
+# /var/lib
+ 该目录保存在那些与某个应用程序或系统有关的状态信息。
+ 
+# /var/lock
+ 锁文件必须保存在该目录中 
+
+# /var/log
+ 该目录包含了各种日志文件。
+ 大多数日志文件都保存在这里或相应的子目录中。
+
+# /var/run
+ 从系统启动开始至当前的系统运行状态信息保存在此。
+ 例如PID文件 /var/run/nginx.pid
+
+
+# /proc 文件系统
+ 该目录下的文件大概有这些:
+	apm 		高级电源管理信息		
+	buddyinfo	Buddy算法内存分配信息
+	compline	内核的命令行参数
+	config.gz	当前内核的.config文件
+	cpuinfo 	cpu信息
+	devices		可以用到的设备
+	diskstats	磁盘I/O统计信息
+	dma			使用的DMA通道
+	loadavg		负载均衡信息
+	locks		内核锁
+	mdstat		磁盘阵列状态
+	meminfo		内存信息
+	misc		杂项信息
+	modules		系统已经加载的模块文本列表
+	mounts		已挂接的文件系统列表
+	partitions	磁盘分区信息	
+	execdomains	执行区域列表
+	fb			Frame buffer细腻
+	filesystems	支持的文件系统
+	interrupt	中断的使用情况,记录中断产生的次数
+	iomem		I/O内存映射信息
+	ioports		I/O端口分配情况
+	kcore		内核核心映象,GDB可以利用它查看当前内核的所有数据机构状态
+	key-users	秘钥保留服务文件
+	kmsg		内核信息
+	ksyms		内核符号表
+	pci			内核识别的PCI设备列表
+	self		访问proc文件系统的进程信息
+	slabinfo	内核缓存信息
+	splash		
+	stat		统计状态表
+	swaps		交换空间使用情况
+	uptime		系统正常运行时间
+	version		内核版本
+	vmstat		虚拟内存统计表
+	zoneinfo	内存管理区信息
+ 
+ 该目录下的子目录
+	[pid]		进程id,里面是pid的进程信息
+	acpi		高级配置与电源接口
+	bus			系统中已安装的总线信息
+	dirver		驱动信息
+	fs			文件系统特别信息
+	ide			IDE设备信息
+	irq			中断请求设置接口
+	net			网络各种状态信息
+	scsi		scsi设配信息
+	sys			内核配置接口
+				该目录中的大多文件都是可写的,通过改写这些文件,可以修改内核参数。
+				系统命令sysctl就是用这个目录实现更改内核参数的。
+	sysvipc		中断的使用情况,记录中断产生次数
+	tty			tty驱动信息
+
+# 查看设备的硬中断号
+ $ cat /proc/interrupts
+			CPU0
+  0:        148    XT-PIC-XT        timer
+  1:          8    XT-PIC-XT        i8042
+  ...
+  23		2395   xxx				eth0
+ 第一列是中断号
+ 第二列是对应的cpu核心,下面的数字是中断次数
+ 最后一列是对应的设备
+
+# 根据设备硬中断号设置设备的cpu亲缘性
+ /proc/irq/[中断号]/smp_affinity  
+ 	该文件接收16进制数据,如果里面的值是3则说明绑定了第0~2号3个cpu
+ 
+ /proc/irq/[中断号]smp_affinity_list
+	该文件接收10进制数据
+
+
+#tmpfs文件系统
+ 该文件系统使用虚拟内存子系统的页面来存储文件,使用的是物理内存
+ 将其挂载到一个目录下:
+	$mount tmpfs /ccc -t tmpfs -o size=64m   //限制使用的最大内存
+
+#系统可打开的总的文件句柄的数量
+ $ cat /proc/sys/fs/file-max     //可修改
+ 57493
+
+#当前系统已打开的文件句柄个数
+ $ cat /prox/sys/fs/file-nr      //只读
+ 576	0	57493
+ 分别代表:
+	已分配文件句柄个数
+	已使用的文件句柄个数
+    文件句柄的最大可用个数
+
+#Linux中TCP的开销
+ 每当创建一个TCP连接,都至少要分配8K的内存,1G大概可以创建13万个连接。
+ TCP连接占用的内存都分配在内核空间,对于32位的Linux内核最多使用1G的内存。
+ 所以32位的Linux无法超过10万个连接。
+
+
+
+ 
