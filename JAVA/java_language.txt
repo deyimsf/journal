@@ -261,4 +261,40 @@
   4.按顺序执行成员变量和成员代码块({//code})
   5.执行构造方法(如果有new)
 
-  
+#happens-before
+ 1.If x and y are actions of the same thread and x comes before y in program
+   order,then hb(x,y).
+  如果x和y在同一个线程中,且x顺序上先与y,那么x先行发生于y。
+
+ 2.There is a happens-before edge from the end of a constructor of an object
+  to the start of a finalizer for that object.
+
+
+ 3.If an action x synchronizes-with a fllowing action y,then we also have hb(x,y).
+
+
+ 4.If hb(x,y) and hb(y,z), then hb(x,z).
+  如果x先行发生于y,y先行发生z,那么x先行发生于z。
+
+ 1.An unlock on a monitor happens-before every subsequent lock on that monitor.
+  在一个监视器上的解锁操作,happens-before后续在该监视器上的加锁操作。
+	
+ 2.A write to a volatile field happens-before every subsequent read of that filed.
+  一个对volatile字段的写操作,先行发生于后续对他的读操作。  
+ 
+ 3.A call to start() on a thread happens-before any actions in the started thread.
+  对一个线程的start()操作,先行发生于该线程启动后在该线程内部做的任何操作。
+
+ 4.All actions in a thread hapens-before any other thread successfully returns 
+   from a join() on that thread.
+  线程A中所有操作先行发生于,在其他线程中成功调用线程A的join方法后的动作。
+
+ 5.The default initialization of any object happens-before any other actions(other
+   than default-writes) of a program.
+  一个对象的默认初始化操作,先行发生于其他操作。 
+ 
+    
+
+ 
+ 
+ 
