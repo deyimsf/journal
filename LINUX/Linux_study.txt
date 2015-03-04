@@ -1425,6 +1425,44 @@ $ iostat -xk
 	已使用的文件句柄个数
     文件句柄的最大可用个数
 
+#查看Linux默认每个进程可打开的最大fd个数
+ $ ulimit -n
+ 1024
+
+#修改对单个进程的fd个数限制
+ 1.对当前会话有效,退出后失效
+ 	$ ulimit -n 65535
+
+ 2.对所有用户永久可用,会立即生效,但是在当前会话中用ulimit -n无法看到
+   对/etc/security/limits.conf文件添加以下设置:
+ 		* - nofile 65536  
+   其中该文件的格式如下:
+   	 <uname|@gname> type resource limit
+     <uname|@gname>: 需要限制的用户或组,用*表示所有用户。用@区分用户和组。
+     type:
+		soft:当前系统生效的设置,作为一个预警,可以突破。
+		hard:系统中所能设定得最大值。
+		- : 该符号表示同时设置了soft和hard值。
+	resource:
+		nofile:打开文件的最大数
+		core: 限制内核文件的大小
+        date: 最大数据大小
+ 	    fsize: 最大文件大小
+		待续...
+ 注意:
+	用ulimit -a可以看到所有的限制 
+ 
+
+#修改整个系统中最大文件句柄数
+ 1.系统重启后失效
+  	 $ echo 76432432 >/proc/sys/fs/file-max
+
+ 2.系统重启后不会失效,在文件/etc/sysctl.conf中添加
+     fs.file-max=78973298 
+   运行命令sysctl是配置文件生效:
+     $ /sbin/sysctl -p 
+
+
 #Linux中TCP的开销
  每当创建一个TCP连接,都至少要分配8K的内存,1G大概可以创建13万个连接。
  TCP连接占用的内存都分配在内核空间,对于32位的Linux内核最多使用1G的内存。
