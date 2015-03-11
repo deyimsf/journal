@@ -820,6 +820,66 @@ lua> print(debug.traceback())
 ******************************************************
 
 
+****************支持utf8编码字符的sub******************
+ --1000 0000  80
+ --1100 0000  C0
+ --1110 0000  E0
+ --1111 0000  F0
+ --1111 0111  F7
+ --截取字符串,从第j个字符开始,到第k个字符
+ --该方法不严谨,没有校验多字节字符的后续字节的有效性
+ function sub(str,j,k)
+ 	local len = string.len(str);
+ 	
+ 	if k >= len then
+ 		return string.sub(str,1,-1);
+ 	end
+ 	
+ 	local n = 0;
+ 	local i = 1;
+ 	local old_i = 1;
+ 	local tmpj = 0;
+ 	local tmpk = 0;
+ 	
+ 	while i<=len do
+ 		local b = string.byte(str,i,i);
+		local num = -1;
+		num = (b < 0x80 and 1) or (b > 0xC0 and (b < 0xE0 and 2))
+				or (b > 0xE0 and (b < 0xF0 and 3)) or (b > 0xF0 and (b < 0xF7 and 4))
+					or -1;
+
+		if num == -1 then
+			error("invalid UTF-8 character",2);
+			num = 1;		
+		end
+
+ 		n=n+1;
+ 		old_i = i;
+ 		i=i+num;
+ 		
+ 		if j==n then
+ 			tmpj = old_i;
+ 		end	
+ 		
+ 		if k==n then
+ 			tmpk = i-1;
+ 			break;
+ 		end
+ 	end
+ 	
+ 	if tmpk == 0 then
+ 		tmpk = -1;
+ 	end
+ 	
+ 	return string.sub(str,tmpj,tmpk);
+ end
+
+
+ --打印
+ print(sub("abc中国.,fds人",3,5));
+
+***************************************************
+
 #luaL_checklstring(lua_State *L,int narg,size_t *l);
  检查栈narg位置的参数是否是一个字符串,然后返回这个字符串；
  如果l不是NULL则*l会被赋值为该字符串的长度
