@@ -94,6 +94,8 @@ static uint64_t murmurhash64A(const void *key,int len,uint64_t seed){
     		k *= m; 
     		k ^= k >> r; 
     		k *= m; 
+	
+			h ^= k;
     		h *= m; 
 	}
 	

@@ -2,18 +2,18 @@ TARGET			=		chash.so
 PREFIX			=		/My/work/nginx
 
 CFLAGS			=		-O3 -Wall -pedantic -DNDEBUG
-CHASH_CFLAGS 	=		-fpic -g
+CHASH_CFLAGS	=		-fpic -g
 CHASH_LDFLAGS	=		-shared
 #MacOs
-#CHASH_LDFLAGS   =       -bundle -undefined dynamic_lookup
+#CHASH_LDFLAGS	=		-bundle -undefined dynamic_lookup
 
 LUA_INCLUDE_DIR	=		$(PREFIX)/luajit/include/luajit-2.1
 
 #install to
-LUA_CMODULE_DIR =		$(PREFIX)/nginx/conf/lualib
-LUA_MODULE_DIR  =       $(LUA_CMODULE_DIR)
+LUA_CMODULE_DIR	=		$(PREFIX)/nginx/conf/lualib
+LUA_MODULE_DIR	=		$(LUA_CMODULE_DIR)
 
-BUILD_CFLAGS	= 		-I$(LUA_INCLUDE_DIR) $(CHASH_CFLAGS)
+BUILD_CFLAGS	=		-I$(LUA_INCLUDE_DIR) $(CHASH_CFLAGS)
 OBJS			=		lua_chash.o
 
 .PHONY: all clean install
