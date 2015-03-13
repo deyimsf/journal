@@ -3,8 +3,10 @@
 #include <lualib.h>
 
 typedef unsigned long long uint64_t;
+typedef long long int64_t;
+typedef long int int32_t;
 
-static uint64_t murmurhash64A(const void *key,int len,uint64_t seed);
+static uint64_t murmurhash64A(const void *key,size_t len,int32_t seed);
 static void setfuncs (lua_State *l, const luaL_Reg *reg, int nup);
 
 //mod(key,num) 取摸
@@ -78,15 +80,16 @@ static void setfuncs (lua_State *l, const luaL_Reg *reg, int nup){
 
 
 //----murmurhash64A
-static uint64_t murmurhash64A(const void *key,int len,uint64_t seed){
+static uint64_t murmurhash64A(const void *key,size_t len,int32_t seed){
 
-	const uint64_t m = 0xc6a4a7935bd1e995ULL;
-	const int r = 47;
-	
+	int64_t m = 0xc6a4a7935bd1e995LL;
+	int r = 47;
+
+	//h声明为无符号类型,后续可实现无符号右移	
 	uint64_t h = seed ^ (len * m);
 
 	const uint64_t * data = (const uint64_t *)key;
-	const uint64_t * end = (len >> 3) + data;
+	const uint64_t * end = data + (len >> 3);
 
 	while(data != end){
 	    	uint64_t k = *data++;
@@ -100,15 +103,14 @@ static uint64_t murmurhash64A(const void *key,int len,uint64_t seed){
 	}
 	
 	const unsigned char * data2 = (const unsigned char *)data;
-
 	switch(len & 7){
-  		case 7: h ^= (uint64_t)(data2[6]) << 48;
-  		case 6: h ^= (uint64_t)(data2[5]) << 40;
-  		case 5: h ^= (uint64_t)(data2[4]) << 32;
-  		case 4: h ^= (uint64_t)(data2[3]) << 24;
-  		case 3: h ^= (uint64_t)(data2[2]) << 16;
-  		case 2: h ^= (uint64_t)(data2[1]) << 8;
-  		case 1: h ^= (uint64_t)(data2[0]);
+  		case 7: h ^= (uint64_t)data2[6] << 48;
+  		case 6: h ^= (uint64_t)data2[5] << 40;
+  		case 5: h ^= (uint64_t)data2[4] << 32;
+  		case 4: h ^= (uint64_t)data2[3] << 24;
+  		case 3: h ^= (uint64_t)data2[2] << 16;
+  		case 2: h ^= (uint64_t)data2[1] << 8;
+  		case 1: h ^= (uint64_t)data2[0];
           		h *= m;
  	};
  
