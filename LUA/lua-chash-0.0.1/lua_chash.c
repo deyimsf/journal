@@ -24,8 +24,10 @@ static int mod(lua_State *L){
 	int index = h%num;
 	lua_pushnumber(L,index); //the first return value
 	
-	//there is one return value	
-	return 1;
+	char hash[30];
+	sprintf(hash,"%lld",h);
+	lua_pushstring(L,hash);  //second
+	return 2;
 }
 
 
