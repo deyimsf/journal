@@ -40,8 +40,13 @@ $ /usr/local/nginx/sbin/nginx -s quit
 $ /usr/local/nginx/sbin/nginx -s reopen 
 
 ##重新载入配置文件(使用SIGHUP信号)
-$ /usr/local/nginx/sbin/nginx -s reload 
-
+ $ /usr/local/nginx/sbin/nginx -s reload 
+ $ kill -SIGHUP master_pid
+ 
+ master接收到该信号后会,先重新加载配置文件,然后重启新的worker并
+ 接收新的请求,老的worker收到master的停止接收新情求的信号后,处理
+ 完当前的请求后退出。
+ 
 ##配置文件默认位置 
 /usr/local/nginx/conf/nginx.conf 
 
@@ -740,3 +745,47 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 			proxy_cache_purge abc $arg_key;
 		}	
  
+
+#NGINX处理请求大致流程
+  1.客户请求开始
+
+  2.从ngx_http_init_request开始处理请求,该函数会设置请求事件为
+    ngx_http_process_request_line函数
+
+  3.ngx_http_process_request_line用来处理请求行,在该函数中会调用
+	ngx_http_read_request_header函数来读取请求。而处理请求用
+	ngx_http_parse_request_line函数来处理请求行。
+    当请求行处理完毕后,Nginx就会改变Tcp读事件的Handler为
+    ngx_http_process_request_headers函数。
+
+  4.到此,在遇到读事件后就会调用ngx_http_process_request_headers函数
+    该函数的作用就是循环读取解析一系列的请求头。过程如下:
+	调用ngx_http_read_request_header函数读请求头数据
+	调用ngx_http_parse_header_line函数处理请求头
+	将解析到的名字在ngx_http_headers_in中找对应的handler并调用
+  
+  5.请求头处理完成后调用ngx_http_process_request来处理请求。
+    该函数将当前的读写事件处理函数都设置为ngx_http_request_handler
+	而ngx_http_request_handler会根据事件的类型来调用read_event_handler
+	或者write_event_handler。
+    此时的read_event_handler为ngx_http_block_reading函数,即不读数据,
+	也就是说此时还没有读取请求体。
+	
+  6.真正处理发生在ngx_http_handler函数中。?在这里处理请求体?
+    该函数设置写事件函数write_event_handler为ngx_http_core_run_phases,
+	并执行该函数。
+	ngx_http_core_run_phases就是nginx留给我们的对外接口,总共有11个阶段。
+
+  7.当所有的阶段处理完后会
+	7.1调用header filter中的所有filter,最后一个是ngx_http_header_filter,该filter
+       会调用ngx_http_write_filter将头输出。
+  
+	7.2调用body filter中的所有filter,最后一个是ngx_http_write_filter,该filter
+	   对body进行输出。
+	
+
+
+------keepalive
+ 
+
+
