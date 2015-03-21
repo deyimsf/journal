@@ -331,3 +331,14 @@ Cookie字段：客户端用
 	  2: 创建P3P隐私对照文件后，保存命名在/w3c/p3p.xml
 	  3: 从P3P隐私中新建Compact policies后，输出到HTTP响应中
 	  X-XSS-Protection: 1 将XSS过滤设置为有效	
+
+#HTTP协议中如何确定响应体body的长度
+	对于http1.0协议,客户端以content-length头为准。如果没有该头,则客户端会一直接收
+	数据,直到服务端主动关闭连接。
+
+	对于http1.1,兼容http1.0的处理方式,另外增加了一个Transfer-encoding的响应头,如果
+	该头的值为chunked,则表明服务端会将数据按照块的方式顺序输出。每个块的开头会标识
+	当前块的长度。	
+
+
+
