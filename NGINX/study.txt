@@ -278,7 +278,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   会map指令做考虑(猜测,为看源码). 
 
  子请求,就是不是通过客户端请求来的不走HTTP协议的请求,但也不是内部跳转,
- 内部跳转使用的变量和整个请求共享但是子请求一般不共享变量。也有共享的如
+ 内部跳转使用的变量和整个请求共享,但是子请求一般不共享变量。也有共享的如
  ngx_auth_request模块,一般都会禁用其父子共享变量。
  #--------------------------------------------------------------------
  注意:所谓的内部跳转就是强行将当前阶段退回到find-config阶段,这样就可以
@@ -744,7 +744,14 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 			#abc是共享缓存的名字
 			proxy_cache_purge abc $arg_key;
 		}	
- 
+
+#Nginx代码的目录结构
+  core: 存放core module的代码,也是ngxin服务的入口
+  http:	http core module的代码,ngxnx作为web/http proxy server运行时的核心模块
+  mail: mail core module代码,nginx作为pop3/imap/smtp proxy server的核心模块
+  event:ngxin自身对事件处理逻辑的封装
+  os: nginx对各个平台抽象逻辑的封装
+  misc: nginx的一些utils,定义了test和profiler的一些外围模块的逻辑
 
 #NGINX处理请求大致流程
   1.客户请求开始
@@ -782,10 +789,231 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   
 	7.2调用body filter中的所有filter,最后一个是ngx_http_write_filter,该filter
 	   对body进行输出。
-	
 
-
-------keepalive
+#Ngxin中的基本数据结构	
+##Nginx中的ngx_str_t字符串结构 
+  src/core/ngx_string.h|ngx_string.c
+  
+  typedef struct {
+ 	size_t	len;
+ 	u_char	*data;
+  }
  
+##ngx_pool_t数据结构,用来管理资源
+  src/core/ngx_palloc.h|ngx_palloc.c
+ 
+  typedef struct ngx_pool_s	ngx_pool_t;
+  struct ngx_pool_s {
+ 	ngx_pool_data_t		d;
+ 	size_t				max;
+ 	ngx_pool_t			*current;
+ 	ngx_chain_t			*chain;
+ 	ngx_pool_large_t	*large;
+ 	ngx_pool_cleanup_t	*cleanup;
+ 	ngx_log_t			*log;
+  };
+ 
+##nginx中的数组
+  src/core/ngx_array.h|ngx_array.c
+ 
+  typedef struct ngx_array_s		ngx_array_t;
+  struct ngx_array_s {
+ 	void		*elts;
+ 	ngx_uint_t	nelts;
+ 	size_t		size;
+ 	ngx_unit_t	nalloc;
+ 	ngx_pool_t	*pool;
+  }
+ 
+##ngx_hash_t
+  src/core/ngx_hash.h|ngx_hash.c
+  
+  //hash元素key-value键值对
+  typedef struct {
+     void             *value;   //value值
+     u_short           len;	   //值的长度
+     u_char            name[1]; //key   ?中括号什么意思
+  } ngx_hash_elt_t;
+ 
+  //hash结构
+  typedef struct {
+     ngx_hash_elt_t  **buckets;   //hash桶(size个)
+     ngx_uint_t        size;		 //hash桶个数
+  } ngx_hash_t;
+ 
+  hash表中对于常用的解决冲突的方法有线性探测,二次探测和开链法等。ngx_hash_t
+  中使用的是和java中HahsMap一样的方式开链法。当ngx_hash_t中的开链并不是真的
+  开了一个链表。
+ 
+  从ngx_hash_t这个hash结构可以看到,该结构有size个(*buckets),一个(*buckets)
+  代表一个桶,这一个桶里面放置了好多的ngx_hash_elt_t元素,实际上每个桶指向的
+  就是一个ngx_hash_elt_t元素的数组。
+ 
+  如果和java中的HashMap对比的话,可以看到**buckets对应HashMap中的数组,而size
+  就代表数组的大小。nginx中的每一个桶(*buckets)对应java中数组的一个元素。
+  最后两者不同的是,java每个数组的元素用链的方式将冲突的key连接起来,而nginx中
+  每个桶(*buckets)用"数组"的方式将其链接起来。
+ 
+ 
+  nginx中的hash表只能一次初始化构建起整个hash表,后续不能删除和插入。
+ 
+##ngx_hash_wildcard_t
+  该hash表是为了处理带有通配符的域名匹配问题。该表支持两种通配符的域名。
+  1.形如 *.aaa.com,.aaa.com,这样的key可以匹配www.aaa.com,b.a.aaa.com。
+  2.形如 aaa.*,该key可以匹配aaa.com,aaa.cn等域名。
+ 
+  需要注意的是,一个该结构类型的hash表只能匹配一种上述一种类型的key。
+  ngx_hash_find_wc_head用来匹配通配符在前的key
+  ngx_hash_find_wc_tail用来查找通配符在后的key
+ 
+##ngx_hash_combined_t hash表的一个组合
+  typedef struct {
+ 	ngx_hash_t			hash;    //普通hash表
+ 	ngx_hash_wildcard_t *wc_head;//通配符在前的hash表
+ 	ngx_hash_wildcart_t *wc_tail;//通配符在后的hash表
+  } ngx_hash_combined_t;
+ 
+  查找时会依次从这三个hash表中查找,一单找到,立即返回,只返回一个。
+ 
+##ngx_hash_keys_arrays_t 
+  src/core/ngx_hash.h|c
+  该结构用来方便我们创建上面三种hash表而存在的辅助类型
+ 
+  typedef struct {
+       ngx_uint_t        hsize;
+   
+       ngx_pool_t       *pool;
+       ngx_pool_t       *temp_pool;
+   
+       ngx_array_t       keys;
+       ngx_array_t      *keys_hash;
+   
+       ngx_array_t       dns_wc_head;
+       ngx_array_t      *dns_wc_head_hash;
+   
+       ngx_array_t       dns_wc_tail;
+       ngx_array_t      *dns_wc_tail_hash;
+  } ngx_hash_keys_arrays_t;
+
+##ngx_chain_t 
+  src/core/ngx_buf.h|c
+  typedef struct ngx_chain_s ngx_chain_t;
+
+  struct ngx_chain_s {
+	ngx_buf_t 	*buf;
+	ngx_chain_t	*next;
+  }
+
+##ngx_buf
+  src/core/ngx_buf.h|c
+  struct ngx_buf_s {
+      u_char          *pos;
+      u_char          *last;
+      off_t            file_pos;
+      off_t            file_last;
+  
+      u_char          *start;         /* start of buffer */
+      u_char          *end;           /* end of buffer */
+      ngx_buf_tag_t    tag;
+      ngx_file_t      *file;
+      ngx_buf_t       *shadow;
+  
+  
+      /* the buf's content could be changed */
+      unsigned         temporary:1;
+  
+      /*
+       * the buf's content is in a memory cache or in a read only memory
+       * and must not be changed
+       */
+      unsigned         memory:1;
+  
+      /* the buf's content is mmap()ed and must not be changed */
+      unsigned         mmap:1;
+  
+      unsigned         recycled:1;
+      unsigned         in_file:1;
+      unsigned         flush:1;
+      unsigned         sync:1;
+      unsigned         last_buf:1;
+      unsigned         last_in_chain:1;
+  
+      unsigned         last_shadow:1;
+      unsigned         temp_file:1;
+  
+      /* STUB */ int   num;
+  };
+
+##ngx_list_t ngxin中的list数据结构
+  src/core/ngx_list.h|c
+
+  //list结构
+  typedef struct {
+	ngx_list_part_t *last; //指向该链表的最后一个节点
+	ngx_list_part_t  part; //头结点
+	size_t			size;  //具体元素所需要的内存大小;?每个,还是总共
+	ngx_unit_t		nalloc;//每个节点可包含的具体元素的个数
+	ngx_pool_t		*pool; //该list使用的分配内存的pool
+  } ngx_list_t;
+
+  //list结构中的节点
+  typedef struct ngx_list_part_s ngx_list_part_t;
+  struct ngx_list_part_s{
+	void			*elts; //每个节点存放具体元素的开始地址,可以理解为一个数组(elts[])
+	ngx_unit_t		nelts; //该节点包含的元素的个数
+	ngx_list_part_t *next; //该节点指向的下一个节点
+  } 
+  
+ ##ngx_queue_t ngxin中的双向链表
+   src/core/ngx_queue.h|c
+
+   typedef struct ngx_queue_s ngx_queue_t;
+   struct ngx_queue_s {
+		ngx_queue_t		*prev;
+		ngx_queue_t		*next;
+   };
+
+   可以看到这个双向链表没有,节点中没有数据成员,只有前一个和后一个,在使用的时候需要
+   先定义个哨兵:
+
+   		ngx_queue_t free;  //哨兵,不放任何数据,prev指向链表头,next指向第一个节点
+
+   使用一个具有数据元素的链表节点时,只要在相应的结构体上加一个ngx_queue_t成员就可以。
+   比如:
+
+    	typedef struct { //加上一个ngx_queue_t后,这就是一个该queue的具体数据
+			int 			a;
+			ngx_queue_t		queue; //代表一个链表节点
+			char			*name;
+    	} mydata;
+
+  当我们知道 ngx_queue_t *q 指向的是链表中queue后,我们可以通过queue在mydata
+  中的偏移量,来获取mydata的地址:
+	1.获取queue在mydata结构体中的偏移量  
+	  size_t offset = offsetof(mydata,queue);	
+ 	2.让queue的具体地址减去偏移量,这个就是mydata的地址  
+	  mydata data = (mydata)((char *)q - offset);  
+
+#Nginx的请求处理
+ ngxin的所有业务逻辑都在worker进程处理,worker进程中的ngx_worker_process_cycle()
+ 函数做一个无限循环操作,不断接收客户端的请求并处理,大致流程如下:
+	1.等待操作系统产生相关的事件
+	2.接收和处理这些事件,将接收到的数据产生更高层的request对象
+	3.处理request中的header和body
+	4.产生响应,并发送回客户端
+	5.完成request的处理
+	6.重新初始化定时器及其他事件
+
+ 从内部来看,一个Http Request的处理过程涉及以下几个阶段:
+	1.初始化Http Request
+	2.处理请求头
+	3.处理请求体
+	4.如果有的话,调用与此请求关联的handler
+	5.依次调用各个phase handler进行处理(11个阶段)
+
+
+
+
+
 
 
