@@ -967,29 +967,29 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  ##ngx_queue_t ngxin中的双向链表
   src/core/ngx_queue.h|c
 
-  typedef struct ngx_queue_s ngx_queue_t;
-  struct ngx_queue_s {
-	ngx_queue_t		*prev;
-	ngx_queue_t		*next;
+  typedef struct ngx_queue_s ngx_queue_t;  
+  struct ngx_queue_s {  
+	ngx_queue_t		*prev;  
+	ngx_queue_t		*next;  
   };
 
   可以看到这个双向链表没有,节点中没有数据成员,只有前一个和后一个,在使用的时候需要
   先定义个哨兵：
-    ngx_queue_t free;  //哨兵,不放任何数据,prev指向链表头,next指向第一个节点
+    ngx_queue_t free;  //哨兵,不放任何数据,prev指向链表头,next指向第一个节点  
 
   使用一个具有数据元素的链表节点时,只要在相应的结构体上加一个ngx_queue_t成员就可以。
-  比如:
-    typedef struct { //加上一个ngx_queue_t后,这就是一个该queue的具体数据
-		int 			a;
-		ngx_queue_t		queue; //代表一个链表节点
-		char			*name;
-    } mydata;
+  比如:  
+    typedef struct { //加上一个ngx_queue_t后,这就是一个该queue的具体数据  
+		int 			a;  
+		ngx_queue_t		queue; //代表一个链表节点  
+		char			*name;  
+    } mydata;  
   当我们知道 ngx_queue_t *q 指向的是链表中queue后,我们可以通过queue在mydata
-  中的偏移量,来获取mydata的地址:
-	1.获取queue在mydata结构体中的偏移量
-	  size_t offset = offsetof(mydata,queue);	
- 	2.让queue的具体地址减去偏移量,这个就是mydata的地址
-	  mydata data = (mydata)((char *)q - offset);	
+  中的偏移量,来获取mydata的地址:  
+	1.获取queue在mydata结构体中的偏移量  
+	  size_t offset = offsetof(mydata,queue);  	
+ 	2.让queue的具体地址减去偏移量,这个就是mydata的地址  
+	  mydata data = (mydata)((char *)q - offset);	  
 
 
 
