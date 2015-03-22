@@ -962,12 +962,12 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	void			*elts; //每个节点存放具体元素的开始地址,可以理解为一个数组(elts[])
 	ngx_unit_t		nelts; //该节点包含的元素的个数
 	ngx_list_part_t *next; //该节点指向的下一个节点
-  } 
+  }; 
 
 ##ngx_queue_t ngxin中的双向链表
   src/core/ngx_queue.h|c
 
-  typedef struct ngx_queue_s ngx_queue_t;
+  typedef struct ngx_queue_s ngx_queue_t;  
   struct ngx_queue_s {
 	ngx_queue_t		*prev;
 	ngx_queue_t		*next;
