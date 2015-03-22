@@ -964,13 +964,13 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	ngx_list_part_t *next; //该节点指向的下一个节点
   } 
   
- ##ngx_queue_t ngxin中的双向链表
+##ngx_queue_t ngxin中的双向链表
   src/core/ngx_queue.h|c
 
   typedef struct ngx_queue_s ngx_queue_t;  
   struct ngx_queue_s {  
-	ngx_queue_t		*prev;  
-	ngx_queue_t		*next;  
+	`ngx_queue_t		*prev;  
+	`ngx_queue_t		*next;  
   };
 
   可以看到这个双向链表没有,节点中没有数据成员,只有前一个和后一个,在使用的时候需要
