@@ -147,4 +147,26 @@ Tcp慢启动和避免拥塞算法
 #快速重传机制
   不再以timeout为界限，而以ack个数驱动重传。如果发送方连续3次收到相同的ack,
  就重传。
+
+#Tcp的KeepAlive,有三个选项可设置
+ $sysctl -a | grep tcp_keepalive
+  
+ net.ipv4.tcp_keepalive_time = 7200
+   TCP链路在经过多少秒后没有数据报文传输就启动保活探测
+ net.ipv4.tcp_keepalive_probes = 9
+   当前最多探测的次数 
+ net.ipv4.tcp_keepalive_intvl = 75 
+   当前发送每个探测报的间隔秒数
+
+ 如果系统支持的话可以为每个socket设置这些参数,使用setsockopt设置
+ TCP_KEEPIDLE 对应 keepalive_time
+ TCP_KEEPCNT 对应 keepalive_probes
+ TCP_KEEPINTVL 对应 keepalive_intvl 
+
+ 例子:
+  Nginx中得listen指令有一个参数可以设置TCP层的keepalive
+  so_keepalive=on|off|[keepidle]:[keepintvl]:[keepcnt] 
+  三个参数,on是开启,off关闭,最后是直接指定keepalive时间	
  
+  listen 8080 so_keepalive=7200:75:9
+

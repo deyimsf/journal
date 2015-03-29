@@ -1478,6 +1478,19 @@ $ iostat -xk
  TCP连接占用的内存都分配在内核空间,对于32位的Linux内核最多使用1G的内存。
  所以32位的Linux无法超过10万个连接。
 
+#sysctl 修改和查看内核参数
+ -a: 显示当前所有内核有效的参数
+	 $systctl -a | grep tcp_keepalive
+ -w: 设置某个参数的值,和-p参数相比,-p可以理解成批量修改
+	 $sysctl -w kernel.domainname="example.com"
+ -p: 从一个指定文件中加载内核参数,如果没有指定则默认从/etc/sysctl.conf中
+	 读取。
+	 $sysctl -p /etc/sysctl.conf  //这个文件是sysctl这个工具的配置文件
 
-
- 
+ 如果不用这个工具,也可以直接在指定位置修改其内核参数,这里我们用tcp的keepalive
+ 来举例子,有三种方式:
+ 	1.sysctl -w net.ipv4.tcp_keepalive_time = 7200
+	2.在/etc/sysctl.conf文件中加入 net.ipv4.tcp_keepalive_time=7200
+	  然后运行命令 $sysctl -p
+	3.直接修改/proc/sys/net/ipv4/tcp_keepalive_time
+ 实际上,上述两种都是在修改3的这个文件 
