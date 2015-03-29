@@ -1011,9 +1011,187 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	4.如果有的话,调用与此请求关联的handler
 	5.依次调用各个phase handler进行处理(11个阶段)
 
+#Nginx模块开发
 
+##Nginx模块的配置结构,该结构用来存储我们需要的中间值
+  每个模块可以用三个不用的数据结构,去存储该模块在main,server,location三个作用
+  域的配置信息。
 
+  对于模块配置信息的定义,命名习惯像这样ngx_http_<module name>_<main|src|loc>_conf_t  
+  比如我们定义如下一个结构,来存储我们的模块在location区域的配置信息:
+	typedef struct{
+		ngx_str_t	hello_string_tmp;
+		ngx_int_t	hello_counter_tmp;
+		ngx_str_t	hello_tmp;
+	}ngx_http_hello_loc_conf_t;  
 
+  在处理数据时我们可以用这个结构保存我们的一些信息,比如我们在读完指令和指令参数
+  后,把这些信息可以放到这个结构体中,如果不需要也可以不放。 
 
+##Ngxin指令配置结构
+  nginx中的每个模块都需要通过一些指令来完成任务,指令的结构体如下:
+  
+  src/core/ngx_core.h
+  typedef struct ngx_command_s     ngx_command_t;
+  
+  src/core/ngx_conf_file.h
+  struct ngx_command_s {
+	ngx_str_t		name;   //指令名字
+	ngx_uint_t		type;   //指令的一些属性,如参数个数,指令可在位置等 
+	char			*(*set)(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
+	ngx_uint_t		conf;   //该配置应该存放的内存位置
+	ngx_unit_t		offset; //该配置项精确存放的位置
+	void			*post;	
+  }
 
+  下面解释下ngx_commands_s结构体中字段的含义:
+  name: 指令的名字
+  type: 该指令属性的一些配置值,可以组合起来使用
+	  NGX_CONF_NOARGS: 该指令不接受任何参数
+	  NGX_CONF_TAKE1:  该指令只接受一个参数
+	     。。。
+	  NGX_CONF_TAKE7:  该指令只接受七个参数
+	
+	  NGX_CONF_TAKE12: 该指令只接受1个或2个参数
+	  NGX_CONF_TAKE13: 接受1或3个参数
+	  NGX_CONF_TAKE23:
+	  NGX_CONF_TAKE123:
+	  NGX_CONF_TAKE1234:
+	  NGX_CONF_1MORE: 至少一个参数
+	  NGX_CONF_2MORE: 至少两个参数
+	  NGX_CONF_MULTI: 可以接受多个
+	  NGX_CONF_BLOCK: 可以接受一个配置块{} 
+	  NGX_CONF_FLAG: 可以接受on或off字符,最终转换为bool
+	  NGX_CONF_ANY:	 可以接受任意的参数值,比MULTI更宽泛
+	   
+	  NGX_DIRECT_CONF: 该指令可以出现在配置文件的最外层,如daemon指令
+	  NGX_MAIN_CONF: 出现在http,main,events,error_log等
+	  NGX_ANY_CONF: 可以出现在任意区域
+	 
+	  NGX_HTTP_MAIN_CONF: 可以出现在http区域
+	  NGX_HTTP_SRV_CONF: 可以出现在http中的server域中
+	  NGX_HTTP_LOC_CONF: 可出现在http server块的location中
+	  NGX_HTTP_UPS_CONF: 可出现在 upstream中
+	  NGX_HTTP_SIF_CONF: server中的if域中
+	  NGX_HTTP_LMT_CONF: 出现在limit_except中
+	  NGX_HTTP_LIF_CONF: 出现在location中得if域中   
+   
+  set:函数指针,用处理指令配置信息的函数,这个函数是我们自定义的,当nginx解析完
+      配置信息后,就会调用该函数并传递其解析的数据,该函数原型如下:
+      
+      //处理成功返回NGX_OK,否则返回NGX_CONF_ERROR或者我们自己定义的字符串
+	  char *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf); 
+	   
+		cf:这个参数保存我们从配置文件读取到的原始字符串,ngx_conf_t中的args字
+		   段是一个ngx_str_t类型的数组,值分别是:指令本身、第一个参数、第二个
+		   参数,直到最后一个参数。
+	    cmd:该配置指令对应的ngx_command_t结构
+		conf:我们自定义的结构体,该结构体可以存储一些的信息
+			 ?我们自己赋值,还是nginx帮我们赋值?必须用下面的函数才会自动赋值?
+	
+  为了方便对指令参数的读取,nginx提供了一些默认的函数,这些函数可以直接赋值给set
+  字段使用: ?是不是只有使用这些函数,ngx_command_s中的offset字段才有意义,才会自动为我们自定义的结构体赋值
+	ngx_conf_set_flag_slot: 读取NGX_CONF_FLAG类型的参数。
+    ngx_conf_set_str_slot:读取字符串类型的参数。
+    ngx_conf_set_str_array_slot: 读取字符串数组类型的参数。
+    ngx_conf_set_keyval_slot: 读取键值对类型的参数。
+    ngx_conf_set_num_slot: 读取整数类型(有符号整数ngx_int_t)的参数。
+    ngx_conf_set_size_slot:读取size_t类型的参数，也就是无符号数。
+    ngx_conf_set_off_slot: 读取off_t类型的参数。
+    ngx_conf_set_msec_slot: 读取毫秒值类型的参数。
+    ngx_conf_set_sec_slot: 读取秒值类型的参数。
+    ngx_conf_set_bufs_slot: 读取的参数值是2个,一个是buf的个数,一个是buf的大小。
+							例如： output_buffers 1 128k;
+    ngx_conf_set_enum_slot: 读取枚举类型的参数，将其转换成整数ngx_uint_t类型。
+    ngx_conf_set_bitmask_slot: 读取参数的值,并将这些参数的值以bit位的形式存储。
+							   例如：HttpDavModule模块的dav_methods指令。	
 
+  conf: 指定把这些配置信息存放到哪个内存区域。
+		http模块对所有要保存的配置信息,划分了main,server和location进行存储,分别
+		对应值为NGX_HTTP_MAIN_CONF_OFFSET,NGX_HTTP_SRV_CONF_OFFSET,
+		NGX_HTTP_LOC_CONF_OFFSET
+
+  offset: 该指令值的精确存放位置,就是我们自定义的结构体的,某个字段的偏移量
+		  ?也就是说nginx回自动为我们的结构体赋值?
+
+  post: 存储一个指针。一般不需要指定,可以指定为NULL
+
+  例子,指定某个模块的指令集:
+	static ngx_command_t ngx_http_hello_commands[] = {
+		{
+			//ngx_str_t name 
+			//指令名字
+			ngx_string("hello_string"),
+
+			//ngx_uint_t type
+			//该指令可以在location域,且只能有一个参数
+			NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+
+			//char *(*set)(ngx_conf_t *cf,ngx_command_t *cmd,void *conf)
+			// cf原始参数
+			// cmd 该指令对应的ngx_command_t结构本身
+			// conf 我们自定义的结构体
+			//处理该指令的函数
+			ngx_http_hello_string,
+			
+			//ngx_uint_t  conf
+			//该指令信息的内存存放区域
+			NGX_HTTP_LOC_CONF_OFFSET,
+			
+			//ngx_uint_t offset
+			//该指令的值存储的精确内存地址,_loc_conf_t是我们自定义的结构体
+			offsetof(ngx_http_hello_loc_conf_t,hello_string),
+
+			//void *post
+			NULL
+		},
+
+		//其他指令
+		//{},
+
+		ngx_null_command   //数组最后用该结构结尾
+	}
+
+#模块的上下文结构 ngx_http_module_t
+ 该结构体中存放的是一些函数,这些函数会在配置信息的创建前和创建后调用,
+ 这个结构体最终会注册到ngx_module_t中。这里的函数其实就是在读取配置信息前后,
+ 或者初始化配置信息前后调用。?目前猜测只有在nginx启动时调用一次,用来读取并保存配置信息?
+
+  src/http/ngx_http_config.h
+  typedef struct {
+      ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
+      ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
+  
+      void       *(*create_main_conf)(ngx_conf_t *cf);
+      char       *(*init_main_conf)(ngx_conf_t *cf, void *conf);
+  
+      void       *(*create_srv_conf)(ngx_conf_t *cf);
+      char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf);
+  
+      void       *(*create_loc_conf)(ngx_conf_t *cf);
+      char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
+  } ngx_http_module_t;
+ 
+ preconfiguration: 在创建和读取该模块的配置信息之前调用
+ postconfiguration: 之后调用
+
+ create_main_conf: 创建http域的配置信息的结构体?成功就返回创建的结构体。
+				   失败就返回NULL。
+ init_main_conf: 初始化这个http域的结构体 ?成功返回NGX_CONF_OK,失败返回
+				 NGX_CONF_ERROR或错误字符串
+ 
+ create_srv_conf: 创建每个server域的存储结构体,并初始化 
+ merge_srv_conf: 合并配置信息,如果当前没有就用上层的。
+
+ create_loc_conf: 创建每个location域的存储结构体,并初始化它。
+				  这里的结构体就是我们自定义结构体,比如http_hello_loc_conf_t
+				  我们只需要创建并初始化它,然后返回即可。
+ merge_loc_conf: ?目前不是太明白?在调用该函数之前,自定义的结构体已经有值了?如果
+				 真的是这样,那又是在什么时候谁给赋值的呢?ngx_command_t中的set函数给赋的值？
+
+				 大概意思可能就是,比如ngx_http_hello_loc_conf_t这个结构体中有
+				 一个expires这个字段,这个值在当前域中可以用,在上层域或下层域中
+				 都可用,那么如果该指令在当前为定义就是用上层的值
+
+#模块定义 ngx_module_s 表示我们编写的某个模块
+   
