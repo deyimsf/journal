@@ -81,27 +81,27 @@ static ngx_int_t ngx_http_hello_init(ngx_conf_t *cf){
 
 // 创建loc域的结构体
 static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf){
-	ngx_http_hello_loc_conf_t *local_conf = NULL;
-	local_conf  = ngx_pcalloc(cf->pool,sizeof(ngx_http_hello_loc_conf_t));
-	if (local_conf == NULL){
+	ngx_http_hello_loc_conf_t *conf = NULL;
+	conf  = ngx_pcalloc(cf->pool,sizeof(ngx_http_hello_loc_conf_t));
+	if (conf == NULL){
 		return NULL;
 	}
 
-        //初始化结构体 ????为什么不是local_conf->hello_string
-	ngx_str_null(&local_conf->hello_string);
-	ngx_str_set(&local_conf->hello_test,"hello world test");
+    //初始化结构体
+	ngx_str_null(&(conf->hello_string));
+	ngx_str_set(&(conf->hello_test),"hello world test");
 
-	return local_conf;
+	return conf;
 }
 
 //处理解析到的指令
 static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
-	ngx_http_hello_loc_conf_t * local_conf;
-	local_conf = (ngx_http_hello_loc_conf_t *)conf;
+	ngx_http_hello_loc_conf_t * conf;
+	conf = (ngx_http_hello_loc_conf_t *)conf;
 
 	//赋值解析到的值
     char *rv = ngx_conf_set_str_slot(cf,cmd,conf);
-	//ngx_str_set(local_conf->hello_string,"mashunfeng");
+	//ngx_str_set(conf->hello_string,"mashunfeng");
 	
 	return rv;
 }
@@ -143,8 +143,8 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	b->last_buf = 1; //这是buffer chain中的最后一个buffer ?	 
 
 	//需要设置响应头
-	r->headers_out.status = NGX_HTTP_OK; //为什么报错  ????
-	r->headers_out.content_length = content_length;
+	r->headers_out.status = NGX_HTTP_OK; 
+	r->headers_out.content_length_n = content_length;
     	
 	//需要发送响应头
 	rc = ngx_http_send_header(r);
