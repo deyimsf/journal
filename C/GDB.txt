@@ -18,14 +18,26 @@
 
 #图形方式启动gdb
   $ gdb -tui a.out
- 加tui方式debug源代码会展示在窗口的上方
+  加tui方式debug源代码会展示在窗口的上方
+ 
+  或者运行gdb后连续按键 ctrl+x和ctrl+a,也可以出现窗口,并且
+  在tui模式下可以有四种窗口,在gdb中输入help layout可以看到
+   
+  改变窗口的布局在gdb中用下面的命令
+   layout prev | next | <layout_name> 
+   Layout names are:
+   	 src   : 默认显示源文件
+   	 asm   : 显示汇编窗口
+   	 split : 显示汇编和源文件两个窗口
+   	 regs  : 寄存器窗口
+	
 
 #查看代码
  (gdb) l	//该命令可以查看源代码
- (gdb) list aa.c:1  //从aa.c这个文件的第一行开始看
+ (gdb) list aa.c:函数名|行号  //从aa.c这个文件的第一行开始看
 
 #打断点
- (gdb) break 行号|地址
+ (gdb) break [file:]函数名|行号
 
 #开始运行程序
  (gdb) run 	//这个时候会程序会停止在断点处
@@ -36,6 +48,9 @@
 #下一步
  (gdb) n|next	//执行下一句
  (gdb) s|step	//执行下一句，如果下一句是个方法则进入,前提是该方法有源代码
+
+#显示程序的栈信息
+ (gdb) bt    //可以看到当前执行的方法,以及停留在哪一行
 
 #跳过断点继续执行
  (gdb) c	

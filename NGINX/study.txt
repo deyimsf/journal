@@ -1194,4 +1194,115 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 				 都可用,那么如果该指令在当前为定义就是用上层的值
 
 #模块定义 ngx_module_s 表示我们编写的某个模块
-   
+ nginx中的每一个模块都要定义一个ngx_module_s结构体来描述自己,这个结构体中
+ 包含了模块的上下文结构(ngx_http_module_t)、指令信息(ngx_command_t)等
+
+ src/core/ngx_core.h
+ typedef struct ngx_module_s ngx_module_t;
+
+ /core/ngx_conf_file.h
+ struct ngx_module_s {
+    ngx_uint_t            ctx_index;
+    ngx_uint_t            index;
+
+    ngx_uint_t            spare0;
+    ngx_uint_t            spare1;
+    ngx_uint_t            spare2;
+    ngx_uint_t            spare3;
+
+    ngx_uint_t            version;
+
+    void                 *ctx;
+    ngx_command_t        *commands;
+    ngx_uint_t            type;
+
+    ngx_int_t           (*init_master)(ngx_log_t *log);
+
+    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
+
+    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
+    void                (*exit_thread)(ngx_cycle_t *cycle);
+    void                (*exit_process)(ngx_cycle_t *cycle);
+
+    void                (*exit_master)(ngx_cycle_t *cycle);
+
+    uintptr_t             spare_hook0;
+    uintptr_t             spare_hook1;
+    uintptr_t             spare_hook2;
+    uintptr_t             spare_hook3;
+    uintptr_t             spare_hook4;
+    uintptr_t             spare_hook5;
+    uintptr_t             spare_hook6;
+	uintptr_t			  spare_hook7;
+ }
+
+ #define NGX_MODULE_V1          0, 0, 0, 0, 0, 0, 1
+ #define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0 
+
+ 有了这个结构之后nginx核心就知道我们模块的信息了,但是还差一个真正处理
+ 我们请求的函数,这个结构上并没有体现,这个函数的声明如下:
+	
+	typedef ngx_int_t (*ngx_http_handler_pt) (ngx_http_request_t *r);
+ 
+ 该函数处理成功返回NGX_OK,发生错误返回NGX_ERROR,留给后续的handler进行处理
+ 返回NGX_DECLINE。
+
+ 这个函数可以通过两种方式挂载到处理过程中
+  1.按阶段挂载
+  2.按需挂载
+
+ Nginx把处理过程分成了11个阶段
+  NGX_HTTP_POST_READ_PHASE  //读取请求内容阶段
+  NGX_HTTP_SERVER_REWRITE_PHASE //Server请求地址重写阶段
+  NGX_HTTP_FIND_CONFIG_PHASE //配置查找阶段
+  NGX_HTTP_REWRITE_PHASE	//location 请求地址重写阶段
+  NGX_HTTP_PREACCESS_PHASE	//访问权限检查准备阶段
+  NGX_HTTP_ACCESS_PHASE	   //访问权限检查阶段
+  NGX_HTTP_TRY_FILES_PHASE //配置项try_files处理阶段
+  NGX_HTTP_CONTENT_PHASE	//内容产生阶段
+  NGX_HTTP_LOG_PHASE		//日志处理阶段 
+ 
+  一般挂载动作发生在模块的上下文调用postconfiguration函数中,例如:
+ 	
+	static ngx_int_t ngx_http_hello_init(ngx_conf_t *cf){
+		ngx_http_handler_pt			*my_h;
+		ngx_http_core_main_conf_t	*cmcf;
+
+		cmcf = ngx_http_conf_get_module_main_conf(cf,ngx_http_core_module);
+		
+		my_h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
+		if (my_h == NULL){
+			return NGX_ERROR;
+		}
+		
+		//挂载我们真正处理请求的函数
+		*my_h = ngx_http_hello_handler;
+
+		return NGX_OK;
+	}
+ 
+ 这种方式也称为content phase handlers,其中以下4个阶段不允许挂载任何handler
+ 	NGX_HTTP_FIND_CONFIG_PHASE
+ 	NGX_HTTP_POST_ACCESS_PHASE
+ 	NGX_HTTP_POST_REWRITE_PHASE
+ 	NGX_HTTP_TRY_FILES_PHASE
+
+
+ 另一种挂载方式叫做content handler。
+ 这种挂载方式只有执行到NGX_HTTP_CONTENT_PHASE阶段的时候才会执行,并且在该阶段
+ 注册的所有handler都将失效。?章宜春说的是这种方式? 
+ 挂载例子如下:
+	
+	static char *ngx_http_circle_gif(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
+		ngx_http_core_loc_conf_t	*clcf;
+		
+		clcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);
+		clcf->handler = ngx_http_circle_gif_handler;
+
+		return NGX_CONF_OK;
+	}
+ 
+
+
+
