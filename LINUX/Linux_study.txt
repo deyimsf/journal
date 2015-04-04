@@ -1233,9 +1233,11 @@ $ iostat -xk
  抓取eth0网口 抓800个包 抓tcp协议 抓80端口 抓取结果放入test.pcap文件
 
 #curl命令
- //指定请求头
- $curl -H 'X-My-Head:123' localhost/test
-
+ -H:指定请求头
+ 	$curl -H 'X-My-Head:123' localhost/test
+ -v:查看请求和响应头
+    $curl http://www.baidu.com -v
+    	
 
 #col筛选换行符
  -b Do not output any backspaces,printing only the last character written to each column position.
