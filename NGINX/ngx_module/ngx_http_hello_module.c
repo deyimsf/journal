@@ -6,8 +6,10 @@
 
 static ngx_int_t ngx_http_hello_init(ngx_conf_t *cf);
 static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf);
+static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
 static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r);
+
 
 //存储location区域的配置信息
 typedef struct{ 
@@ -94,13 +96,20 @@ static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf){
 	return conf;
 }
 
+// 合并loc域的配置信息
+static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child){
+	//该方法会在ngx_http_hello_create_loc_conf和ngx_http_hello_string方法调用后再执行
+
+	return NGX_CONF_OK;
+}
+
 //处理解析到的指令
 static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
-	ngx_http_hello_loc_conf_t * conf;
-	conf = (ngx_http_hello_loc_conf_t *)conf;
+	ngx_http_hello_loc_conf_t * loc_conf;
+	loc_conf = (ngx_http_hello_loc_conf_t *)conf;
 
 	//赋值解析到的值
-    char *rv = ngx_conf_set_str_slot(cf,cmd,conf);
+    char *rv = ngx_conf_set_str_slot(cf,cmd,loc_conf);
 	//ngx_str_set(conf->hello_string,"mashunfeng");
 	
 	return rv;
