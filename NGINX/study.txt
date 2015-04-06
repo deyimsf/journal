@@ -1155,7 +1155,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 #模块的上下文结构 ngx_http_module_t
  该结构体中存放的是一些函数,这些函数会在配置信息的创建前和创建后调用,
  这个结构体最终会注册到ngx_module_t中。这里的函数其实就是在读取配置信息前后,
- 或者初始化配置信息前后调用。?目前猜测只有在nginx启动时调用一次,用来读取并保存配置信息?
+ 或者初始化配置信息前后调用。只有在nginx启动时调用,用来读取并保存配置信息。
 
   src/http/ngx_http_config.h
   typedef struct {
@@ -1173,21 +1173,22 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   } ngx_http_module_t;
  
  preconfiguration: 在创建和读取该模块的配置信息之前调用
- postconfiguration: 之后调用
+ postconfiguration: 模块的配置信息都被设置完后调用,最后执行该方法
 
  create_main_conf: 创建http域的配置信息的结构体?成功就返回创建的结构体。
 				   失败就返回NULL。
- init_main_conf: 初始化这个http域的结构体 ?成功返回NGX_CONF_OK,失败返回
-				 NGX_CONF_ERROR或错误字符串
+ init_main_conf: 初始化这个http域的结构体,成功返回NGX_CONF_OK,失败返回
+				 NGX_CONF_ERROR或错误字符串。因为main域上面没有其他域了,所以
+				 这里没有merge这个操作。
  
- create_srv_conf: 创建每个server域的存储结构体,并初始化 
+ create_srv_conf: 创建每个server域的存储结构体。 
  merge_srv_conf: 合并配置信息,如果当前没有就用上层的。
 
  create_loc_conf: 创建每个location域的存储结构体,并初始化它。
 				  这里的结构体就是我们自定义结构体,比如http_hello_loc_conf_t
 				  我们只需要创建并初始化它,然后返回即可。
- merge_loc_conf: ?目前不是太明白?在调用该函数之前,自定义的结构体已经有值了?如果
-				 真的是这样,那又是在什么时候谁给赋值的呢?ngx_command_t中的set函数给赋的值？
+ merge_loc_conf:  这个方法会在create_loc_conf函数和ngx_command_t中的set关联的函数
+ 				  调用之后在执行。
 
 				 大概意思可能就是,比如ngx_http_hello_loc_conf_t这个结构体中有
 				 一个expires这个字段,这个值在当前域中可以用,在上层域或下层域中
@@ -1204,12 +1205,10 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  struct ngx_module_s {
     ngx_uint_t            ctx_index;
     ngx_uint_t            index;
-
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
     ngx_uint_t            spare2;
     ngx_uint_t            spare3;
-
     ngx_uint_t            version;
 
     void                 *ctx;
@@ -1217,23 +1216,14 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
     ngx_uint_t            type;
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
-
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
-
     ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
     ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
     void                (*exit_thread)(ngx_cycle_t *cycle);
     void                (*exit_process)(ngx_cycle_t *cycle);
-
     void                (*exit_master)(ngx_cycle_t *cycle);
-
     uintptr_t             spare_hook0;
-    uintptr_t             spare_hook1;
-    uintptr_t             spare_hook2;
-    uintptr_t             spare_hook3;
-    uintptr_t             spare_hook4;
-    uintptr_t             spare_hook5;
-    uintptr_t             spare_hook6;
+	...
 	uintptr_t			  spare_hook7;
  }
 
@@ -1288,7 +1278,6 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  	NGX_HTTP_POST_REWRITE_PHASE
  	NGX_HTTP_TRY_FILES_PHASE
 
-
  另一种挂载方式叫做content handler。
  这种挂载方式只有执行到NGX_HTTP_CONTENT_PHASE阶段的时候才会执行,并且在该阶段
  注册的所有handler都将失效。?章宜春说的是这种方式? 
@@ -1304,5 +1293,22 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	}
  
 
+#响应头过滤函数
+ 入口只有一个:
+	
+	ngx_int_t ngx_http_send_header(ngx_http_request_t *r){
+		...
+		return	ngx_http_top_header_filter(r);
+	}
 
+#响应体过滤函数
+ 可能被执行多次,入口函数是:
 
+	ngx_int_t ngx_http_output_filter(ngx_http_request_t *r,ngx_chain_t *in){
+		...
+		rc = ngx_http_top_body_filter(r,in);
+		...
+		return rc;
+	}
+
+#主要功能介绍
