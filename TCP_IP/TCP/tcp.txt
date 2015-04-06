@@ -170,3 +170,88 @@ Tcp慢启动和避免拥塞算法
  
   listen 8080 so_keepalive=7200:75:9
 
+#半链接队列
+ 该队列用来保存SYN_RECV状态的链接,队列长度由net.ipv4.tcp_max_syn_backlog设置。
+ 查看默认值:
+  $sysctl -a | grep net.ipv4.tcp_max_syn_backlog
+   net.ipv4.tcp_max_syn_backlog = 512
+
+#accept队列 
+ 用来保存ESTABLISHED状态的还未被服务端接收的链接。
+ 队列长度为min(net.core.somaxconn,backlog),backlog是我们创建
+ ServerSocket(int port,int backlog)时指定的参数,最终传递给
+ int listen(int sockfd,int backlog)
+ 查看net.core.somaxconn默认值
+  $sysctl -a | grep net.core.somaxconn
+   net.core.somaxconn = 128
+
+#SYN flooding
+ syn洪水是说,客户端只发送syn包,不回应ack,这样会快速的填满半链接队列,
+ 从而导致server端无法接收正常的握手请求。
+
+ linux使用SYNcookie来解决这种问题,大致就是将连接信息编码在ISN中返回
+ 给客户端,server端不再保存这个办链接,利用ACK待会的ISN还原链接信息。
+ ?疑问,server端如何识别这个cookie
+
+ 这个net.ipv4.tcp_syncookies值是1表示是开启的,默认开启。
+
+#查看网卡是否支持多队列
+  $ lspci -vvv
+ 找Ethernet controller,看是否有MSI-X,Enable+ 并且Count>1,则支持。
+ 
+ 看网卡是否开启了多队列:
+  $ cat /proc/interrupts
+ 如果看到eth0-TxRx-0表明已经打开
+
+ 最后根据上面看到的中断号,看是否每个队列对应到了不同的CPU
+  $ cat /proc/irq/终断号/smp_affinity
+
+#网卡中的RingBuffer队列
+ Ring Buffer位于NIC和IP层之间,NIC是网卡最开始存放数据的地方。
+ 该队列是一个FIFO(先进先出)环形队列。里面只是包含了指向sk_buff
+ (socket kernel buffers)的描述符
+
+ 查看该队列的设置:
+	$ ethtool -g eth0
+     Ring parameters for eth0:
+     Pre-set maximums:
+     RX:		4096
+     RX Mini:	0
+     RX Jumbo:	0
+     TX:		4096
+     Current hardware settings:
+     RX:		256
+     RX Mini:	0
+     RX Jumbo:	0
+     TX:		256
+ 可以看到,RX接收队列4096,传输队列256,通过ifconfig查看队列的运行状况:
+	$ ifconfig 
+    eth0  Link encap:Ethernet  HWaddr 08:00:27:07:9E:3D  
+          inet addr:10.0.2.15  Bcast:10.0.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::a00:27ff:fe07:9e3d/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:49257 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:27796 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:12420869 (11.8 MiB)  TX bytes:2558849 (2.4 MiB) 
+ 看RX这一行
+	errors:收包的错误数 
+    dropped:数据包已进入RingBuffer,但由于内存不够等系统原因,丢弃的包。
+	overruns:数据包没有到RingBuffer就被网卡物理层给丢弃,比如CPU无法
+         及时处理中断,不能将RingBuffer中的数据放入到内核中。
+    
+    如果dropped的数量持续增加,可以用ethtool -G 增大RingBuffer
+	 ?好像参数不对 
+
+#数据包接收队列 InputPacket Queue
+ 当接收数据包的速率大于内核TCP处理包得速率,包会被缓存在TCP层之前
+ 的队列中,也就是说此时并没有进入到TCP程序。
+ 
+ 查看队列长度
+ $sysctl -a | grep  net.core.netdev_max_backlog
+
+#recvBuffer队列,TCP的窗口大小
+ 
+
+
+     
