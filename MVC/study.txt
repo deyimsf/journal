@@ -1,0 +1,61 @@
+#什么是MVC模式
+ mvc模式的意思是软件可以分成三个部分
+ View: 用户界面
+ Controller: 业务逻辑
+ Model: 数据保存
+
+#标准前端MVC
+		
+				View
+				/   +
+			   /     \
+			  +       \
+     Controller ----+ Model
+ 
+ 他们之间的通信是单向的,其中Model负责将数据输出到View,客户根据看到
+ 的情况,通过View传送指令到Controller,Controller完成业务逻辑后在要求
+ Model改变状态。
+
+#Struts2中得MVC
+ 
+				      View
+			         (Result)
+				    /        \
+			       /          \
+				  /            \
+			     +              +
+         Controller  ------+    Model
+  (FilterDispatcher,拦截器)    (Action)
+
+ 可以看到Struts2中得MVC是一个标准的MVC,用户通过View(jsp,vm等)发送
+ 一系列指令给Controller(拦截器),Controller要求Actin改变状态。
+
+#Model2(Servlet)中得mvc
+ Java Web中通常把Servlet+JSP+JavaBean的的模型称为Model2,这也是一个MVC
+ 模型,其中JavaBean是Model层,比如我们的service类等。
+
+#MVP模式
+ MVP只是将Controller改名为Presenter同时改变了通信方向
+ 
+					View
+				  + /  
+				 / /     
+			 	/ +       
+		  Presenter --+  +-- Model
+
+  View很薄,没有业务逻辑,Presenter负责逻辑
+
+#MVVM模式
+ 基本上和MVP一样,用ViewModel代替Presenter
+
+					View
+				   	+  
+				   /     
+				  /
+			 	 +       
+		  ViewModel --+  +-- Model
+ 
+  不同的是View和ViewMode是双向绑定,View的变动自动反映在ViewMode上
+  ViewModel的变动也自动反映在View上
+
+					
