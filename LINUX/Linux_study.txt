@@ -1262,6 +1262,7 @@ $ iostat -xk
  $ vagrant up <空|ID>     //启动
 
  $ vagrant ssh <ID>   //ssh上这个虚拟机
+   
  $ vagrant halt <?>     //关闭虚拟机
  $ vagrant reload <?>   //重启虚拟机
  $ vagrant status <?>   //查看虚拟机状态
@@ -1269,6 +1270,13 @@ $ iostat -xk
 
  $ vagrant box list     //查看当前安装的box
  $ vagrant box remove   //删除一个box
+
+#在本机直接用ssh登陆vagrant
+ $ssh vagrant@localhost -p 2222  
+ 因为本地做了一个2222到22的映射所以可以,和使用vagrant ssh <ID>一样
+
+#在本机用scp和vagrant链接
+ $scp -P 2222 file root@localhost:/my/file
 
 
 #**********************Linux目录**************************
@@ -1496,3 +1504,31 @@ $ iostat -xk
 	  然后运行命令 $sysctl -p
 	3.直接修改/proc/sys/net/ipv4/tcp_keepalive_time
  实际上,上述两种都是在修改3的这个文件 
+
+#awk命令
+ 一般格式:
+	awk [-F 分隔符] '{[/pattern/]action}' file
+ 如果不指定分隔符默认用空格
+
+ 例子: 
+	$ last -n 5 | awk '{print $1}' // 打印最后登陆的5个用户名
+    $ last -n 5 | awk '{print $1 "--" $1}' //重复用户名
+
+#awk的BEGIN和END
+ 任何在BEGIN之后列出的操作({}内)将在awk开始扫描出入之前执行,
+ 儿END之后列出的操作将在扫描结束之后执行。所以可以用BEGIN来
+ 显示变量和初始化变量,使用END来出处最终结果
+
+ 例子:统计行数
+	$ cat /etc/passwd |awk 'BEGIN {c=0} {c=c+1} END {printf "total:%d 行\n",c}' 
+
+#awk正则匹配
+  //显示/etc/passwd中匹配root的行,此时和grep很像
+  $awk -F ':' '/root/' /etc/passwd
+
+  //打印匹配到行的第7列
+  $awk -F ':' '/root/{print $7}' /etc/passwd
+
+#awk内置变量
+ 
+
