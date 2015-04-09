@@ -1,6 +1,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
+#include <sys/time.h>
 
 typedef unsigned long long uint64_t;
 typedef long long int64_t;
@@ -30,6 +31,19 @@ static int mod(lua_State *L){
 	return 2;
 }
 
+static int currentTimeMillis(lua_State *l){
+    struct timeval time;
+    int status = gettimeofday(&time,NULL);
+    if(status < 0){ 
+        lua_pushinteger(l,-1);
+        return 1;
+    }   
+
+    int64_t millis = (int64_t)time.tv_sec * 1000 + (int64_t)time.tv_usec / 1000;
+    lua_pushinteger(l,millis);
+    return 1;
+}
+
 
 //将这个c函数注册到lua中
 int luaopen_chash(lua_State *L){
@@ -39,6 +53,7 @@ int luaopen_chash(lua_State *L){
 	//所有要注册到lua中的c函数放到luaL_Reg数组中
 	const luaL_Reg methods[] = {
 						{"mod",mod},
+						{"time",currentTimeMillis},
 						{NULL,NULL}
 	};
 
