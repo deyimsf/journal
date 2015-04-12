@@ -103,12 +103,14 @@ locate(寻找可匹配的文件)利用数据库来查找数据
 可以用updatedb命令更新数据库 
 
 #查找home下属于masf的文件 
-[root@www~]$ find /home -user masf 
+ $ find /home -user masf 
 #查找系统中不属于任何人的文件 
-[root@www~]$ find / -nouser 
+ $ find / -nouser 
 #查找home下的某个文件 
-[root@www~]$ find /home -name 文件名 
-
+ $ find /home -name 文件名 
+#模块查找某个文件
+ -iname :不区分大小写,Like -name
+ $ find ./ -iname "ngx_http_spdy*"
 
 df可以查出目前挂载的设备 
 [root@www~]$ df 

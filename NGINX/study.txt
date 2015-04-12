@@ -1159,17 +1159,17 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 
   src/http/ngx_http_config.h
   typedef struct {
-      ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
-      ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
+   4   ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
+   8   ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
   
-      void       *(*create_main_conf)(ngx_conf_t *cf);
-      char       *(*init_main_conf)(ngx_conf_t *cf, void *conf);
+   1   void       *(*create_main_conf)(ngx_conf_t *cf);
+   5   char       *(*init_main_conf)(ngx_conf_t *cf, void *conf);
   
-      void       *(*create_srv_conf)(ngx_conf_t *cf);
-      char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf);
+   2   void       *(*create_srv_conf)(ngx_conf_t *cf);
+   6   char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf);
   
-      void       *(*create_loc_conf)(ngx_conf_t *cf);
-      char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
+   3   void       *(*create_loc_conf)(ngx_conf_t *cf);
+   7   char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
   } ngx_http_module_t;
  
  preconfiguration: 在创建和读取该模块的配置信息之前调用
