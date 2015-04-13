@@ -1,0 +1,63 @@
+#什么是https
+ https(Hyper text Transfer Protocol over Secure Socket Layer),
+ 是一种基于SSL/TLS的http,该协议介于TCP和http之间,使用443端口。
+
+ TLS是SSL v3.0的升级版,目前大部分https都用的是TLS v1.0
+
+#TLS握手
+ TLS握手可以分为四步
+ 1.Client Hello
+ 2.Server Hello
+ 3.Client Key Exchange
+ 4.Server Finish
+
+##Client Hello
+ 客户端告知服务端自己支持那些加密算法,将支持的加密套件(Cipher Suite)
+ 的列表传送给服务端。另外客户端还会产生一个随机数,自己保存一份并发送
+ 给服务端。
+
+##Server Hello
+  服务端接收到Client Hello后,发送自己的证书给客户端用来证明自己的身份。
+  同样服务端页生成一个随机数,自己保存一份并发送给服务端。
+
+##Client Key Exchange  
+  在这一步之前所有的信息都是明文传送的,所以双方的随机数都是可以被截获并看到的。
+  收到服务端的证书之后,客户端使用加密算法生成一个48个字节的key,叫PreMaster Secret
+  或者PreMaster key,这个key才是一个保密的key,所以在发送给服务端之前会用证书
+  中得public key进行加密。但是后续应用数据加密传输的时候并不是的这key。  
+
+  检查证书的合法性  ?怎么检查?
+
+##Server Finish
+  服务端收到客户端的PreMaster加密数据后,用私钥对其解密,并对数据进行验证,并使用
+  同样的方式生成Session secret。 
+
+  给客户端发送ChangeCipherSpec(协商好的加密套件),说服务端已经切换到协商的加密
+  套件状态。
+
+  服务端使用session secret加密一段finish消息给客户端,以验证加密通道是否成功,但
+  后续传输数据是的加密key并不是session secret。
+  (不是太确定为什么这里不用 encryption key对其进行加密)
+
+  最后客户端收到信息后用session secret对其解密并验证,如果验证通过,则建立握手结束
+
+##PreMaster Secret的作用
+  客户端和服务端都用会PreMaster Secret并结合客户端随机数、服务端随机数,生成一个
+  Master Secret,这个里面包含了传输数据用的session scret等数据。
+  		-----------------------------
+		|   client write MAC key    |
+	    -----------------------------
+		|   server write MAC key    |
+		-----------------------------
+		|client write encryption key|
+ 		-----------------------------
+		|server write encryption key|
+		-----------------------------
+		|	  client write IV       |
+		-----------------------------
+		|	  server write IV       |
+		-----------------------------
+  传输数据时真正加密数据的是encryption key,并且加密的时候会附加上
+  MAC secret,当服务端收到数据后用client encryption key对其进行解密,
+  并用各自的wwrite MAC key对数据的完整性进行校验。
+
