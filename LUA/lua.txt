@@ -510,6 +510,12 @@ lua> print(debug.traceback())
  date = os.date(model,[时钟值]);
  print(os.date("%Y%m%d")); -->20140820
 
+#当前时间转换为GMT时间
+ 由于GMT时间和北京相差8个时区,所以北京时间等GMT+8
+ 所以北京时间减去8个小时就是GMT时间
+
+ print(os.date("%a, %d %b %Y %X GMT",os.time()-28800))
+
 #获取系统环境变量
  print(os.getenv("HOME"));  -->/home/lua
 
@@ -987,5 +993,44 @@ lua> print(debug.traceback())
 		//该函数有一个返回值,即栈顶元素t
 		return 1;		
 	}
+
+
+
+
+#LuaJIT FFI
+ FFI库允许从纯Lua代码调用外部C函数,使用C的数据结构
+
+##使用FFI调用C函数
+  传统lua调用c函数,需要按照lua的规范去写相应的c,然后编译成库文件,但是我们
+  写成的这个函数就只能在lua中调用,虽然也是一个.so库。
+
+  而使用FFI可以直接调用C函数,例子如下:
+	//加载ffi模块
+	local ffi = require("ffi");
+	
+	//声明C函数和C结构体
+	ffi.cdef[[
+			int printf(const char* fmt,...);
+			typedef struct {int a;int b;} foo_t;
+		]];
+
+	//用ffi.C这个命名空间掉c函数
+    ffi.C.printf("Hello %s!","world");
+ 
+    //创建foo_t这个结构体,并初始化
+	cdata = ffi.new("foo_t",4,5); 
+
+	//打印这个结构体的值
+    print(cdata.a); -->4
+	print(cdata.b); -->5
+    
+##创建才数据对象
+  cdata = ffi.new(ct [,nelem],[,init ...]); 
+  ct: c数据类型
+  nelem: 结构体中类似int[?]的变长数组的初始化值
+  init: 其他类型的初始化值
+
+  ctype = ffi.typeof(ct);
+  cdata = ctype([nelem,][init...]);
 
 
