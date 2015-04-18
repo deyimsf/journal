@@ -1217,6 +1217,73 @@ $ iostat -xk
 
  /proc/目录其实就代表系统内存
 
+#dentry_cache (dentries)
+ 目录项高速缓存,记录了目录项到inode的映射关系。
+ stat系统调用会获取目录的信息,所以也就缓存到内核中了
+
+#slab是linux的一种内存分配机制
+ 内存模块在分配资源的时候,为了提高效率和资源的利用率,都是通过slab来分配的。
+ 通过slab的信息可以粗略的了解系统的运行情况,看资源是否正常。 
+
+ 通过以下两种方式查看:
+  $ /proc/slabinfo
+  $ slabtop
+
+#slabtop命令
+ 该命令可以查看slab分配的内存情况,比如用dentry_cache大小等
+ $ slabtop
+ 	Active / Total Objects (% used)    : 1608895 / 2137510 (75.3%)
+	Active / Total Slabs (% used)      : 46644 / 46644 (100.0%)
+ 	Active / Total Caches (% used)     : 93 / 182 (51.1%)
+ 	Active / Total Size (% used)       : 120429.28K / 180114.34K (66.9%)
+ 	Minimum / Average / Maximum Object : 0.02K / 0.08K / 4096.00K
+
+  	OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+	13926348 13926348 100%    0.21K 773686       18   3494744K dentry_cache
+	1082583 613610  56%    0.10K  29259 	  37    117036K buffer_head
+	548064 547979  99%    0.02K   3806	144     15224K avtab_node
+
+ 有时候dentry_cache缓存过大,而且ACTIVE又过大,使用也在100%,是时候用free是看不
+ 到的,free不把这些当成缓存,而是当成应用程序本身的内存来统计。
+
+ 但是通过 cat /proc/meminfo 可以看到:
+	SReclaimable:     13926348 kB    //可回收的slab
+	SUnreclaim:        59260 kB		 //不可回收的slab
+ 大部分是可以回收的,但是操作系统就是没收回去,因为这些对象处于活跃状态
+
+ 有两种方式可以让这块内存自动回收:
+ 1.触发kswapd内核进程,让其来回收内存
+   这个进程的执行需要剩余内存达到一个阀值,比如再剩余内存只有1GB的时候触发。
+   
+   查看目前触发阀值是多少:
+   $ grep low /proc/zoneinfo
+	 low      18
+     low      3923
+     low      17175
+   这三列加起来乘以4KB就是这个阀值,依次可知当前系统阀值是82MB。
+   (?好像好多系统这个值都很小,应该不是只有kswapd这一种回收方式)
+
+   可以通过vm.extra_free_kbytes和vm.min_free_kbytes来改变low的大小
+   min_free_kbytes: 
+	系统保留内存大小,预先分配给操作系统的内存,如果太大,很容易导致
+    其他程序无法使用过多的内存,从而导致OOM,如果太小可能导致系统死锁等。
+
+   extra_free_kbytes:
+	实际配置的时候应该使用这个,具体代表什么意思还不太清楚???
+ 
+  2.第二中方式
+    设置系统回收page cache,inode cache,dentry cache和swap cache的优先级
+    vm.vfs_cache_pressure默认是100,其值越大inode cache和dentry cache所占
+    的比例越大,为0则不回收
+
+  注意:当机器内存不够是应该先看这两种方式对应的值。
+
+#vm.swappiness控制系统将内存swap out到交换空间的积极性
+ 取值范围0~100。值越大交换的积极性越高,默认是60。
+
+    $sysctl -w vm.vfs_cache_presure=1000
+
+
 #tcpdump命令
  -i: 针对特定网口抓包,比如eth0
  -c: 抓取指定数据的包
@@ -1534,3 +1601,5 @@ $ iostat -xk
 #awk内置变量
  
 
+#排序去重
+ $cat host.access.log | awk '{print $9}' | awk -F '?' '{print $1}' |sort |uniq
