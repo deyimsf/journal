@@ -458,8 +458,8 @@ a[i] = i++; 存在同样的问题
 	const int ****const *p;
 	const int *****const p; //等同 const int *****p; int const *****p;
 
-#指针函数
- int (*pfun) (int,int);  //pfun是一个指向 int xxx(int,int) 函数的指针
+#函数指针
+ int (*pfun) (int,int);  //声明 pfun是一个指向 int xxx(int,int) 函数的指针
  int (*pfuns[10]) (int,int); //函数指针数组
 
  int sum(int a,int b){};
@@ -468,6 +468,32 @@ a[i] = i++; 存在同样的问题
 
  pfun(1,3);
  pfuns[0](3,5);
+
+#函数的调用方式 函数指针和函数指示符
+   int test(){};    //test是一个函数指示符
+   int (*pfunc)(int,int);   //pfunc是一个函数指针
+ 
+   其中pfunc是一个指向函数的指针,*pfunc就是这个函数,按照这种解释则
+   我们在使用函数指针调用函数的时候应该使用 *pfunc 来调用函数,像这样
+   int c = (*pfunc)(5,6)
+
+   历史上,贝尔实验室的C和Unix的开发者使用的就是这种观点,即
+	 (*pfunc)(5,6)
+   而Berkeyly的Unix的扩展这采用函数指针的形式对其调用,即
+	 pfunc(5,6) 
+   标准C为了兼容性,两种方式都接受。
+
+   实际上,编译器在内部都把器转换成了函数指针的形式来使用,这就是默认的function-to-pointer转换。
+   也就是说内部其实使用的是pfunc(5,6)这种形式,那么 (*pfunc)(5,6)之所以可以使用,是因为编译器
+   把 *pfunc 这个函数指示符(代表某个函数)按照function-to-pointer规则,转换成了函数指针类型pfunc。
+   
+   所以依次类推 *(*pfunc)(5,6) 最终也会转换成 pfunc(5,6)的方式进行调用。
+   
+   另外前面提到的test函数可以这样调用
+	 (*test)()
+   因为按照function-to-pointer规则,test函数类型被编译器转换成了函数指针(这里可以认为test变成指针了)
+   那么在函数指针前面加上*则代表这个函数,即*test在编译器内是个函数类型,最后又根据func-to-pointer
+   将其转换为函数指针来调用,最终test()和(*test)()等价。 
 
 #结束程序的函数
  abort(): 该函数会清空输出缓冲区,关闭打开的流,是否真的这么做取决于实现.
