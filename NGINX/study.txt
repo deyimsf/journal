@@ -1110,6 +1110,13 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 		http模块对所有要保存的配置信息,划分了main,server和location进行存储,分别
 		对应值为NGX_HTTP_MAIN_CONF_OFFSET,NGX_HTTP_SRV_CONF_OFFSET,
 		NGX_HTTP_LOC_CONF_OFFSET
+		
+		其中在main中解析到的指令只会放到main_conf上下文中,依次类推在server和location
+        区域中解析到的指令也只会放到各自的上下文中。
+
+		然而由于某些指令可以在不同的区域中使用,并且如果本区域没有配置的话,下级区域可以
+        继承上级区域的指令,所以在ngx_http_module_t模块上下文中可以看到有merge类的回调
+        函数去合并指令。
 
   offset: 该指令值的精确存放位置,就是我们自定义的结构体的,某个字段的偏移量
 		  ?也就是说nginx回自动为我们的结构体赋值?
@@ -1171,6 +1178,8 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
    3   void       *(*create_loc_conf)(ngx_conf_t *cf);
    7   char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
   } ngx_http_module_t;
+
+ 这些回调函数都是在http/ngx_http.c 文件中被调用的,具体可以搜module->
  
  preconfiguration: 在创建和读取该模块的配置信息之前调用
  postconfiguration: 模块的配置信息都被设置完后调用,最后执行该方法
@@ -1311,4 +1320,180 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 		return rc;
 	}
 
-#主要功能介绍
+  Nginx的响应内容都存于in(ngx_chain_t,单链表 )中,并且链表不会太长。链表中每个ngx_chain_t
+  都有一个ngx_buf_t用来缓存数据,其实这个buf结构体记录了响应的开始地址和结束地址,但对于
+  静态文件,会被实际分配32K,一次吐不完就多吐多次。对于反向代理在4k或8k。
+
+  在响应体过滤中,ngx_buf_t结构体的标志位特别重要。如buf中有last标志,说明是最后一块buf,
+  可以直接输出并结束请求了。
+    
+#子请求
+ 在过滤模块中可以发送新的子请求,当子请求发出时会调用ngx_http_subrequest函数,该函数
+ 将子请求的r->postponed链表中,当父请求的响应体处理完毕后会依次处理链表中的所有子请求
+ ,并且每个子请求都会有一个完整的请求处理过程。
+
+#upstream
+ nginx的模块可以分为三类:handler,filter,upstream
+ 前两种模块可以完成单机操作,upstream可以跨越单机。
+ 
+ 开发不同的upstream模块只需要实现几个回调函数来完成构造请求和解析响应等。
+ 回调函数如下:
+ create_request  创建请求需要的数据,比如某种协议的请求
+ reinit_request  
+ process_header  处理后端服务器返回的信息头部
+				 nginx在处理后端服务的响应头时只用一块缓存,所有的数据都在
+				 这个缓存中,所以解析头部信息时不需要考虑跨多块缓存的情况。
+				
+				 该函数的重要职责是将后端服务器返回的状态翻译成返回给客户端
+                 的状态。处理完头部信息后pos指针要后移,否则头部信息也会被输出
+     			 到响应体中。
+
+				 如果头部大小大于缓存的大小,nginx会返回错误信息给客户端,并
+ 				 记录log。(?全是这样,还是只有memcached模块是这样)
+ abort_request
+ finalize_request
+ input_filter
+ input_filter_init
+
+#Nginx源码目录结构
+ auto    	用来检测系统环境以及编译相关的脚本
+     cc  	检测编译器相关的编译选项
+     lib	编译nginx需要的一些库的检测,比如prce
+	 os     于平台相关的检测
+     types  与数据相关的一些辅助脚本
+ 
+ conf		默认配置文件,最后会拷贝到安装目录
+ contrib	存放一些工具,geo等
+ html		默认存放的网页文件
+ man 		nginx的man手册
+ src		存nginx源代码
+	core	核心源码
+	event	对事件处理机制的封装
+	http	作为http服务器相关的代码
+	mail	作为邮件服务器相关的代码
+	misc	一些辅助代码,测试c++头的兼容性,以及对google_perftools的支持
+	os		对各种不同操作系统提供的系统函数的封装,对外提供统一的系统接口
+
+#nginx中configure原理 
+ 初始化
+ . auto/options
+ . auto/init
+ . auto/sources
+ auto/options用于处理用户输入的configure选项
+
+ auto/init用于初始化临时文件路径，并创建Makefile
+    //生成最终执行编译的makefile文件路径
+    NGX_MAKEFILE=$NGX_OBJS/Makefile
+
+ auto/sources定义不同功能或系统所需的文件的变量
+
+#模块的执行顺序
+ 从obj/ngx_modules.c中可以看到模块的执行顺序,对于不同模块在相同阶段的指令
+ 其执行顺序和该文件中的模块的顺序一致。第三方的模块永远在最后执行。
+
+ 注意,该文件中http filter模块会将所有的filter排成一个倒序链,所以filter
+ 模块的执行顺序和文件中的顺序是相反的。  
+
+ 另外第三方的filter模块必须注册在&ngx_http_headers_filter_module和
+ ngx_http_copy_filter_module之间。
+
+#nginx启动阶段
+ ngx_cycle_t结构用于存放 core模块的配置
+ ngx_conf_t结构,用于存放解析配置的上下文信息
+
+ 配置文件的解析在ngx_conf_file.c中实现,提供的主要函数是ngx_conf_parse
+ ngx_conf_param是对ngx_conf_parse的包装,用来解析命令行传递的配置。
+
+ ngx_conf_parse方法分连个阶段解析配置，词法分析和指令解析
+	词法分析通过ngx_conf_read_token函数完成
+
+ 在http/ngx_http.c 文件中,会调用nginx模块上下文中指定的回调函数,
+ 比如这样一段代码:
+	for (m = 0; ngx_modules[m]; m++) {
+    	if (module->postconfiguration) {
+        	if (module->postconfiguration(cf) != NGX_OK) {
+            	return NGX_CONF_ERROR;
+       	 	}
+    	}
+    }
+ 回调各个模块的postconfiguration函数
+
+#nginx请求处理阶段
+ 在初始化阶段,跟事件相关的初始化工作主要由ngx_event_process_init函数完成。
+ 该函数会为每一个要监听的套接字分配一个ngx_connection_t结构,并且将该结构
+ 的读事件处理函数设置为ngx_event_accept。
+ 这结构只代表这个监听端口,之后每来一个请求就重新分配一个ngx_conn_t结构。
+
+ 这个时候并没有将这个连接代表的socket挂到事件处理模型上,如果使用了accept锁
+ 则要在后面抢到锁才能将该connetion挂到事件模型上。
+	if (ngx_use_accept_mutex) {
+        continue;
+    }
+ 如果没有使用accept锁则直接挂到事件模型上
+	if (ngx_event_flags & NGX_USE_RTSIG_EVENT) {
+           if (ngx_add_conn(c) == NGX_ERROR) {
+               return NGX_ERROR;
+           }
+
+     } else {
+		   //这里rev是ngx_event_t结构 
+           if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+               return NGX_ERROR;
+           }
+     }
+
+ 当某个监听事件挂载到事件模型上后,nginx就可以接收并处理客户端的请求了。
+ 当客户端的请求到来的时候,nginx的事件模型会接收到这个读事件,并交给之前
+ 注册好的事件处理函数ngx_event_accept来处理。
+
+ ngx_event_accept函数会调用accept函数获取一个客户端链接,并为这个链接分配
+ 一个ngx_connetion_t结构,之后做一些初始化工作。  
+ 
+ 之后调用ngx_http_init_connetion函数来初始化读写事件的处理函数。
+ 其中写事件的处理函数是ngx_http_empty_handler,这个函数什么也不做,第一次
+ 也不会向事件模型注册写事件,如果有数据要写的话就直接写,只有在一次写不完
+ 的时候才会注册真正的写事件函数,并将写事件挂载到事件模型上。
+
+ ngx_http_init_request是刚开始是注册的读事件。
+ 该函数的工作就是初始化请求,比如为该连接分配一个ngx_http_request_t结构
+ 并将其放在该连接的hc成员的request字段。
+ 该函数根据请求的端口号和地址找一个默认虚拟主机,比如listen指令的default_server属性。
+ 如果在后面能够找到匹配的虚拟主机,则会覆盖默认的设置。 
+
+  1.之后ngx_http_process_request_line函数被设置为读事件处理函数
+
+  2.分配缓冲区来保存请求头,默认缓冲区为1k,可以用client_header_buffer_size修改，
+	如果客户端发过来的请求头大于1k,则会重新分配更大的缓冲区,最大为8k,最多4个
+    也就是说单个请求头不能大于8k,所有请求头总大小不能大于32k。
+    可以用large_client_header_buffers指令修改 
+
+  3.为请求分配一个内存池,默认大小为4k,可用request_pool_size指令修改。 
+
+  4.将请求的main字段设置为它本身,代表是一个主请求。
+
+  5.将当前时间保存在start_sec和start_msec字段中,通过该时间可以计算请求处理
+    所用的时间,也就是说在接收到客户端第一个数据为开始时间。
+
+  6.初始化其他请求字段,比如uri_changes设置为11,表示最多可以将uri改写10次,
+    subrequests设置为201,表示最多可以发起200个子请求。
+
+  7.最后调用该连接的读事件处理函数来解析客户端的数据,也就是前面我们设置的
+    ngx_http_process_request_line函数。
+
+   至此ngx_http_init_request函数处理处理完毕,进入ngx_http_process_request_line函数。
+ 
+##ngx_http_process_request_line函数的主要作用那个是解析请求行,因为涉及到
+  IO操作,请求行可能不能被一次读完,所以在ngx_http_init_request函数中将其设置为
+  读时间处理函数。
+  
+  该函数会调用ngx_http_read_request_header函数来读取请求行。读取后的数据会放
+  到header_in指向的缓冲区中,每读一个字节r->header_in->last就会加1,尽可能多的读到数据之后返回。
+  
+  然后调用ngx_http_parse_request_line方法去解析请求行,在该方法中对应的缓存
+  请求行的缓存header_in中得pos回一直减,代表已经解析到的数据。
+  解析成功之后将解析到的数据保存到r结构体的相应的字段中。
+     
+##解析请求头
+
+		
+ 
