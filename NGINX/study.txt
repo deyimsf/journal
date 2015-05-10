@@ -1494,6 +1494,148 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
   解析成功之后将解析到的数据保存到r结构体的相应的字段中。
      
 ##解析请求头
-
+  headers_in中保存了所有请求头,类型为ngx_http_headers_in_t
+  	typedef struct {
+		ngx_list_t			headers;	//存放所有解析到的请求头
 		
+		//一些常用头,只是一些对解析到的常见头的一个引用
+		ngx_table_elt_t		*host;		
+		ngx_table_elt_t		*connection;
+		ngx_table_elt_t		*if_modifed_since;
+		...
+	} ngx_http_headers_in_t;
+
+  在ngx_http_process_request_line函数中,当解析完请求行之后,如果请求行
+  的uri中包含了域名部分,那么或把它保存在 headers_int_t的server字段中:
+
+	if (r->host_start && r->host_end){ //如果uri中有host
+		host.len = r->host_end - r->host_start;
+		host.data = r->host_start;
+		
+		rc = ngx_http_validate_host($host,r->pool,0);
+
+		// 各种校验个判断 
+		 .....
+		
+		r->header_in.server = host;
+	}		
+
+  然后判断请求是否用的是http0.9协议,如果是的话就省略处理请求头,直接
+  调用ngx_http_process_request()函数处理请求,因为0.9没有请求头。
+	
+	if (r->http_version < NGX_HTTP_VERSION_10){ //判断是否是0.9协议
+		if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r,&r->headers_in.server == NGX_ERROR)){
+			return;
+		}
+
+		ngx_http_process_request(r);
+		return;
+	}  
+
+  如果是1.0以上的协议,则处理请求头,在处理之前先为headers这个链表进行初始化,
+  为这个链表的初始节点分配了20个ngx_table_elt_t类型的空间。
+	
+	if (ngx_list_init($r->header_in.headers,r->pool,20,sizeof(ngx_table_elt_t))) != OK){
+		ngx_http_close_request(r,NGX_HTTP_INTERNAL_SERVER_ERROR);
+		return;
+	}
+
+  然后把读时间处理函数设置成ngx_http_process_request_headers,接着直接调用
+  该函数来处理请求头.
+	
+	rev->handler = ngx_http_process_request_headers;
+	ngx_http_process_request_headers(rev);
+
+  直到这里才开始真正的进入到处理请求头函数并处理请求头。读取和解析请求行的
+  处理逻辑相似,这里是在一个循环里面先调用ngx_http_read_request_header去读取
+  请求头,如果当前连接没有数据过来,则直接返回并等待下一次事件到来,如果读到了
+  就调用ngx_http_parse_header_line函数来解析,该函数一次调用只能解析一个请求头
+  并且有3中不同的返回值。
+  	1.返回NGX_OK 表示成功解析出了一行请求头,然后从ngx_http_headers_in[]中查找
+      是否为该请求头绑定了处理函数,如果有的话就执行。数组在ngx_http_request.c中
+     
+      在该数组中共有25个常用请求头,每个请求头都绑定了处理函数,其中大部分都绑定
+      的是公共处理函数,有两个这样的函数,ngx_http_process_header_line和
+      ngx_http_process_unique_header_line, 第一个函数只是简单将解析到的请求头,
+      在ngx_http_headers_in_t中保存一份引用。第二回检查是是否重复,如果是则返回
+      400错误。
+
+      剩下的都有自己得处理函数,比如host头的ngx_http_process_host函数,他的作用
+      也是保存host头的一个引用,并且保存在headers_in.server字段中, 但是根据http
+      协议的规范,如果请求行中带有域名则以请求行为准。所以这里会检查一下该字段
+      是否为空,因为前面已经会对这个字段赋值。
+
+   2.返回NGX_AGIAN 表示接收的数据不够解析完一个请求头,需继续下一个轮循。
+     在轮循中首先检查header_in是否已满,如果满了就调用ngx_http_alloc_large_header_buffer
+     函数来分配更大的缓冲区,如果客户端发送了一行过大的请求头,或整个请求头大小
+     超过了限制则返回494错误。需要注意的是在nginx中每个请求头不能跨缓冲区,所以
+     每个缓冲区的大小决定了请求头的大小。
+
+   3.返回NGX_HTTP_PARSE_HEADER_DONE,表示所有请求已经解析成功,请求的状态被设置
+     为NGX_HTTP_PROCESS_REQUEST_STATE,意味这请求读取阶段结束,正是进入请求处理
+     阶段,nginx之所以没有在这里处理请求体,而是交给后续的请求处理阶段,是因为nginx  
+     本身不知道这些请求体是否有用,如果后续模块不需要则白白浪费时间和内存空间。
+
+   处理完请求头之后,nginx调用ngx_http_process_request_header函数,该函数先调用
+   ngx_http_find_virtual_server函数查找虚拟服务器配置,然后对一些请求头做一些
+   协议的检查,比如如果是http1.1协议但没发送host头,则返回400错误。
+
+   最后调用ngx_http_process_request函数处理请求。
+
+#读取请求体    
+ 请求体的读取一般发生在nginx的content handler中,比如proxy模块是一定会把客户端
+ 的请求体转发给后端服务器的。
+ 读取请求体有ngx_http_read_client_request_body函数完成,该函数会根据请求体的大小,
+ 以及相关指令配置,将请求体放入到内存、临时文件或者前一部分放内存剩余放文件中。
  
+ client_body_buffer_size: 设置缓存请求体的buffer大小,默认为系统页大小的2倍,当
+   请求体大于这个值时,会把剩余的请求体写入到临时文件中。?不确定是剩余
+
+ client_body_in_single_buffer: 是否将请求体完整的存储在一块连续的内存中,默认off
+   如果为on则如果缓存够用放在一块连续的内存中,否则全部放入一个临时文件
+ 
+ client_body_in_file_only: 是否总是将请求体放在临时文件中,默认off
+
+#丢弃请求体
+ nginx核心提供的ngx_http_discard_request_body函数可以丢弃请求体。 
+
+#多阶段处理请求
+ NGX_HTTP_POST_READ_PHASE: 接收完请求头之后的第一个阶段
+ NGX_HTTP_SERVER_REWRITE_PHASE: server级别的uri重写阶段
+ NGX_HTTP_FIND_CONFIG_PHASE: 该阶段使用重写之后的uri来查找location
+ NGX_HTTP_REWRITE_PHASE: location级别的uri重写阶段
+ NGX_HTTP_POST_REWRITE_PHASE: 用来检查上阶段是否有uri重写,并根据结果调到合适的阶段
+ NGX_HTTP_PREACCESS_PHASE
+ NGX_HTTP_ACCESS_PHASE
+ NGX_HTTP_POST_ACCESS_PHASE
+ NGX_HTTP_TRY_FILES_PHASE
+ NGX_HTTP_CONTENT_PHASE
+ NGX_HTTP_LOG_PHASE :记录访问日志,进入该阶段表明该请求的响应已经发送到系统send_buffer
+
+##多阶段执行链
+ 以上的前十个阶段都是在ngx_http_core_run_phases函数中执行的,所以在这个过程中
+ 链接的读事件会一直是这个函数。
+
+ LOG阶段的handler链运行在ngx_http_free_request函数中,具体执行函数是ngx_http_log_request
+
+#Nginx filter
+ 在Content阶段将产生的数据发往客户端之前,会先经过过滤。   
+
+##header filter
+  通常调用ngx_http_send_header函数来发送响应头,该函数又调用ngx_http_top_header_filter(r)
+  来发送。
+
+##body filter
+  调用ngx_http_output_filter发送响应头,该函数又调用ngx_http_top_body_filter(r,in)
+
+#ngx_http_copy_filter_module 模块
+
+#ngx_http_write_filter_module
+ 该模块是最后一个body模块
+
+#子请求subrequest
+ nginx发起一个子请求需要拥有自己得ngx_http_request_t结构，uri和args
+ 子请求需要重新从server rewrite阶段走一遍各个PHASE
+
+
+

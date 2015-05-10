@@ -148,8 +148,11 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	
 	b->pos = tmp_buf;
 	b->last = tmp_buf + content_length;
-	b->memory = 1; //这个buffer在内存中 ?
-	b->last_buf = 1; //这是buffer chain中的最后一个buffer ?	 
+	
+	//这个buffer在内存中,后续在write filter中用该标记判断从哪里输出数据
+	//如果是 b->file = 1 则表示后续要输出的内容在file中,如果同时设置则file起作用
+	b->memory = 1; 
+	b->last_buf = 1; //这是buffer chain中的最后一个buffer 
 
 	//需要设置响应头
 	r->headers_out.status = NGX_HTTP_OK; 
