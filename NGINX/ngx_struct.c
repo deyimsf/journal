@@ -26,3 +26,38 @@
     ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1]; 
  } ngx_http_core_main_conf_t;
 
+#nginx基本数据类型core/ngx_config.h
+ typedef intptr_t		ngx_int_t;
+ typedef uintptr_t		ngx_uint_t;
+ typedef intptr_t		ngx_flat_t;
+ 
+ 其中intptr_t、uintptr_t位置在/usr/include/stdint.h中
+
+#字符串数据类型core/ngx_string.h/c
+ 
+ typedef struct {
+	size_t		len;
+	u_char		*data;	
+ } ngx_str_t;
+
+ typedef struct {
+	ngx_str_t	key;
+	ngx_str_t	value;
+ } ngx_keyval_t;
+
+ typedef struct {
+	unsigned	len:28;  //位字段宽度是28
+
+	unsigned	valid:1;
+	unsigned	no_cacheable:1;
+	unsigned	not_found:1;
+	unsigned	escape:1;
+	
+	u_char		*data;	
+ } ngx_variable_value_t;
+
+
+
+
+
+
