@@ -1294,7 +1294,7 @@ $ iostat -xk
  -r: 读取用-w参数保存的文件
  -n: 默认本地ip地址用域名localhost等显示,该参数强制用ip地址。
  -ttt: 抓包结果中将包含抓包日期
- [ip,arp,tcp,udp,ip6,wlan等] 之抓取指定的协议。
+ [ip,arp,tcp,udp,ip6,wlan等] 只抓取指定的协议。
  port: 指定抓取的端口
  dst: 指定抓取的目标ip地址 
  src: 指定抓取来源ip地址
@@ -1494,9 +1494,9 @@ $ iostat -xk
 # 根据设备硬中断号设置设备的cpu亲缘性
  /proc/irq/[中断号]/smp_affinity  
  	该文件接收16进制数据,如果里面的值是3则说明绑定了第0~2号3个cpu
- 
+   
  /proc/irq/[中断号]smp_affinity_list
-	该文件接收10进制数据
+	该文件接收10进制数据 比如0-23,表示绑定到0到23号cpu上
 
 
 #tmpfs文件系统

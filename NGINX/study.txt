@@ -1639,3 +1639,74 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 
 
 
+#nginx内存相关
+ nginx内存的操作主要在os/unix/ngx_alloc.{h,c}和core/ngx_palloc.{h,c}下
+
+ ngx_alloc  使用malloc分配内存空间
+ ngx_calloc 使用malloc分配，并将空间初始化为0
+ ngx_memalign 返回一个指定的alignment大小的数值为对齐基数的空间
+ ngx_free   释放内存
+
+##创建内存池
+ ngx_pool_t *ngx_create_pool(size_t size, ngx_log_t *log);
+ 
+ 创建完后会初始化:
+ pool->d.last = (u_char *)p + sizeof(ngx_pool_t);  //指向ngx_pool_t结构体的后面
+ pool->d.end = (u_char *)p + size; //整个结构的结尾后面
+ p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL; //这个池的内存大小
+
+##销毁内存池
+  void ngx_destroy_pool(ngx_pool_t *pool);
+ 
+  遍历链表释放所有内存,如果注册了cleanup链表,则调用该链表的handler
+
+##重置内存池
+  void ngx_reset_pool(ngx_pool_t * pool);
+	
+  释放所有large段内存，并将d->last指针重新指向ngx_pool_t结构之后，最后和创建时一样
+
+##从内存池中分配内存
+  void *ngx_palloc(ngx_pool_t *pool, size_t size);
+  void *ngx_pnalloc(ngx_pool_t *pool, size_t size);
+  void *ngx_pcalloc(ngx_pool_t *pool, size_t size);
+  void *ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment);
+
+  ngx_palloc分配内存过程如下:
+  1.判断待分配的内存是否大于 pool->max, 如果大于则使用ngx_palloc_large在链表中分配,
+    并将新的large指向旧的large,将新的返回。
+
+  2.如果小于 pool->max 则尝试在pool->current链表中搜索出一个可以分别配的pool。  
+
+  3.如果在pool->current 链表中无法找到足够大的限制内存,则调用ngx_palloc_block生成一个
+    新的节点ngx_pool_t,并在新的节点里面分配内存并返回,同时将pool->current的指针指向
+    新的位置,这个新位置从pool->d.failed 小于等于4的节点中找出。
+
+##释放指定的内存
+ ngx_int_t ngx_pfree(ngx_pool_t *pool, void *p);
+
+ 只释放large链表的内存
+
+##注册cleanup回调结构体(函数)
+ 
+##创建一个数组容器
+  ngx_array_t *ngx_array_create(ngx_pool_t *p, ngx_uint_t n, size_t size);
+ 
+  n: 数组的个数
+  size: 数组元素的大小
+
+##销毁数组容器
+  void ngx_array_destroy(ngx_array_t *a);
+
+##插入数组
+  void *ngx_array_push(ngx_array_t *a); //返回一个元素的指针
+  void *ngx_array_push_h(ngx_array_t *a, ngx_uint_t n); //返回n个元素的指针
+
+##ngx_queue nginx队列
+
+##ngx_hash容器
+
+##ngx_list容器
+
+
+
+

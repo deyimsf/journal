@@ -56,6 +56,83 @@
 	u_char		*data;	
  } ngx_variable_value_t;
 
+//nginx内存池
+ struct ngx_pool_s {
+	 ngx_pool_data_t		d;    //这是一个链表,可以连接很多ngx_pool_t
+	 size_t					max;  //分配的内存大小(对于用户来说可用的)
+	 ngx_pool_t				*current; //指向d链表中的一个ngx_pool_t结构(最近一次操作的pool)
+	 ngx_chain_t			*chain;
+	 ngx_pool_large_t		*large; 
+	 ngx_pool_cleanup_t		*cleanup; //在清理内存是回调用这个机构里的handler
+   	 ngx_log_t				*log;
+ };
+
+ typedef struct ngx_pool_s	ngx_pool_t;
+ typedef struct ngx_chain_s ngx_chain_t;
+
+//池中数据的数据结构
+ typedef struct {
+	u_char		*last;
+	u_char		*end;
+	ngx_pool_t	*next;
+	ngx_unit_t	failed;  //分配内存时失败的次数?
+ } ngx_pool_data_t;
+
+//当实际需要的内存比内存池创建是指定的size大时,则直接在该结构
+//分配一段内存
+ struct ngx_pool_large_s {
+	ngx_pool_large_t	*next;
+	void				*alloc;
+ }
+
+//释放内存时如果指定了这个结构,那么会依次调用该结构中的handler
+ typedef struct ngx_pool_cleanup_s ngx_pool_cleanup_t;
+ struct ngx_pool_cleanup_s {
+	ngx_pool_cleanup_pt		handler;
+	void					*data;
+	ngx_pool_cleanup_t		*next;
+ }
+
+//nginx数组
+ struct ngx_arry_s {
+	void		*elts;	//指向具体数据的指针
+	ngx_uint_t	nelts;  //实际包含的元素数量
+	size_t		size;	//单个数组元素的大小
+	ngx_uint_t	nalloc; //整个数组可容纳的个数
+	ngx_pool_t	*pool;
+ }
+
+//nginx队列
+ typedef struct ngx_queue_s ngx_queue_t;
+
+ struct ngx_queue_s {
+ 	ngx_queue_t	 *prev;
+	ngx_queue_t  *next;
+ }
+
+ --获取该队列所在的原始数据节点
+ #define ngx_queue_data(queue,type,link)   \
+		(type *)((u_char *)q - offsetof(type,link))
+
+
+//nginx hash结构
+ typedef struct {
+    //看成是一个二维数组
+    //第一维代表一个个的桶,每个桶又是一个数组,用来放置具体提的元素
+	//相当于java中Entry[] table的Entry实体,Entry在java中代表一个桶,这个桶是一个链表
+    //nginx中用数组解决hash冲突,java中用链表
+	ngx_hash_elt_t	**buckets; 
+	ngx_uint_t		size;
+ }
+
+//hash 元素
+ typedef struct {
+	void 		*value;   //存入的值
+	u_short		len;      //值得长度
+	u_char		name[1];  //key值  为什么数组长度是1 ??
+ } ngx_hash_elt_t;
+
+
 
 
 
