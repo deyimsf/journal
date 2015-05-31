@@ -352,6 +352,8 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	post-access  不接受注册,主要用于配合access阶段实现核心模块的satisfy功能
 	try-files	 不接受注册,专门用于实现try_files指令的功能
 	content
+
+MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度。
 	log
 
  看下面的例子：
@@ -822,7 +824,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  	void		*elts;
  	ngx_uint_t	nelts;
  	size_t		size;
- 	ngx_unit_t	nalloc;
+ 	ngx_uint_t	nalloc;
  	ngx_pool_t	*pool;
   }
  
@@ -1198,7 +1200,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 				  这里的结构体就是我们自定义结构体,比如http_hello_loc_conf_t
 				  我们只需要创建并初始化它,然后返回即可。
  merge_loc_conf:  这个方法会在create_loc_conf函数和ngx_command_t中的set关联的函数
- 				  调用之后在执行。
+ 				  调用之后再执行。
 
 				 大概意思可能就是,比如ngx_http_hello_loc_conf_t这个结构体中有
 				 一个expires这个字段,这个值在当前域中可以用,在上层域或下层域中
@@ -1380,13 +1382,17 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
  . auto/options
  . auto/init
  . auto/sources
- auto/options用于处理用户输入的configure选项
+ auto/options用于处理用户输入的configure选项,该配置包含了configure文件都有
+ 那些选项,比如--prefix、--add-moudle等选项
 
  auto/init用于初始化临时文件路径，并创建Makefile
     //生成最终执行编译的makefile文件路径
     NGX_MAKEFILE=$NGX_OBJS/Makefile
 
  auto/sources定义不同功能或系统所需的文件的变量
+
+ 当这个脚本执行完后,在./objs/ngx_auto_config.h中会保存用户都输入了那些选项
+ 比如#define NGX_CONFIGURE " --prefix=/export/servers/ --add-module=/usr/local/src/ngx-module/"
 
 #模块的执行顺序
  从obj/ngx_modules.c中可以看到模块的执行顺序,对于不同模块在相同阶段的指令
@@ -1710,4 +1716,6 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 
 
 
-
+#Nginx模块命名规则
+ ngx_服务名_模块名_module
+ ngx_http_hello_module

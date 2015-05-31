@@ -48,6 +48,10 @@
 #打印变量
  (gdb) print i  //i是程序中得变量
 
+#打印字全部字符串,不省略
+ (gdb) set print element 0
+ (gdb) p *str@len
+
 #下一步
  (gdb) n|next	//执行下一句
  (gdb) s|step	//执行下一句，如果下一句是个方法则进入,前提是该方法有源代码
@@ -77,6 +81,10 @@
 		h 双字节表示一个单位
 		w 四字节表示一个单位
 		g 八字节表示一个单位
+ Format letters are o(octal), x(hex), d(decimal), u(unsigned decimal),
+ t(binary), f(float), a(address), i(instruction), c(char) and s(string).
+ Size letters are b(byte), h(halfword), w(word), g(giant, 8 bytes)
+
   例子:从某个地址开始,按字符格式显示变量
 	  (gdb) x/3bc 0x10058009  //意思是从改地址开始显示3个单位(b,单字节)的内容
       (gdb) x/3hx 0x10058009  //从该地址开始,双字节表示一个单位，显示三个单位的十六进制内容

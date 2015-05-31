@@ -42,7 +42,8 @@ static ngx_http_module_t ngx_http_hello_module_ctx={
 	NULL,				 /*create server configuration*/
 	NULL,				 /*merge server configuration*/
 
-	ngx_http_hello_create_loc_conf,  /*create location configuration*///创建自定义的结构体
+						 //创建自定义的结构体,用来存放指令参数
+	ngx_http_hello_create_loc_conf,  /*create location configuration*/
 	NULL				 /*merge location configuration*/
 };
 
@@ -69,6 +70,9 @@ static ngx_int_t ngx_http_hello_init(ngx_conf_t *cf){
 	ngx_http_core_main_conf_t	*cmcf;
 	
 	cmcf = ngx_http_conf_get_module_main_conf(cf,ngx_http_core_module);
+    //另一种挂载方式,按需挂载
+    //cmcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);
+	//cmcf->handler = ngx_http_hello_handler;
 
 	//函数注册到CONTENT阶段
 	h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
@@ -100,6 +104,11 @@ static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf){
 static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child){
 	//该方法会在ngx_http_hello_create_loc_conf和ngx_http_hello_string方法调用后再执行
 
+	ngx_http_hello_loc_conf_t *prev = parent;
+	ngx_http_hello_loc_conf_t *conf = child;
+	
+	ngx_conf_merge_str_value(conf->hello_string,prev->hello_string,"defalut");	
+
 	return NGX_CONF_OK;
 }
 
@@ -112,7 +121,7 @@ static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf
     char *rv = ngx_conf_set_str_slot(cf,cmd,loc_conf);
 	//ngx_str_set(conf->hello_string,"mashunfeng");
 	
-	return rv;
+	return NGX_CONF_OK;
 }
 
 //真正处理请求的函数
@@ -123,6 +132,7 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	ngx_http_hello_loc_conf_t *my_conf;
 
 	//存放从my_conf中都到的信息
+    //u_char* tmp_buf = ngx_pcalloc(r->pool, my_conf->hello_string.len + 16);// [1024] = {0};
 	u_char tmp_buf[1024] = {0};
 	ngx_uint_t content_length = 0;
 
