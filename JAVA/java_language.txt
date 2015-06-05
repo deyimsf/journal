@@ -281,6 +281,7 @@
 	
  2.A write to a volatile field happens-before every subsequent read of that filed.
   一个对volatile字段的写操作,先行发生于后续对他的读操作。  
+  另,Java存储模型不会对volatile指令的操作进行重排序。
  
  3.A call to start() on a thread happens-before any actions in the started thread.
   对一个线程的start()操作,先行发生于该线程启动后在该线程内部做的任何操作。
