@@ -1118,12 +1118,12 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 	
   为了方便对指令参数的读取,nginx提供了一些默认的函数,这些函数可以直接赋值给set
   字段使用: ?是不是只有使用这些函数,ngx_command_s中的offset字段才有意义,才会自动为我们自定义的结构体赋值
-	ngx_conf_set_flag_slot: 读取NGX_CONF_FLAG类型的参数。
-    ngx_conf_set_str_slot:读取字符串类型的参数。
+	ngx_conf_set_flag_slot: 读取NGX_CONF_FLAG类型的参数。将on或off转换成1或0。
+    ngx_conf_set_str_slot:读取字符串类型的参数。将字符串保存为ngx_str_t。
     ngx_conf_set_str_array_slot: 读取字符串数组类型的参数。
     ngx_conf_set_keyval_slot: 读取键值对类型的参数。
     ngx_conf_set_num_slot: 读取整数类型(有符号整数ngx_int_t)的参数。
-    ngx_conf_set_size_slot:读取size_t类型的参数，也就是无符号数。
+    ngx_conf_set_size_slot:读取size_t类型的参数。如解析8k,1m并将其保存为size_t。
     ngx_conf_set_off_slot: 读取off_t类型的参数。
     ngx_conf_set_msec_slot: 读取毫秒值类型的参数。
     ngx_conf_set_sec_slot: 读取秒值类型的参数。
@@ -1132,6 +1132,8 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
     ngx_conf_set_enum_slot: 读取枚举类型的参数，将其转换成整数ngx_uint_t类型。
     ngx_conf_set_bitmask_slot: 读取参数的值,并将这些参数的值以bit位的形式存储。
 							   例如：HttpDavModule模块的dav_methods指令。	
+	ngx_http_set_complex_value_slot: 解析一个包含nginx变量的字符串并保存为ngx_http_complex_value_t。
+    //更多处理函数参见ngx_conf_file.h
 
   conf: 指定把这些配置信息存放到哪个内存区域。
 		http模块对所有要保存的配置信息,划分了main,server和location进行存储,分别
@@ -1199,6 +1201,8 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
    1   void       *(*create_main_conf)(ngx_conf_t *cf);
    5   char       *(*init_main_conf)(ngx_conf_t *cf, void *conf);
   
+				  //create之后会调用该模块的指令处理函数,这些指令函数会将解析到的指令值放入到该
+				  //创建的自定义结构中,然后merge_src被调用进行合并
    2   void       *(*create_srv_conf)(ngx_conf_t *cf);
    6   char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf);
   
@@ -1229,6 +1233,72 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 				 大概意思可能就是,比如ngx_http_hello_loc_conf_t这个结构体中有
 				 一个expires这个字段,这个值在当前域中可以用,在上层域或下层域中
 				 都可用,那么如果该指令在当前为定义就是用上层的值
+
+##对以上这个回调方法的调用顺序做一个详细解释
+  配置文件如下,并标出各个指令可以存在的区域
+  http{
+  	server_names_hash_bucket_size 64; //Context:http
+	client_header_timeout 60s; //Context:http,server	
+	root	/export/masf;	//Context:http,server,location,if in location
+
+	server{
+		listen	80;	      //Context:server
+        #merge_slashes on  //Context:http,server
+		access_log	off;  //Context:http,server,location	
+	
+		location ~ ^/masf {
+			expires 6s;	  //Context:http,server,location
+		}
+	}
+  }
+
+  首先,对于从配置文件解析到的指令数据应该放到哪里,nginx为我们准备了三种坑位,
+  在ngx_command_t中可以用NGX_HTTP_MAIN_CONF_OFFSET、NGX_HTTP_SRV_CONF_OFFSET、
+  NGX_HTTP_LOC_CONF_OFFSET这三种配置来指定。
+  具体存放指令信息的结构体我们需要自己定义,这个结构会被放到哪个坑位,则有上面三
+  个配置指定。
+
+  通常在nginx中有这样一种默契,如果一个指令可以配置在http、server块中,那么该指令
+  被解析完后应该放在NGX_HTTP_SRV_CONF_OFFSET坑位中,因为如果放在LOC_CONF中会有冗
+  余,放在MAIN_CONF中有覆盖。
+  (因为把原本应该在SRV_CONF块中的指令解析到MAIN_CONF中,那SRV_CONF中就会没有值,这
+   时候如果server块和http块中都配置了某个指令,在merge_conf的时候虽然server中有指
+   令,但SRV_CONF结构体中且没有值,所有上层配置会覆盖下层配置)
+   
+  现在我们来看看上面配置文件中每个指令应该存放的坑位:
+  http块
+  main_conf
+	server_names_hash_bucket_size 64
+  srv_conf
+ 	client_header_timeout 60s
+  loc_conf
+	root	/export/masf
+
+  server块(可以有多个)
+	srv_conf
+	  listen 80
+	loc_conf
+	  access_log off
+
+    location块(可以有多个)
+      loc_conf
+		expires 6s
+  
+  配置文件的解析是自上而下的,最后我们可以的出ngx_http_module_t结构中的回调函数的顺序
+  是这样的。
+  1.调用create_main_conf函数,创建自定义的main_conf结构体存放server_names_hash_bucket_size指令
+  2.调用create_srv_conf函数,创建srv_conf结构体存放client_header_timeout指令
+  3.调用create_loc_conf函数,创建loc_conf结构体存放root指令
+  4.调用preconfiguration
+  5.调用create_srv_conf,创建srv_conf结构体存放listen指令
+  6.调用create_loc_conf,创建loc_conf结构体存放access_log指令
+  7.调用create_loc_conf,创建loc_conf结构体存放expires指令
+  8.调用init_main_conf,对http块做一些初始化操作
+  9.调用merge_srv_conf,和上层的listen指令合并(如果需要),当然上层不会有listen指令
+  10.调用merge_loc_conf,和上层的access_log指令合并(如果需要)
+  11.调用merge_loc_conf,和上层的expires指令合并(如果需要)
+  12.最后调用postconfiguration
+
 
 #模块定义 ngx_module_s 表示我们编写的某个模块
  nginx中的每一个模块都要定义一个ngx_module_s结构体来描述自己,这个结构体中
@@ -1739,7 +1809,16 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 ##ngx_list容器
 
 
-
 #Nginx模块命名规则
  ngx_服务名_模块名_module
  ngx_http_hello_module
+
+#ngx_buf_t结构中几个重要的标志位
+ last_buf:标示这是整个响应的最后一个缓冲区,nginx会立即发送缓冲区的所有数据
+ last_in_chain:标示当前URI处理的最后一个缓冲区,用subrequest时用该标志位
+ flush:标示要立即发送缓冲区的所有数据
+ memory:标示缓冲区是内存缓冲
+ in_file:标示缓冲区是文件缓冲
+
+
+
