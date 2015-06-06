@@ -23,7 +23,10 @@ static ngx_command_t ngx_http_hello_commands[]={
 		ngx_string("hello_string"), 
 		NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS|NGX_CONF_TAKE1, //loc区域，一个或零个参数
 		ngx_http_hello_string, //解析该指令的函数,在这里可以把指令信息赋值到我们定义上面定义的结构中 
-		NGX_HTTP_LOC_CONF_OFFSET, //用loc区域的pool分配内存		
+		//用loc区域的pool分配内存,也就是解析后的数据放入哪里
+		//如果某个指令可以用在main、server配置部分，但不能用在location部分,则应该使用srv_conf存储
+		//存loc_conf中有冗余,存在man_conf中有覆盖
+		NGX_HTTP_LOC_CONF_OFFSET,	
         //?猜测用到ngx的赋值函数如ngx_conf_set_str_slot的时候,会用到这个字段
         offsetof(ngx_http_hello_loc_conf_t,hello_string), 
 		NULL
@@ -49,17 +52,17 @@ static ngx_http_module_t ngx_http_hello_module_ctx={
 
 //模块的定义
 ngx_module_t ngx_http_hello_module = {
-	NGX_MODULE_V1,			/*站位*/
+	NGX_MODULE_V1,			/*版本号*/
 	&ngx_http_hello_module_ctx,	/*模块上下文结构,可使用里面的一些函数*/
 	ngx_http_hello_commands,	/*模块定义的指令*/
 	NGX_HTTP_MODULE,		/*module type*/
-	NULL,				/*init master*/
-	NULL,				/*init module*/
-	NULL,				/*init process*/
-	NULL,				/*init thread*/
-	NULL,				/*exit thread*/
-	NULL,				/*exit process*/
-	NULL,				/*exit master*/
+	NULL,				/*init master*/ master进程初始化时执行
+	NULL,				/*init module*/ master进程解析配置以后,初始化模块时调用一次
+	NULL,				/*init process*/worker进程初始化时调用一次
+	NULL,				/*init thread*/ 多线程时,线程初始化时调用,Linux下未使用
+	NULL,				/*exit thread*/ 多线程退出是调用一次
+	NULL,				/*exit process*/worker进程退出时调用一次
+	NULL,				/*exit master*/ master进程退出时调用一次
 	NGX_MODULE_V1_PADDING
 };
 
@@ -102,7 +105,7 @@ static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf){
 
 // 合并loc域的配置信息
 static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child){
-	//该方法会在ngx_http_hello_create_loc_conf和ngx_http_hello_string方法调用后再执行
+	//该方法会在ngx_http_hello_create_loc_conf和ngx_http_hello_string方法调用后在执行
 
 	ngx_http_hello_loc_conf_t *prev = parent;
 	ngx_http_hello_loc_conf_t *conf = child;
