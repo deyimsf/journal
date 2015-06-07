@@ -1242,10 +1242,10 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 	root	/export/masf;	//Context:http,server,location,if in location
 
 	server{
-		listen	80;	      //Context:server
-        #merge_slashes on  //Context:http,server
 		access_log	off;  //Context:http,server,location	
-	
+		listen	80;	      //Context:server
+		expires 60s;      //Context:http,server,location
+			
 		location ~ ^/masf {
 			expires 6s;	  //Context:http,server,location
 		}
@@ -1284,20 +1284,17 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
       loc_conf
 		expires 6s
   
-  配置文件的解析是自上而下的,最后我们可以的出ngx_http_module_t结构中的回调函数的顺序
-  是这样的。
-  1.调用create_main_conf函数,创建自定义的main_conf结构体存放server_names_hash_bucket_size指令
-  2.调用create_srv_conf函数,创建srv_conf结构体存放client_header_timeout指令
-  3.调用create_loc_conf函数,创建loc_conf结构体存放root指令
-  4.调用preconfiguration
-  5.调用create_srv_conf,创建srv_conf结构体存放listen指令
-  6.调用create_loc_conf,创建loc_conf结构体存放access_log指令
-  7.调用create_loc_conf,创建loc_conf结构体存放expires指令
-  8.调用init_main_conf,对http块做一些初始化操作
-  9.调用merge_srv_conf,和上层的listen指令合并(如果需要),当然上层不会有listen指令
-  10.调用merge_loc_conf,和上层的access_log指令合并(如果需要)
-  11.调用merge_loc_conf,和上层的expires指令合并(如果需要)
-  12.最后调用postconfiguration
+  我们可以的出ngx_http_module_t结构中的回调函数的顺序是这样的,和指令顺序没有关系:
+  1.对于每一个模块nginx依次调用create_(main|srv|loc)_conf函数,用来存放该模块在http块
+     配置的指令信息。?如果在该区域发现该模块的某个指令,则调用响应的指令函数赋值?
+  2.调用preconfiguration 
+  3.在server块,依次调用create_(srv|loc)_conf函数,来存放该模块在server区域的指令。
+    (在这个块中找到所有该模块的指令,并调用其指令处理函数将值存入相应的机构体中?)
+  4.在location块,调用create_loc_conf函数,存放location区域中该模块的指令
+  5.调用init_main_conf,做一些初始化操作
+  6.依次调用merge_(srv|loc)_conf函数,合并该模块在server块中的指令值
+  7.调用merge_loc_conf函数,合并该模块在location块中的指令值 
+  8.最后调用postconfiguration
 
 
 #模块定义 ngx_module_s 表示我们编写的某个模块
@@ -1309,7 +1306,7 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 
  /core/ngx_conf_file.h
  struct ngx_module_s {
-    ngx_uint_t            ctx_index;
+    ngx_uint_t            ctx_index;  //该模块在request->ctx中的索引
     ngx_uint_t            index;
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
@@ -1820,5 +1817,67 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
  memory:标示缓冲区是内存缓冲
  in_file:标示缓冲区是文件缓冲
 
+#自定义ctx变量
+ 每个模块在request中都已一个地方放置一个自定义的ctx变量,父子请求之间可以用这个
+ 作为通信的桥梁。
+ 用ngx_http_set_ctx(r,ctx,module)函数设置,该函数是一个宏
+  #define ngx_http_set_ctx(r, c, module)      r->ctx[module.ctx_index] = c
+ 
+ 用ngx_http_get_module_ctx(r,module)获取,该函数也是一个宏
+  #define ngx_http_get_module_ctx(r, module)  (r)->ctx[module.ctx_index]
+
+ 同理,我们自定义的main_conf、srv_conf、loc_conf结构体都放在了requst的相关字段中
+ 分别是 **main_conf、**srv_conf、**loc_conf。
+ 获取方式也是分别对应三个宏:
+	#define ngx_http_get_module_main_conf(r, module)  (r)->main_conf[module.ctx_index]
+	#define ngx_http_get_module_srv_conf(r, module)  (r)->srv_conf[module.ctx_index]
+	#define ngx_http_get_module_loc_conf(r, module)  (r)->loc_conf[module.ctx_index] 
+	
+#编写filter模块
+ filter模块和handler模块编写格式基本相同,不同的是注册方式。handler模块需要把自己的处理
+ 函数注册到相应的phase才能执行,并且相应的指令存在某个区域(http、server、location)才会被
+ 执行。filter模块只要被注册就会被执行,属于全局性质的,所以在filter处理函数内部需要写很多
+ 判断去尽量的不执行自己。
+
+ 注册filter一般放在所有指令都解析并合并完成阶段,也就是postconfiguration指向的函数中。
+ 首先该模块开始除会有两个全局变量:
+	static ngx_http_output_header_filter_pt		ngx_http_next_header_filter;
+	static ngx_http_output_body_filter_pt		ngx_http_next_body_filter; 
+
+ 这两个变量存放的是该过滤器执行完后下一个要执行的过滤器。
+
+ 向nginx注册filter,下面这个函数就是postconfiguration指向的函数:
+	static ngx_int_t ngx_http_hello_filter(ngx_conf *cf){
+		ngx_http_next_body_filter = ngx_http_top_body_filter;
+		ngx_http_top_body_filter = ngx_http_footer_body_filter;
+
+		ngx_http_next_header_filter = ngx_http_top_header_filter;
+		ngx_http_top_header_filter = ngx_http_footer_header_filter;
+
+		return NGX_OK;
+	}
+
+ nginx注册过滤器的顺序在编译完后的ngx_module_t *ngx_modules[]数组中.
+ 首先是注册初始化各个handler模块,然后才注册filter。
+ 
+ 注册顺序从上向下,当注册第一个过滤器时,过滤器链表头ngx_http_top_(header|body)_filter
+ 还没有值,所以第一个过滤器会把自己放入到链表头中:
+	ngx_http_top_(header|body)_filter = ngx_http_(模块)_(header|body)_filter 
+ 这时候全局变量 top_(header|body)_filter 就有值了。
+
+ 接着注册第二个过滤器,在第二个过滤中,首先会把链表头的过滤器放入到本地变量中next_filter中
+ 然后把自己放入到链表头中。其中next_filter就是第二个过滤器执行完后要执行的filter。
+
+ 依次类推去注册剩下的过滤器,最后一个过滤器会成为链表头,所以过滤器是越往下越早执行。
+
+#过滤器filter模块的config文件
+ ngx_addon_name=ngx_http_(模块名)_filter_module
+ HTTP_AUX_FILTER_MODULES="$HTTP_AUX_FILTER_MODULES ngx_http_(模块名)_filter_module" 
+ NGX_ADDON_SRC="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_(模块名)_filter_module.c"
+
+ 这个和handler模块注册不一样的就只用HTTP_AUX_FILTER_MODULES,handler是HTTP_MODULES 
 
 
+
+
+ 

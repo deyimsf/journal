@@ -199,3 +199,43 @@ typedef struct {
     char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
  } ngx_http_module_t;
 
+//请求结构体
+ struct ngx_http_request_s {
+	uint32_t			signature;
+
+	ngx_connection_t	*connection;
+	
+	void				**ctx;  //为每个模块保存自定义的ctx
+	void				**main_conf; //每个模块的main_conf结构体都放在这里
+	void				**srv_conf;
+	void				**loc_conf;
+
+	.........
+ }
+
+//ngxin模块结构体
+ struct ngx_module_s {
+    ngx_uint_t            ctx_index;  //该模块在request->ctx中的索引 
+    ngx_uint_t            index;
+    ngx_uint_t            spare0;
+    ngx_uint_t            spare1;
+    ngx_uint_t            spare2;
+    ngx_uint_t            spare3;
+    ngx_uint_t            version;
+
+    void                 *ctx;
+    ngx_command_t        *commands;
+    ngx_uint_t            type;
+
+    ngx_int_t           (*init_master)(ngx_log_t *log);
+    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
+    void                (*exit_thread)(ngx_cycle_t *cycle);
+    void                (*exit_process)(ngx_cycle_t *cycle);
+    void                (*exit_master)(ngx_cycle_t *cycle);
+    uintptr_t             spare_hook0;
+    ...  
+    uintptr_t             spare_hook7;
+ }
+
