@@ -1,2 +1,5 @@
 #Mac OS在标题栏上显示目录完整路径
  defaults write com.apple.finder _FXShowPosixPathInTitle -bool YES
+
+#JDK安装目录
+ /Library/Java/JavaVirtualMachines/1.6.0_41-b02-445.jdk/Contents/Home

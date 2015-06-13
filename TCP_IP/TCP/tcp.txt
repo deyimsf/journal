@@ -191,7 +191,7 @@ Tcp慢启动和避免拥塞算法
  从而导致server端无法接收正常的握手请求。
 
  linux使用SYNcookie来解决这种问题,大致就是将连接信息编码在ISN中返回
- 给客户端,server端不再保存这个办链接,利用ACK待会的ISN还原链接信息。
+ 给客户端,server端不再保存这个半链接,利用ACK带回的ISN还原链接信息。
  ?疑问,server端如何识别这个cookie
 
  这个net.ipv4.tcp_syncookies值是1表示是开启的,默认开启。
