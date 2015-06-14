@@ -1,6 +1,0 @@
-//告诉nginx我们模块的名字
-ngx_addon_name=ngx_http_hello_module
-//告诉nginx我们增加一个HTTP模块
-HTTP_MODULES="$HTTP_MODULES ngx_http_hello_module"
-//告诉nginx编译哪些文件
-NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_hello_module.c"
