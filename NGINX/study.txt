@@ -1879,13 +1879,14 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
  这个和handler模块注册不一样的就只用HTTP_AUX_FILTER_MODULES,handler是HTTP_MODULES 
 
 #和ngx_http_core_module相关的结构体
- 
+ //核心模块自定义上下文 
  typedef struct {
 	void		**main_conf;
 	void		**srv_conf;
 	void		**loc_conf;		
  } ngx_http_conf_ctx_t;
 
+ //?为没一个其他模块生成一个,还是始终只有一份
  struct ngx_http_core_loc_conf_s {
 	ngx_str_t		name;   //location name
 	.......
