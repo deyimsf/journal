@@ -160,6 +160,21 @@ ngx_http_add_hello_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 		return ngx_http_next_body_filter(r,in);
 	}	
 	
+	//找出最后一个chain_t
+    ngx_chain_t *tmp;
+    for(tmp = in; tmp; tmp = tmp->next){
+        if(tmp->buf->last_buf){
+            //是最后一buf
+            tmp->buf->last_buf = 0;
+            break;
+        }   
+    }   
+
+	//如果不是最后一个则直接输出
+	if(tmp == NULL){
+		return ngx_http_next_body_filter(r,in);
+	}
+	
 	//为当前filter创建buf和chain_t
 	buf = ngx_calloc_buf(r->pool);	
 	if(buf == NULL){
@@ -185,22 +200,11 @@ ngx_http_add_hello_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 	buf->last_buf = 1;
 	buf->memory = 1;
 	
-	//将新建的chain_t放入输出链中
-	ngx_chain_t *tmp;
-	for(tmp = in; tmp; tmp = tmp->next){
-		if(tmp->buf->last_buf){
-			//是最后一buf
-			tmp->buf->last_buf = 0;
-			break;
-		}
-	}
-	
+	//将自定义的chain_t tmp作为最后一个buf放入链中	
 	tmp->next = nct;
 	nct->next = NULL;
 	nct->buf = buf;	
 		
 	return ngx_http_next_body_filter(r,in);
 }
-
-
 
