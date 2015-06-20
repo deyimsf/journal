@@ -7,6 +7,14 @@
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
     *h = ngx_http_hello_handler;  //真正处理请求的函数
     
+	疑问，对于这种挂载方式,为什么当有一个空location的时候,仍然会执行
+	ngx_http_hello_handler方法？
+	location ~ ^/test {
+    	//这里面没有任何指令,没有hello_string指令,为什么也会执行hello_handler?
+		//用第二种绑定就不会执行
+    }
+
+
   2.另一种挂载方式,按需挂载
     ngx_http_core_locl_conf_t clcf;
 	clcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);

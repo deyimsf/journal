@@ -239,3 +239,42 @@ typedef struct {
     uintptr_t             spare_hook7;
  }
 
+//bufs copy_filter中有用到
+typedef struct {
+	ngx_int_t	num;
+	size_t		size;
+} ngx_bufs_t;
+
+//copy_filter中用到的上下文结构
+struct ngx_output_chain_ctx_s {
+	ngx_buf_t					*buf;	//保存临时buf
+	ngx_chain_t					*in;	//保存将要发送的chain
+	ngx_chain_t					*free;	//保存已经发送完毕的chain
+	ngx_chain_t					*busy;	//保存还未发送的chain
+
+	unsigned					sendfile:1;
+	unsigned					directio:1;
+ #if (NGX_HAVE_ALIGEND_DIRECTIO)
+	unsigned					unaligned:1;
+ #endif
+	unsigned					need_in_memory:1;
+	unsigned					need_in_temp:1;
+ #if (NGX_HAVE_FILE_AIO)
+	unsigned					aio:1;
+	
+	ngx_output_chain_aio_pt		aio_handler;
+
+	off_t						alignment;
+	
+	ngx_pool_t					*pool;
+	ngx_int_t					allocated;
+	ngx_bufs_t					bufs;
+	ngx_buf_tag_t				tag;
+	
+	ngx_output_chain_filter_pt	output_filter;
+	void						*filter_ctx;
+
+}
+
+
+
