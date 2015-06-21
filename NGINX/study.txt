@@ -1915,7 +1915,78 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
     			((ngx_http_conf_ctx_t *) cf->ctx)->main_conf[module.ctx_index]
 
 
-#TODO 写一个filter?
-#模仿 ngx_http_addition_filter_module
+#--------------------nginx输出数据时的大致流程----------------------
+ 当nginx把所有请求头都解析完毕后,写事件handler变成了ngx_http_core_run_phases方法，
+ 该方法用来执行每个模块的所有的阶段handler,该方法快速执行完毕后,写事件handler就会被改写
+ 
+  void
+  ngx_http_core_run_phases(ngx_http_request_t *r)
+  {
+    ngx_int_t                   rc;  
+    ngx_http_phase_handler_t   *ph; 
+    ngx_http_core_main_conf_t  *cmcf;
+
+    cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
+
+    ph = cmcf->phase_engine.handlers;
+
+    // checker = ngx_http_phase_handler_pt
+    // 这里会循环执行所有的阶段,这里会快速的执行完毕,改变事件的操作在相关的阶段中完成
+    // 当执行到ngx_http_core_content_phase时该方法先执行模块绑定的handler,
+    
+    // 每个模块的content_phase阶段绑定的handler都会去调用ngx_http_send_header输出响应头
+    // 调用ngx_http_output_filter输出响应体,实际上响应头的信息也是有output_filter输出的
+    // 执行完一次output_filter后，ngx_http_finalize_request方法将根据传入的rc决定是否
+    // 调用ngx_http_set_write_handler方法将写事件handler改为r->write_event_handler=ngx_http_writer
+    
+    // 而ngx_http_writer又会去调用ngx_http_output_filter,当output_filter返回后会
+    // 检查是否输出完毕，如果没有的话就直接返回,因为这时候写事件handler还是http_writer
+    // 所以下一个写事件到来后会继续执行http_writer,如此反复执行,直到输出完毕后再次改写写事件handler
+    while (ph[r->phase_handler].checker) {
+
+        rc = ph[r->phase_handler].checker(r, &ph[r->phase_handler]);
+
+        if (rc == NGX_OK) {
+            return;
+        }    
+    }    
+  }
+
+  //ngx_http_core_content_phase的部分代码
+  ngx_int_t
+  ngx_http_core_content_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
+  {
+    size_t     root;
+    ngx_int_t  rc;
+    ngx_str_t  path;
+
+	// 这种是按需绑定
+    if (r->content_handler) {
+        r->write_event_handler = ngx_http_request_empty_handler;
+        ngx_http_finalize_request(r, r->content_handler(r));
+        return NGX_OK;
+    }
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "content phase: %ui", r->phase_handler);
+
+    // 这种是按阶段绑定
+    // 调用模块自己的handler,该handler中调用ngx_http_output_filter进行内容输出
+    // 其中rc 就是ngx_http_output_filter的返回值
+    rc = ph->handler(r);
+
+    // 如果rc 不等于 NGX_DECLNED 就调用finalize_request去修改"写事件handler"
+    if (rc != NGX_DECLINED) {
+
+        ngx_http_finalize_request(r, rc);
+        return NGX_OK;
+    }
+
+    ....... 
+     
+    return NGX_OK;
+  }
+#--------------------------ngxin输出数据的大致流程---------------------
+
 
  
