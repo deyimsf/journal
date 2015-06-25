@@ -1234,6 +1234,26 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 				 一个expires这个字段,这个值在当前域中可以用,在上层域或下层域中
 				 都可用,那么如果该指令在当前为定义就是用上层的值
 
+##调用顺序
+ 调用main方法
+ 调用ngx_init_cycle
+ 通过ngx_conf_parse方法解析顺序解析配置文件
+ 当解析到http指令后,调用http指令指定的方法ngx_http_bloc
+ ngx_http_block方法
+  1.调用每个模块的create_main_conf、create_srv_conf、create_loc_conf方法
+  2.调用每个模块的preconfiguration
+  3.调用ngx_conf_parse方法去解析http{}中的指令
+  4.当解析到第一个server指令后,调用server指令指定的方法ngx_http_core_server
+  5.ngx_http_core_server方法调用每个模块的create_srv_conf、create_loc_conf方法  
+  6.ngx_http_core_server之后调用ngx_conf_parse方法解析server{}内部的指令
+  7.当解析到第一个location指令后,调用location指令指定的方法ngx_http_core_location
+  8.ngx_http_core_location方法调用每个模块的creat_loc_conf方法
+  9.ngx_http_core_location之后ngx_conf_parse方法解析location{}内部的指令
+  10.调用每个模块的init_main_conf方法
+  11.调用每个模块的merge(merge_srv、merge_loc)
+  12.调用每个模块的postconfiguration
+
+
 ##对以上这个回调方法的调用顺序做一个详细解释
   配置文件如下,并标出各个指令可以存在的区域
   http{
