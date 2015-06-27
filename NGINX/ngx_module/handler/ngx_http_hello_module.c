@@ -74,9 +74,9 @@ static ngx_int_t ngx_http_hello_init(ngx_conf_t *cf){
 	
 	cmcf = ngx_http_conf_get_module_main_conf(cf,ngx_http_core_module);
     //另一种挂载方式,按需挂载
-    //cmcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);
-	//cmcf->handler = ngx_http_hello_handler;
-	//?cmcf只有一份吗
+    //目前只知道在指令方法里面按需才能挂载上，为什么?
+    //clcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);
+	//clcf->handler = ngx_http_hello_handler;
 
 	//函数注册到CONTENT阶段
 	h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
@@ -106,7 +106,6 @@ static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf){
 
 // 合并loc域的配置信息
 static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child){
-	//该方法会在ngx_http_hello_create_loc_conf和ngx_http_hello_string方法调用后在执行
 
 	ngx_http_hello_loc_conf_t *prev = parent;
 	ngx_http_hello_loc_conf_t *conf = child;
@@ -141,7 +140,12 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	ngx_uint_t content_length = 0;
 
 	//取出我们的指令配置信息
-	my_conf = ngx_http_get_module_loc_conf(r,ngx_http_hello_module);	
+	my_conf = ngx_http_get_module_loc_conf(r,ngx_http_hello_module);
+    //如果指令不存在,则放弃执行该方法	
+    if(my_conf->hello_string.len == 0){ 
+	   return NGX_DECLINED;
+    }
+
 	//将数据读入到临时buf中
 	ngx_sprintf(tmp_buf,"%s Hi ",my_conf->hello_string.data);
 	content_length = ngx_strlen(tmp_buf); 

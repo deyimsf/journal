@@ -23,7 +23,7 @@
 
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
 
-    ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1]; 
+    ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1]; //中括号表示数组? 
  } ngx_http_core_main_conf_t;
 
 //nginx基本数据类型core/ngx_config.h
@@ -150,8 +150,12 @@ typedef struct {
 //用于Nginx在解析配置文件时描述每个指令的属性
  struct ngx_conf_s {
 	char				*name; //指令名字 ?
-	ngx_array_t			*args; //指令后的参数的值 ?
-	ngx_cycle_t			*cycle;
+
+	// 每解析到一个指令时,指令的名字和参数值
+	// (ngx_str_t *)(args->elts)[0] 是指令的名字
+    // (ngx_str_t *)(args->elts)[1] 指令的第一个参数值
+	ngx_array_t			*args; 	
+    ngx_cycle_t			*cycle;
 	ngx_pool_t			*pool; 
 	ngx_pool_t			*temp_pool;	//解析配置文件时临时内存池,解析完后就释放
     ngx_conf_file_t 	*conf_file;	//存放nginx配置文件的相关信息,比如文件名nginx.conf
@@ -211,6 +215,8 @@ typedef struct {
 	void				**loc_conf;
 
 	.........
+
+	ngx_int_t			phase_handler;  //当前请求执行到哪个阶段?
  }
 
 //ngxin模块结构体
@@ -276,5 +282,42 @@ struct ngx_output_chain_ctx_s {
 
 }
 
+//nginx变量结构体
+ typedef struct ngx_http_variable_s  ngx_http_variable_t;
+ struct ngx_http_variable_s {
+	ngx_str_t					name;   //变量名字 
+	ngx_http_set_variable_pt	set_handler;  //回调函数
+	ngx_http_get_variable_pt	get_handler;  //回调函数
+	uintptr_t					data;	//调用回调函数传递的数据
+	ngx_uint_t					flags;  //变量的行为标记,如是否允许重复定义、是否可被缓存等
+	ngx_uint_t					index;
+ }
 
+//阶段执行有关的数据结构
+ struct ngx_http_phase_handler_s {
+     ngx_http_phase_handler_pt  checker;
+     ngx_http_handler_pt        handler;
+     ngx_uint_t                 next;
+ };
+
+//nginx中的阶段
+ typedef enum {
+    NGX_HTTP_POST_READ_PHASE = 0,
+
+    NGX_HTTP_SERVER_REWRITE_PHASE,
+
+    NGX_HTTP_FIND_CONFIG_PHASE,
+    NGX_HTTP_REWRITE_PHASE,
+    NGX_HTTP_POST_REWRITE_PHASE,
+
+    NGX_HTTP_PREACCESS_PHASE,
+
+    NGX_HTTP_ACCESS_PHASE,
+    NGX_HTTP_POST_ACCESS_PHASE,
+
+    NGX_HTTP_TRY_FILES_PHASE,
+    NGX_HTTP_CONTENT_PHASE,
+
+    NGX_HTTP_LOG_PHASE
+ } ngx_http_phases;
 

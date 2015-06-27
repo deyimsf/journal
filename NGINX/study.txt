@@ -1237,13 +1237,14 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 ##调用顺序
  调用main方法
  调用ngx_init_cycle
- 通过ngx_conf_parse方法解析顺序解析配置文件
+ 通过ngx_conf_parse方法解析顺序解析配置文件,该方法会每解析到一个指令就调用他指定的方法
  当解析到http指令后,调用http指令指定的方法ngx_http_bloc
  ngx_http_block方法
   1.调用每个模块的create_main_conf、create_srv_conf、create_loc_conf方法
   2.调用每个模块的preconfiguration
-  3.调用ngx_conf_parse方法去解析http{}中的指令
-  4.当解析到第一个server指令后,调用server指令指定的方法ngx_http_core_server
+  3.调用ngx_conf_parse方法去解析http{}中的指令,按顺序解析
+  4.每遇见一个指令就调用该指令指定的处理方法.当解析到server指令后,
+    调用server指令指定的方法ngx_http_core_server
   5.ngx_http_core_server方法调用每个模块的create_srv_conf、create_loc_conf方法  
   6.ngx_http_core_server之后调用ngx_conf_parse方法解析server{}内部的指令
   7.当解析到第一个location指令后,调用location指令指定的方法ngx_http_core_location
@@ -2008,5 +2009,4 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
   }
 #--------------------------ngxin输出数据的大致流程---------------------
 
-
- 
+#ngxin变量的创建和读取 

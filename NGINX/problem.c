@@ -7,11 +7,11 @@
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
     *h = ngx_http_hello_handler;  //真正处理请求的函数
     
-	疑问，对于这种挂载方式,为什么当有一个空location的时候,仍然会执行
-	ngx_http_hello_handler方法？
+	对于这种挂载方式,当有一个空location的时候,仍然会执行ngx_http_hello_handler
+    方法,如果不想上这个函数执行可以返回NGX_DECLINED,这时候就会去执行nginx默认
+    的index、autoindex、static等模块
 	location ~ ^/test {
-    	//这里面没有任何指令,没有hello_string指令,为什么也会执行hello_handler?
-		//用第二种绑定就不会执行
+			
     }
 
 
@@ -19,7 +19,8 @@
     ngx_http_core_locl_conf_t clcf;
 	clcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);
     clcf->handler = ngx_http_hello_handler;
- 
-  疑问,对于这两种挂载方式,ngx_http_core(main|loc)_conf_t这两个结构是从
-  ngx_http_core_module模块拿出来的,难道locl_conf、main_conf只有一个实例吗
-  那clcf->handler这种方式注册的handler岂不是整个nginx就一个?
+
+    ?疑问，为什么这种方式在postconfiguration方法中挂载不上，好像只能在具体的指令
+    处理函数中才能挂载上.
+    另外((ngx_http_conf_ctx_t *) cf->ctx)->loc_conf 变量在http{} server{} locaiton{} 
+    和指令的处理函数中不一样
