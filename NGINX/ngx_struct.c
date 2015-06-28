@@ -6,10 +6,10 @@
 
     ngx_hash_t                 headers_in_hash;
 
-    ngx_hash_t                 variables_hash;
+    ngx_hash_t                 variables_hash;  //变量的hash表
 
-    ngx_array_t                variables;       /* ngx_http_variable_t */
-    ngx_uint_t                 ncaptures;
+    ngx_array_t                variables;  //索引变量的数组  /* ngx_http_variable_t */
+    ngx_uint_t                 ncaptures;  //变量的hash数组
 
     ngx_uint_t                 server_names_hash_max_size;
     ngx_uint_t                 server_names_hash_bucket_size;
@@ -293,6 +293,18 @@ struct ngx_output_chain_ctx_s {
 	ngx_uint_t					index;
  }
 
+//变量值
+ typedef struct {
+ 	unsigned	len:28; //变量值数据的长度
+
+	unsigned	valid:1; //变量是否合法
+	unsigned	no_cacheable:1; //变量是否可以缓存,缓存后只调用一次get_handler
+	unsigned	not_found:1 //变量是否找到
+	unsigned	escape:1	
+
+	u_char		*data;	//变量值的具体数据
+ }
+
 //阶段执行有关的数据结构
  struct ngx_http_phase_handler_s {
      ngx_http_phase_handler_pt  checker;
@@ -320,4 +332,46 @@ struct ngx_output_chain_ctx_s {
 
     NGX_HTTP_LOG_PHASE
  } ngx_http_phases;
+
+//可以解析多着值的数据结构
+ typedef struct {
+    ngx_str_t                   value;
+    ngx_uint_t                 *flushes;
+    void                       *lengths;
+    void                       *values;
+ } ngx_http_complex_value_t;
+
+ typedef struct {
+    ngx_conf_t                 *cf;
+    ngx_str_t                  *value;
+    ngx_http_complex_value_t   *complex_value;
+
+    unsigned                    zero:1;
+    unsigned                    conf_prefix:1;
+    unsigned                    root_prefix:1;
+ } ngx_http_compile_complex_value_t;
+
+ //将 ccv->value 进行逆波兰计算 
+ ngx_int_t ngx_http_compile_complex_value(ngx_http_compile_complex_value_t *ccv);
+
+ //将ccv->value 的值求出放入到 value中 
+ ngx_int_t ngx_http_complex_value(ngx_http_request_t *r, ngx_http_complex_value_t *val, ngx_str_t *value);
+
+//跟变量有关的结构体 
+ typedef struct {
+    ngx_uint_t        hsize;
+
+    ngx_pool_t       *pool;
+    ngx_pool_t       *temp_pool;
+
+    ngx_array_t       keys;
+    ngx_array_t      *keys_hash;
+
+    ngx_array_t       dns_wc_head;
+    ngx_array_t      *dns_wc_head_hash;
+
+    ngx_array_t       dns_wc_tail;
+    ngx_array_t      *dns_wc_tail_hash;
+ } ngx_hash_keys_arrays_t;
+
 

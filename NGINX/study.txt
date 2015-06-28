@@ -2010,3 +2010,115 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 #--------------------------ngxin输出数据的大致流程---------------------
 
 #ngxin变量的创建和读取 
+##相关的数据结构
+ // 变量本身的信息
+ struct ngx_http_variable_s {
+	ngx_str_t					name; //变量名
+	ngx_http_set_variable_pt	set_handler; 
+	ngx_http_get_variable_pt	get_handler;
+	uintptr_t					data; //调用set或get时传递的值
+	ngx_uint_t					flags; //变量的标志，有四种
+	ngx_uint_t					index; //变量的索引号，如果有的话
+ } 
+
+ // 表示变量的值
+ typedef struct {
+	unsigned	len:28; //变量值长度
+	
+	unsigned	valid:1; //是否合法,0是不合法
+	unsigned	no_cacheable:1; //是否可以缓存,0是不可以缓存?
+	unsigned	not_found:1;  //是否找到,0是每找到
+	unsigned	escape:1;
+	
+	u_char		*data;	//变量值
+ }
+
+ // 在ngx_http_core_module的配置文件中保存的变量信息
+ typedef struct {
+	ngx_hash_t					variables_hash;  //变量的hash表？有啥作用
+	ngx_array_t					variables;		//索引变量的数组,存的变量的值
+	ngx_hash_keys_arrays_t		*variables_keys //变量的hash数组?
+ }
+
+ // 变量的值是个请求相关的,所以在请求结构体中有一个变量数组,
+ // 主要用于缓存变量的结果,里面保存的是索引过的变量的值,
+ // 当然最终是否使用缓存数据,则有变量的属性在决定
+ struct ngx_http_request_s {
+	ngx_http_variable_value_t		*variables;
+ }
+
+##模块中操作变量的函数 
+ // 向cmcf->variables_keys中添加一个变量名,具体的变量值需要模块开发者
+ // 在函数外指定回调函数set_handler或get_handelr,并在回调函数中设置变量值
+ //
+ // name: 变量名字 
+ // flags: 变量的标记
+ // 	NGX_HTTP_VAR_CHANGEABLE  允许一个变量可以多次添加
+ //		NGX_HTTP_VAR_NOCACHEABLE 不允许缓存
+ //		NGX_HTTP_VAR_INDEXED 使用索引读取  
+ //		NGX_HTTP_VAR_NOHASH 该变量不需要被hash
+ ngx_http_variable_t *ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name,ngx_uint_t flags);
+
+ // 索引一个变量,并返回索引值
+ // 如果要索引一个变量,则只能在配置文件初始化的时候来设置
+ // 该方法会不添加一个真正的变量,配置文件初始化结束时会检查其合法性
+ ngx_int_t ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name);
+
+ // 通过索引值来获得变量值
+ // 该方法只有第一次才会调用get_handler去获取值,以后不管值是有效无效(valid)
+ // 是否有没有被发现(not_found) 都直接返回r->variables中缓存的值 
+ ngx_http_variable_value_t *ngx_http_get_indexed_variable(ngx_http_request_t *r,ngx_uint_t index); 
+
+ // 通过索引值来获得变量值
+ // 该方法只会对合法的(valid=1)且有可缓存标记的变量使用缓存 
+ ngx_http_variable_value_t *ngx_http_get_flushed_variable(ngx_http_request_t *r, ngx_uint_t index);
+
+ // 通过名字和hash值或的变量值
+ // 如果变量没有被索引过,则只能通过该方法获得值
+ // 其中key就是 name的hash值,有ngx_hash_strlow方法计算hash值  
+ ngx_http_variable_value_t *ngx_http_get_variable(ngx_http_request_t *r,ngx_str_t *name, ngx_uint_t key);
+
+##读取使用set定义的变量的例子
+  // 配置文件片段
+  location ~ ^/test {
+		set $a	"aaa";
+		
+		hello_string	$a;
+  }   
+
+  我们使用索引变量的方式,所以需要在文件解析的过程中索引变量
+  比如在 ngx_http_hello_string 方法中
+
+    // 拿到指令hello_string的原始参数
+  	ngx_str_t t = loc_conf->hello_string;
+    if(t.data[0] == '$') {
+		// 如果参数的一个字符是$,则我们认为他是一个变量,这时我们索引他
+		t.data++;
+		t.len--;
+
+		ngx_uint_t	index = ngx_http_get_variable_index(cf,&t);
+        // 将索引值保存在我们的本地结构中,供以后使用
+		loc_conf->index = index;
+    }
+  
+ 在模块注册的handler函数ngx_http_hello_handler中获取该变量值:
+	
+    // 拿到指令hello_string的原始值
+    ngx_str_t t = my_conf->hello->string;
+	if(t.data[0] == '$'){
+		t.data++;
+		t.len--;
+	
+		ngx_http_variable_value_t	*value;
+        // 如果没有索引该变量则通过hash就可以
+        // ngx_uint_t hash;
+		// hash = ngx_hash_strlow(t.data,t.data,t.len);
+
+		// 通过索引获取变量值
+		value = ngx_http_get_indexed_variable(r,my_conf->index);
+		
+		t.data = value->data;
+		t.len = value->len;	
+	}
+
+ 
