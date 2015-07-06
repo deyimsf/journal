@@ -24,3 +24,6 @@
     处理函数中才能挂载上.
     另外((ngx_http_conf_ctx_t *) cf->ctx)->loc_conf 变量在http{} server{} locaiton{} 
     和指令的处理函数中不一样
+
+
+

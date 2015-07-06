@@ -203,7 +203,7 @@ typedef struct {
     char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
  } ngx_http_module_t;
 
-//请求结构体
+//请求结构体 ngx_http_request_t
  struct ngx_http_request_s {
 	uint32_t			signature;
 
@@ -214,10 +214,12 @@ typedef struct {
 	void				**srv_conf;
 	void				**loc_conf;
 
+	ngx_http_request_t	*main;	//指向主请求,前提该请求是一个子请求
+	ngx_http_request_t	*parent; //指向该子请求的父请求
 	.........
 
 	ngx_int_t			phase_handler;  //当前请求执行到哪个阶段?
- }
+ };
 
 //ngxin模块结构体
  struct ngx_module_s {
@@ -373,5 +375,29 @@ struct ngx_output_chain_ctx_s {
     ngx_array_t       dns_wc_tail;
     ngx_array_t      *dns_wc_tail_hash;
  } ngx_hash_keys_arrays_t;
+
+//表示子请求本身的数据结构
+ struct ngx_http_posted_request_s {
+	ngx_http_request_t				*request;
+	ngx_http_posted_request_t		*next;
+ }
+
+//用来保存子请求结果的数据结构
+ struct ngx_http_postponed_request_s {
+	ngx_http_request_t				*request;
+	ngx_chain_t						*out;  //结果数据
+	ngx_http_postponed_request_t	*next;
+ }
+
+// 子请求的回调数据结构
+ typedef struct {
+	// 子请求处理完成后的回调函数 
+	ngx_http_post_subrequest_pt		handler;
+	// 传给回调函数的数据
+	void							*data;
+ } ngx_http_post_subrequest_t;
+
+// 子请求处理完成后的回调函数
+ typedef ngx_int_t	(*ngx_http_post_subrequest_pt)(ngx_http_request_t *r, void *data, ngx_int_t rc);
 
 

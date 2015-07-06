@@ -2121,4 +2121,74 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 		t.len = value->len;	
 	}
 
+#ngx_sprintf函数
+ 一般格式:
+	% <格式描述> <输出类型> <数据类型>  
  
+	<格式描述>: 描述输出的宽度以及宽度不够后填充的内容
+				例如,#10代表宽度为10,不够以#填充。
+	
+	<输出类型>: 描述输出的类型
+				u:		无符号数
+				m:  	按<数据类型>指定的数据类型的最大值输出数字
+			    x:		小写16进制
+				X: 		大写16进制
+			    .<n>:	<n>表示小数位数		
+				*:	    限定字符串的输出长度, 需要length和ptr参数配合	
+	
+	<数据类型>:
+				V:		nginx字符串,ngx_str_t *str	
+				v:		nginx变量值,ngx_variable_value_t *value
+				s:		字符串,uchar *c
+				O:		偏移量,off_t ot
+				P:		进程ID,对应ngx_pid_t pt
+				T: 		时间,time_t	
+				M:		毫秒,ngx_msec_t
+				z:		容量,ssize_t、size_t
+			    i:		ngx_int_t
+				l:		long
+				D:		int32_t、uint32_t		
+				L:		64位长整形,对应ngx_atomic_int、ngx_atomic_uint_t
+				A:		ngx_atomic_int_t、ngx_atomic_uint_t
+				f:		浮点数,对应double,如果传入的是float,会被C升级为double
+				p:		void *
+				c:		字符
+				Z:		字符串尾0
+				N:		换行
+				%:		%
+
+#子请求
+ //子请求的回调数据结构
+   typedef struct {
+		//子请求处理完成后的回调函数
+		ngx_http_post_subrequest_pt		handler;
+		//传给上面回调函数的数据
+		void							*data;
+   }
+
+ // 子请求处理完成后的回调函数
+ // r: 返回的请求的数据结构
+ // data: ngx_http_post_subrequest_t中的data字段 
+ // rc: 子请求的返回结果
+ typedef ngx_int_t	(*ngx_http_post_subrequest_pt)(ngx_http_request_t *r,void *data,ngx_int_t rc);
+
+ // 发起子请求的函数
+ // r: 		当前请求
+ // uri:	要进行子请求的uri
+ // args:	进行子请求的参数
+ // psr:	? 
+ // ps:		子请求的回调数据结构,可以为NULL
+ // flags:  子请求的两个状态标记 
+ //	     NGX_HTTP_SUBREQUEST_IN_MEMORY: 默认子请求的输出直接返回给客户端,
+ //										如果不想直接输出,可设置该标记
+ //		 
+ //		 NGX_HTTP_SUBREQUEST_WAITED: 子请求完成后会设置自己的r->done标记,通过它
+									 可判断子请求是否完成
+ //
+ ngx_int_t ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args,
+		       ngx_http_request_t **psr, ngx_http_post_subrequest_t *ps, ngx_uint_t flags)
+
+
+
+
+
