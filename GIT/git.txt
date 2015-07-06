@@ -99,3 +99,143 @@ $ git show :3:fileName
  //认为你已经修改冲突了。
 #半手工解决冲突
 $ git mergetool
+
+
+#config配置了本地git的一些信息
+ [user]
+	name = masf     //user.name = masf 
+	email = masf@jd.com 	//user/email = masf@jd.com
+ [core]
+	repositoryformatversion = 0
+
+ [remote "origin"] //远程版本库地址
+	url = http://[user]:[password]@source.cc.com/app/dynamic
+    // + 代表强制进行引用替换
+    // 冒号前面代表远程版本库的所有分支,冒号后面代表复制到本地的远程分支目录
+    // 当使用git fetch origin时,就代表使用了如下命令:
+	//   $git fetch origin +refs/heads/*:refs/remotes/origin/*
+    //   将远程版本库的所有分支复制为本地的远程分支
+	fetch = +refs/heads/*:refs/remotes/origin/*
+ [branch "master"] //本地版本库地址
+	remote = origin
+	merge = refs/heads/master 
+
+#~/.gitconfig 全局config配置文件
+ [user]
+	name = masf
+	email = masf@163.com	
+
+#对于http协议,如果要让git记住密码,可以如下设置
+ $git config --<global|system|local> credential.helper store [--file=git-credentials]
+ 
+ 如果是global那么会在 ~/.gitconfig 下添加如下内容
+	[credential]
+		helper = store
+ 这个配置会让所有的git版本库在首次输入密码的时候被记住,并放在--file指定的文件中，
+ 且该文件默认放在 ~/.git-credentials文件中,内容如下
+ 	http://<user>:<password>@jd.com
+	https://<user>:<password>@github.com
+ 
+#创建本地分支
+ $git branch	test_b
+ $git checkout	test_b
+
+ 等同如下命令
+ $git checkout -b test_b
+
+#查看本地分支
+ $git branch
+  * brand_b
+    brand_s
+    master
+
+ 本地分支保存在.git/refs/heads下
+
+#查看远程分支
+ $git branch -r
+   origin/HEAD -> origin/master
+   origin/brand_b
+   origin/master
+ 
+ 远程分支保存在.git/refs/remotes/origin下
+
+#创建远程分支
+ 如果从远程版本库拉回来的项目还没有分支,那么我们就可以创建一个远程分支,步骤如下:
+ 1.创建一个本地分支
+   $git brach test_b
+ 2.将本地分支推送到远程版本库
+   $git push origin test_b 
+
+#分支追踪
+ 当我们从远程版本库拉回来一个有很多分支的项目时,远程分支会放到.git/refs/remotes/origin下 
+ 为了可以在某一个远程分支上工作,我们需要基于该远程分支创建一个本地分支,对于1.6.6以上版本   
+
+	$git checkout brand_b  
+
+ 这个命令会创建一个本地分支brand_b,然后将其跟踪到远程分支.git/refs/remotes/origin/brand_b上
+ 这时候config文件会多出如下内容:
+
+	[branch "brand_b"]
+    remote = origin
+    merge = refs/heads/brand_b 
+ 
+ 如果本地已经存在一个叫brand_b的分支,可以用下面的命令创建远程分支的本地跟踪
+  
+    $git checkout -b brand_ss origin/brand_b
+
+ 改命令的意思是基于远程分支brand_b创建一个本地分支为brand_ss的跟踪。
+ 随后config文件会多出如下内容:
+	[branch "brand_ss"]
+	remote = origin
+	merge = refs/heads/brand_b
+
+#分支当前commit版本号存放地址
+ 所有分支的当前版本号都存在目录.git/refs/heads下
+	master   //保存主分支的commit版本号
+	test_b   //保存test_b分支的commit版本号 
+	test_a
+ 不管是本地分支还是远程分支,都放在该目录下,但是对于本地分支
+ config中没有描述信息
+  
+#添加远程版本库
+ $git remote add <origin> <url>
+ $git remote add ccc ddd
+
+ 添加后config文件增加内容如下
+ [remote "ccc"]
+    url = ddd 
+    fetch = +refs/heads/*:refs/remotes/ccc/*
+
+ 一般默认我们会有一个origin的
+ [remote "origin"]
+	url = http://sdfds.23.com
+	fetch = +refs/heads/*:refs/remotes/origin/*
+
+#删除远程版本库
+ $git remote rm <origin>
+
+#获取但不合并
+ $git fetch <origin>
+
+#获取并合并到本地分支
+ $git pull <origin>
+
+#推送到远程版本库
+ $git push <origin> [master]
+
+ //将本地分支推送到远程分支中
+ $git push origin brand_b:brand_b
+ //如果当前分支就是brand_b,并且brand_b就是远程分支的一个跟踪,那么
+ //如下命令同上
+ $git push 
+
+ //将本地分支直接推送到远程master中
+ $git push origin brand_b:master
+
+#忽略文件
+ 如果想忽略某些文件,可以编写以下文件
+ .git/info/exclude
+
+
+
+
