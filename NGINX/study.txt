@@ -2159,12 +2159,12 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 
 #子请求
  //子请求的回调数据结构
-   typedef struct {
-		//子请求处理完成后的回调函数
-		ngx_http_post_subrequest_pt		handler;
-		//传给上面回调函数的数据
-		void							*data;
-   }
+ typedef struct {
+	//子请求处理完成后的回调函数
+	ngx_http_post_subrequest_pt		handler;
+	//传给上面回调函数的数据
+	void							*data;
+ } ngx_http_post_subrequest_t;
 
  // 子请求处理完成后的回调函数
  // r: 返回的请求的数据结构
@@ -2176,7 +2176,7 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
  // r: 		当前请求
  // uri:	要进行子请求的uri
  // args:	进行子请求的参数
- // psr:	? 
+ // psr:	获得创建的子请求 
  // ps:		子请求的回调数据结构,可以为NULL
  // flags:  子请求的两个状态标记 
  //	     NGX_HTTP_SUBREQUEST_IN_MEMORY: 默认子请求的输出直接返回给客户端,
@@ -2188,7 +2188,12 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
  ngx_int_t ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args,
 		       ngx_http_request_t **psr, ngx_http_post_subrequest_t *ps, ngx_uint_t flags)
 
-
-
-
-
+ 子请求的执行步骤大概如下:
+ 1.创建相应的数据结构然后调用ngx_http_subrequest函数,该函数会把子请求添加到,当前请求的
+   postponed链表尾部和主请求的posted_requests链表尾部
+ 2.在每个请求的读写事件的handler中,当执行完请求的相关逻辑后会调用ngx_http_run_posted_requests
+   方法来执行子请求。比如主请求在走完一遍PHASE的时候会调用该方法。
+ 3.执行完子请求后就是要输出数据,数据的输出用的是ngx_http_postpone_filter和
+   ngx_http_finalize_request函数来实现的。 
+   ??? 后续查看ngx_http_postpone_filter方法是什么时候调用的
+	

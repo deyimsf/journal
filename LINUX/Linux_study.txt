@@ -1651,6 +1651,5 @@ $ iostat -xk
  监控nginx的所有系统调用,并输出到一个文件中
  $ strace -fF -o ~/aa.txt nginx_pid
   
-
-
-
+#ab 测试
+ ./ab -n 10 -c 10 -H "Accept-Encoding: gzip"  http://www.jd.com/
