@@ -205,19 +205,23 @@ typedef struct {
 
 //请求结构体 ngx_http_request_t
  struct ngx_http_request_s {
-	uint32_t			signature;
+	uint32_t							signature;
 
-	ngx_connection_t	*connection;
+	ngx_connection_t					*connection;
 	
-	void				**ctx;  //为每个模块保存自定义的ctx
-	void				**main_conf; //每个模块的main_conf结构体都放在这里
-	void				**srv_conf;
-	void				**loc_conf;
+	void								**ctx;  //为每个模块保存自定义的ctx
+	void								**main_conf; //每个模块的main_conf结构体都放在这里
+	void								**srv_conf;
+	void								**loc_conf;
 
-	ngx_http_request_t	*main;	//指向主请求,前提该请求是一个子请求
-	ngx_http_request_t	*parent; //指向该子请求的父请求
+	ngx_http_request_t					*main;	//指向主请求
+	ngx_http_request_t					*parent; //指向该子请求的父请求
+	ngx_http_postponed_request_t		*postponed; //指向直接子请求的链表
+	ngx_http_post_subrequest_t			*post_subrequest; //子请求的回调handler
+	ngx_http_posted_request_t			*posted_requests; //主请求的所有未执行的子请求
 	.........
 
+	unsigned            internal:1; //该请求是否可以访问internal类型的locaiton
 	ngx_int_t			phase_handler;  //当前请求执行到哪个阶段?
  };
 
@@ -377,15 +381,18 @@ struct ngx_output_chain_ctx_s {
  } ngx_hash_keys_arrays_t;
 
 //表示子请求本身的数据结构
+//该链表保存在主请求的posted_requests字段
  struct ngx_http_posted_request_s {
-	ngx_http_request_t				*request;
+	ngx_http_request_t				*request; //子请求
 	ngx_http_posted_request_t		*next;
  }
 
 //用来保存子请求结果的数据结构
+//每个请求都有的postponed链表
+//该链表保存了当前请求的,所有直接子请求,或者直接子请求产生的数据
  struct ngx_http_postponed_request_s {
-	ngx_http_request_t				*request;
-	ngx_chain_t						*out;  //结果数据
+	ngx_http_request_t				*request; //被回置为子请求本身
+	ngx_chain_t						*out;  //结果数据? 谁的数据,当前请求本身的还是*request的
 	ngx_http_postponed_request_t	*next;
  }
 
@@ -400,4 +407,20 @@ struct ngx_output_chain_ctx_s {
 // 子请求处理完成后的回调函数
  typedef ngx_int_t	(*ngx_http_post_subrequest_pt)(ngx_http_request_t *r, void *data, ngx_int_t rc);
 
-
+// 链接
+ struct ngx_connection_s {
+	// data字段保存的是当前可以向客户端发送数据的(主|子)请求
+	// 具体保存的是哪个结构？ngx_http_request_t
+	void				*data;
+	ngx_event_t			*read;
+	ngx_event_t			*write;
+	
+	ngx_socket_t		fd;
+	
+	ngx_recv_pt			recv;
+	ngx_send_pt			send;
+	ngx_recv_chain_pt	recv_chain;
+	ngx_send_chain_pt	send_chain;
+	
+	.......
+ }
