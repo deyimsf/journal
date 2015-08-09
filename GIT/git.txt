@@ -126,6 +126,7 @@ $ git mergetool
 	fetch = +refs/heads/*:refs/remotes/origin/*
  [branch "master"] //本地版本库地址
 	remote = origin
+	// 把从远程版本库拉取下来的master合并到本地的refs/heads/master分支中
 	merge = refs/heads/master 
 
 #~/.gitconfig 全局config配置文件
@@ -194,7 +195,7 @@ $ git mergetool
   
     $git checkout -b brand_ss origin/brand_b
 
- 改命令的意思是基于远程分支brand_b创建一个本地分支为brand_ss的跟踪。
+ 该命令的意思是基于远程分支brand_b创建一个本地分支为brand_ss的跟踪。
  随后config文件会多出如下内容:
 	[branch "brand_ss"]
 	remote = origin
@@ -237,7 +238,7 @@ $ git mergetool
  //将本地分支推送到远程分支中
  $git push origin brand_b:brand_b
  //如果当前分支就是brand_b,并且brand_b就是远程分支的一个跟踪,那么
- //如下命令同上
+ //如下命令同上?
  $git push 
 
  //将本地分支直接推送到远程master中

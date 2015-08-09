@@ -1,0 +1,22 @@
+ngx_http_hello_handler
+ngx_http_subrequest_body_filter
+
+/export/App/d.360buy.com/WEB-INF/classes/lua/get.properties
+
+
+p	*r->main->posted_requests->request
+
+p *r->postponed->next->out
+
+
+p *r->main->postponed->next->out->buf
+p *r->postponed->next->out->buf
+
+p ph[r->phase_handler]
+
+
+ngx_http_core_run_phases
+ngx_http_core_find_config_phase
+ngx_http_core_find_location
+	子请求在这方法后看p *r->main->postponed->next->out->buf
+   会有乱码

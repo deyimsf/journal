@@ -203,7 +203,7 @@ ngx_http_subrequest_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 	rc = ngx_http_next_body_filter(r,in);
 
 	// 如果输出发生错误或者当前还没有最后一个buf,则直接返回rc
-	if (rc == NGX_ERROR || !last) {
+	if (rc == NGX_ERROR || !last || conf->sub_after.len == 0) {
 		return rc;	
 	}
 	
@@ -212,6 +212,8 @@ ngx_http_subrequest_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 		return NGX_ERROR;	
 	}	
 		
+	ngx_http_set_ctx(r,NULL,ngx_http_subrequest_filter_module);
+
 	return rc;
 }
 

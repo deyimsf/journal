@@ -424,3 +424,20 @@ struct ngx_output_chain_ctx_s {
 	
 	.......
  }
+
+// 缓存结构
+ struct ngx_buf_s {
+	u_char		*pos;
+	u_char		*last;
+
+	
+	unsigned	memory:1;
+	
+	unsigned	last_buf:1;
+	unsigned	last_in_chain:1;
+
+	unsigned	last_shadow:1;
+	unsigned	temp_file:1;
+	
+	int			num;
+ }

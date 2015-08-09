@@ -135,8 +135,7 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	ngx_http_hello_loc_conf_t *my_conf;
 
 	//存放从my_conf中都到的信息
-    //u_char* tmp_buf = ngx_pcalloc(r->pool, my_conf->hello_string.len + 16);// [1024] = {0};
-	u_char tmp_buf[1024] = {0};
+    u_char* tmp_buf = ngx_pcalloc(r->pool, my_conf->hello_string.len + 1);// [1024] = {0};
 	ngx_uint_t content_length = 0;
 
 	//取出我们的指令配置信息
