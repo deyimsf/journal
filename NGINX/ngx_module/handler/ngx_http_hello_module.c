@@ -15,6 +15,7 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r);
 typedef struct{ 
 	ngx_str_t hello_string;
 	ngx_str_t hello_test;
+	ngx_int_t index;
 } ngx_http_hello_loc_conf_t;
 
 //模块的指令信息
@@ -124,6 +125,18 @@ static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf
     char *rv = ngx_conf_set_str_slot(cf,cmd,loc_conf);
 	//ngx_str_set(conf->hello_string,"mashunfeng");
 	
+
+	//检查是否有变量
+	ngx_str_t t = loc_conf->hello_string;
+	if (t.data[0] == '$') {
+		t.data++;
+		t.len--;
+	
+		//索引这个变量,并将其保存到loc_conf中
+		ngx_uint_t index = ngx_http_get_variable_index(cf,&t);	
+		loc_conf->index = index;
+	}
+
 	return NGX_CONF_OK;
 }
 
@@ -135,7 +148,6 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	ngx_http_hello_loc_conf_t *my_conf;
 
 	//存放从my_conf中都到的信息
-    u_char* tmp_buf = ngx_pcalloc(r->pool, my_conf->hello_string.len + 1);// [1024] = {0};
 	ngx_uint_t content_length = 0;
 
 	//取出我们的指令配置信息
@@ -145,8 +157,28 @@ static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r){
 	   return NGX_DECLINED;
     }
 
+	//如果hello_string指令参数是变量
+	ngx_str_t t = my_conf->hello_string;
+	if(t.data[0] == '$'){
+		t.data++;
+		t.len--;
+	
+		ngx_http_variable_value_t *value;
+		/*如果变量无法索引,可以用下面这种方式获取变量
+		  ngx_uint_t hash;
+		  hash = ngx_hash_strlow(t.data,t.data,t.len);
+		  value = ngx_http_get_variable(r,&t,hash);
+		*/
+		value = ngx_http_get_indexed_variable(r,my_conf->index);
+			
+		t.data = value->data;
+		t.len = value->len;
+	}
+
 	//将数据读入到临时buf中
-	ngx_sprintf(tmp_buf,"%s Hi ",my_conf->hello_string.data);
+	u_char* tmp_buf = ngx_pcalloc(r->pool, my_conf->hello_string.len + 1);// [1024] = {0};
+	ngx_sprintf(tmp_buf,"%s",t.data);
+	
 	content_length = ngx_strlen(tmp_buf); 
     //如果我们不需要请求体,那就把它抛弃
 	rc = ngx_http_discard_request_body(r);

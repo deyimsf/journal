@@ -214,6 +214,8 @@ typedef struct {
 	void								**srv_conf;
 	void								**loc_conf;
 
+	ngx_http_upstream_t					*upstream; //如果字段不为空,则该请求的响应数据来自上游(upstream)
+
 	ngx_http_request_t					*main;	//指向主请求
 	ngx_http_request_t					*parent; //指向该子请求的父请求
 	ngx_http_postponed_request_t		*postponed; //指向直接子请求的链表
@@ -440,4 +442,60 @@ struct ngx_output_chain_ctx_s {
 	unsigned	temp_file:1;
 	
 	int			num;
+ }
+
+
+// upstream结构体
+ struct ngx_http_upstream_s {
+	ngx_http_upstream_handler_pt	read_event_handler;
+	ngx_http_upstream_handler_pt	write_event_handler;
+
+	ngx_peer_connection_t			peer;
+
+	ngx_event_pipe_t				*pipe;
+									//给upstream发送的请求数据
+	ngx_chain_t						*request_bufs;
+
+	ngx_output_chain_ctx_t			output;
+	ngx_chain_writer_ctx_t			writer;
+	
+	ngx_http_upstream_conf_t		*conf;
+
+
+
+	void							*input_filter_ctx;	
+
+	ngx_buf_t						buffer;  //upstream从后端接收到的数据
+	off_t							length;
+
+	ngx_chain_t						*out_bufs; //最终要输出的数据会有buffer组成chain输出?
+	ngx_chain_t						*busy_bufs;
+	ngx_chain_t						*free_bufs;
+
+if (NGX_HTTP_CACHE)
+	ngx_int_t						(*create_key)(ngx_http_request_t *r);
+endif	
+									// 生成发送到后端服务器的请求数据,并将数据以链的形式
+									// 放入request_bufs字段中
+	ngx_int_t						(*create_request)(ngx_http_request_t *r);
+									// 当某台服务器出错时,nginx会尝试另一台后端服务器。
+									// 选定新的服务器以后,会先调用此函数,重新初始化upstream模块
+									// 的工作状态,然后重连其他服务器
+	ngx_int_t						(*reinit_request)(ngx_http_request_t *r);
+									//处理后端服务器返回的信息头。这个所谓的头部是链接后端服务时
+									//通信协议规定的,如果是http协议则header部分就是响应行和响应头
+	ngx_int_t						(*process_header)(ngx_http_request_t *r);
+									//客户端放弃请求时被调用。
+	void							(*abort_request)(ngx_http_request_t *r);
+									//正常完成与后端服务器的请求后调用该函数
+	void							(*finalize_request)(ngx_http_request_t *r, ngx_int_t rc);:w
+									
+									//初始化input_filter的上下文,默认直接返回
+	ngx_int_t						(*input_filter_init)(void *data);
+									//处理后端服务器返回的响应正文。
+									//nginx默认将接收到的内容封装成缓冲链ngx_chain。
+									//该链由upstream的out_bufs字段指定,
+	ngx_int_t						(*input_filter)(void *data, ssize_t bytes);
+
+
  }
