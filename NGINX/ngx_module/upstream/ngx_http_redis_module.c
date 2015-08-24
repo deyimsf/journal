@@ -19,7 +19,9 @@ typedef struct {
 
 //redis模块自定义结构
 typedef struct {
-
+	//input_filter方法没有传入request参数,所以我们可以将
+	//request放入定义上下文中,以便后续使用
+	ngx_http_request_t			*request;
 } ngx_http_redis_ctx_t;
 
 //upstream模块的一些回调函数
@@ -183,9 +185,167 @@ ngx_http_redis_handler(ngx_http_request_t *r)
 	u->conf = &mlcf->upstream_conf; //应该就是upstream的一些配置信息
 
 	//4.设置回调函数
-	//TODO 明天搞
-
+	u->create_request = ngx_http_redis_create_request;
+	u->reinit_request = ngx_http_redis_reinit_request;
+	u->process_header = ngx_http_redis_process_header;
+	u->abort_request = ngx_http_redis_abort_request;
+	u->finalize_request = ngx_http_redis_finalize_request;
+	u->input_filter_init = ngx_http_redis_filter_init;
+	u->input_filter = ngx_http_redis_filter;
 	
+	//5.创建upstream环境数据结构,自定义上下文
+ 	ctx = ngx_palloc(r->pool, sizeof(ngx_http_redis_ctx_t));
+	if (ctx == NULL) {
+		return NGX_HTTP_INTERNAL_SERVER_ERROR;
+	}	
+	
+	ctx->request = r; //把当前请求放入到自定义上下文中
+	
+	ngx_http_set_ctx(r, ctx, ngx_http_redis_module);
+
+	u->input_filter_ctx = ctx;//调用input_filter时入参*data值为ctx
+
+	//6.完成初始化并进行收尾工作
+	r->main->count++;
+	ngx_http_upstream_init(r);
+	
+	return NGX_DONE;
+}
+
+//创建并发送请求
+static ngx_int_t
+ngx_http_redis_create_request(ngx_http_request_t *r)
+{
+	size_t							len;
+	ngx_buf_t						*b;
+	ngx_chain_t						*cl;
+	ngx_http_variable_value_t		*vv; //变量值
+	ngx_http_redis_loc_conf_t		*mlcf;
+
+	//1.获取变量值
+	mlcf = ngx_http_get_module_loc_conf(r, ngx_http_redis_module);
+	vv = ngx_http_get_indexed_variable(r, mlcf->index);
+
+	if (vv == NULL || vv->not_found || vv->len == 0) {
+		ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, 
+						"the \"$redis_get\" variable is not set");
+		return NGX_ERROR;
+	}
+	
+	//2.创建存放请求命令的buf
+	len = sizeof("get ") - 1 + vv->len + sizeof(CRLF) - 1;
+	b = ngx_create_temp_buf(r->pool, len);
+	if (b == NULL) {
+		return NGX_ERROR;
+	}
+
+	//3.创建存放命令buf的chain
+	cl = ngx_alloc_chain_link(r->pool);
+	if (cl == NULL) {
+		return NGX_ERROR;
+	}	
+
+	cl->buf = b;
+	cl->next = NULL;
+	
+    //请求数据封装成chain赋值给upstream
+	r->upstream->request_bufs = cl;
+
+	//4.赋值
+	u_char *tmp_buf = ngx_pcalloc(r->pool, len);
+	ngx_sprintf(tmp_buf,"%s%s%s","get ",vv.data,CRLF);
+
+	b->pos = tmp_buf;
+	b->last = tmp_buf+len;
+
+	return NGX_OK;
+}
+
+
+//某个后端服务失败后要做的事
+static ngx_int_t
+ngx_http_redis_reinit_request(ngx_http_request_t *r)
+{
+	return NGX_OK;
+}
+
+//客户端放弃请求时调用? 什么叫放弃?
+static void
+ngx_http_redis_abort_request(ngx_http_request_t *r)
+{
+	ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+					"abort http redis request");
+	return;	
+}
+
+//正常完成与后端服务器请求后调用该函数
+static void
+ngx_http_redis_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
+{
+	ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connetion->log, 0,
+					"finalize http redis request");
+
+	return;
+}
+
+//处理协议头
+//如果协议头数据未完全返回,可以让该方法放回NGX_AGAIN
+//当链路有数据时会重新调用该方法
+static ngx_int_t
+ngx_http_redis_process_header(ngx_http_request_t *r)
+{
+	ngx_http_upstream_t				*u;
+
+	u = r->upstream;
+
+	//在未解析完协议头之前,upstream返回的数据都会在u->buffer这一块缓存中
+   
+	//
+	//r->headers_out.content_length_n = ?
+	u->headers_in.status_n = 200; //?
+	u->state->status = 200;
+	
+	//我们不处理协议头,直接返回
+	return NGX_OK; 	
+}
+
+//处理服务器返回的响应正文
+//data 存放在ngx_http_set_ctx(r,ctx,ngx_http_[name]_module)中的ctx
+//bytes ??
+//?会多次进来吗
+static ngx_int_t
+ngx_http_redis_filter(void *data, ssize_t bytes)
+{
+	/*
+	ngx_http_redist_ctx_t	*ctx = data;
+	
+	u_char					*last;
+	ngx_buf_t				*b;
+	ngx_http_upstream_t 	*u;
+
+	u = ctx->request->upstream;
+	b = &u->buffer;
+	*/
+
+	//最终是把接收到的数据组成chain追加到u->out_bufs中
+
+	return NGX_OK;	
+}
+
+//初始化input_filter
+static ngx_int_t
+ngx_http_redis_filter_init(void *data)
+{
+	ngx_http_redis_ctx_t		*ctx = data;
+	
+	ngx_http_upstream_t			*u;
+
+	u = ctx->request->upstream;
+
+	//TODO设置一些值
+	u->length = u->length;
+
+	return NGX_OK;
 }
 
 

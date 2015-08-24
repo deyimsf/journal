@@ -488,7 +488,7 @@ endif
 									//客户端放弃请求时被调用。
 	void							(*abort_request)(ngx_http_request_t *r);
 									//正常完成与后端服务器的请求后调用该函数
-	void							(*finalize_request)(ngx_http_request_t *r, ngx_int_t rc);:w
+	void							(*finalize_request)(ngx_http_request_t *r, ngx_int_t rc);
 									
 									//初始化input_filter的上下文,默认直接返回
 	ngx_int_t						(*input_filter_init)(void *data);
