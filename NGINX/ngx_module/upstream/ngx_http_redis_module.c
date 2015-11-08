@@ -14,7 +14,7 @@
 //loc_conf数据结构
 typedef struct {
 	ngx_http_upstream_conf_t	upstream_conf; //必须有一个?
-	ngx_int_t					index; //用来存放redis key
+	ngx_int_t			index; //用来存放redis key
 } ngx_http_redis_loc_conf_t;
 
 //redis模块自定义结构
@@ -48,7 +48,7 @@ static ngx_int_t ngx_http_redis_handler(ngx_http_request_t *r);
 
 //模块的命令
 static ngx_command_t ngx_http_redis_commands[] = {
-	{ ngx_string("redis_pass");
+	{ ngx_string("redis_pass"),
 	  NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
 	  ngx_http_redis_pass,
 	  NGX_HTTP_LOC_CONF_OFFSET,
@@ -74,7 +74,7 @@ static ngx_http_module_t ngx_http_redis_module_ctx = {
 };
 
 //模块定义
-ngx_module_t  ngx_http_memcached_module = { 
+ngx_module_t  ngx_http_redis_module = { 
     NGX_MODULE_V1,
     &ngx_http_redis_module_ctx,        	   /* module context */
     ngx_http_redis_commands,           	   /* module directives */
@@ -98,6 +98,30 @@ static void *ngx_http_redis_create_loc_conf(ngx_conf_t *cf){
 		return NULL;
 	}
 
+	//初始化upstream的一些变量
+
+	conf->upstream_conf.local = NGX_CONF_UNSET_PTR;
+    conf->upstream_conf.next_upstream_tries = NGX_CONF_UNSET_UINT;
+   	conf->upstream_conf.connect_timeout = NGX_CONF_UNSET_MSEC;
+    conf->upstream_conf.send_timeout = NGX_CONF_UNSET_MSEC;
+   	conf->upstream_conf.read_timeout = NGX_CONF_UNSET_MSEC;
+    conf->upstream_conf.next_upstream_timeout = NGX_CONF_UNSET_MSEC;
+
+    	/* the hardcoded values */
+    	/*conf->upstream_conf.cyclic_temp_file = 0;
+    	conf->upstream_conf.buffering = 0;
+    	conf->upstream_conf.ignore_client_abort = 0;
+    	conf->upstream_conf.send_lowat = 0;
+    	conf->upstream_conf.bufs.num = 0;
+    	conf->upstream_conf.busy_buffers_size = 0;
+    	conf->upstream_conf.max_temp_file_size = 0;
+    	conf->upstream_conf.temp_file_write_size = 0;
+    	conf->upstream_conf.intercept_errors = 1;
+    	conf->upstream_conf.intercept_404 = 1;
+    	conf->upstream_conf.pass_request_headers = 0;
+    	conf->upstream_conf.pass_request_body = 0;
+	*/
+
 	return conf;
 }
 
@@ -108,7 +132,24 @@ ngx_http_redis_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 	ngx_http_redis_loc_conf_t *prev = parent;
 	ngx_http_redis_loc_conf_t *conf = child;
 
-	//TODO
+	ngx_conf_merge_ptr_value(conf->upstream_conf.local,
+                              prev->upstream_conf.local, NULL);
+
+   	ngx_conf_merge_uint_value(conf->upstream_conf.next_upstream_tries,
+                              prev->upstream_conf.next_upstream_tries, 0); 
+
+	ngx_conf_merge_msec_value(conf->upstream_conf.connect_timeout,
+                              prev->upstream_conf.connect_timeout, 60000);
+
+	ngx_conf_merge_msec_value(conf->upstream_conf.send_timeout,
+                              prev->upstream_conf.send_timeout, 60000);
+
+  	ngx_conf_merge_msec_value(conf->upstream_conf.read_timeout,
+                              prev->upstream_conf.read_timeout, 60000);
+
+   	ngx_conf_merge_msec_value(conf->upstream_conf.next_upstream_timeout,
+   	                           prev->upstream_conf.next_upstream_timeout, 0); 
+
 	
 	return NGX_CONF_OK;
 }
@@ -136,7 +177,7 @@ ngx_http_redis_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 	
 	// 赋值
 	u.url = value[1]; //将redis_pass的第一个参数赋值给u.url
-	u.no_resolve = 1; //?
+	u.no_resolve = 1; //
 
 	// 创建upstream吗?????
 	mlcf->upstream_conf.upstream = ngx_http_upstream_add(cf, &u, 0);
@@ -150,7 +191,8 @@ ngx_http_redis_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 	clcf->handler = ngx_http_redis_handler;
 
 	// 获取redis_get变量的索引并保存
-	mlcf->index = ngx_http_get_variable_index(cf, &ngx_http__key);
+	ngx_str_t ngx_http_redis_get = ngx_string("redis_get");
+	mlcf->index = ngx_http_get_variable_index(cf, &ngx_http_redis_get);
 	
 	if (mlcf->index == NGX_ERROR){
 		return NGX_CONF_ERROR;
@@ -163,21 +205,21 @@ ngx_http_redis_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 static ngx_int_t
 ngx_http_redis_handler(ngx_http_request_t *r)
 {
-	ngx_int_t						 rc;
-	ngx_http_upstream_t				*u
+	//ngx_int_t				rc;
+	ngx_http_upstream_t			*u;
 	ngx_http_redis_ctx_t			*ctx;
 	ngx_http_redis_loc_conf_t		*mlcf;
 
 	//TODO 做一些方法合法性的判断,比如支持NGX_HTTP_GET操作
 	
-	//1.创建upstream数据结构
+	//1.创建upstream,之后r->upstream就不是NULL了
 	if(ngx_http_upstream_create(r) != NGX_OK){
 		return NGX_HTTP_INTERNAL_SERVER_ERROR;	
 	}
 
 	//2.设置模块的tag和schema。 ?有啥用?
 	u = r->upstream; //步骤1中创建的结构. ?loc_conf中的upstream_conf是干什么的?	
-    ngx_str_set($u->schema,"redis://");	
+    	ngx_str_set(&u->schema,"redis://");	
 	u->output.tag = (ngx_buf_tag_t)&ngx_http_redis_module;
 
 	//3.设置upstream的后端服务器列表结构?
@@ -252,8 +294,20 @@ ngx_http_redis_create_request(ngx_http_request_t *r)
 	r->upstream->request_bufs = cl;
 
 	//4.赋值
-	u_char *tmp_buf = ngx_pcalloc(r->pool, len);
-	ngx_sprintf(tmp_buf,"%s%s%s","get ",vv.data,CRLF);
+	u_char *tmp_buf = ngx_pcalloc(r->pool, len+1);
+        /*u_char *tmp = tmp_buf;
+	*tmp++ = 'g';
+	*tmp++ = 'e';
+	*tmp++ = 't';
+	*tmp++ = ' ';
+	*tmp++ = 'n';
+	*tmp++ = 'a';
+	*tmp++ = 'm';
+	*tmp++ = 'e';
+	*tmp++ = '\r';
+	*tmp++ = '\n';
+	*/
+	ngx_sprintf(tmp_buf,"%s%s\r\n","get ",vv->data);
 
 	b->pos = tmp_buf;
 	b->last = tmp_buf+len;
@@ -273,7 +327,7 @@ ngx_http_redis_reinit_request(ngx_http_request_t *r)
 static void
 ngx_http_redis_abort_request(ngx_http_request_t *r)
 {
-	ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+	ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
 					"abort http redis request");
 	return;	
 }
@@ -282,7 +336,7 @@ ngx_http_redis_abort_request(ngx_http_request_t *r)
 static void
 ngx_http_redis_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 {
-	ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connetion->log, 0,
+	ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
 					"finalize http redis request");
 
 	return;
@@ -301,7 +355,7 @@ ngx_http_redis_process_header(ngx_http_request_t *r)
 	//在未解析完协议头之前,upstream返回的数据都会在u->buffer这一块缓存中
    
 	//
-	//r->headers_out.content_length_n = ?
+	r->headers_out.content_length_n = 2;
 	u->headers_in.status_n = 200; //?
 	u->state->status = 200;
 	
@@ -337,13 +391,12 @@ static ngx_int_t
 ngx_http_redis_filter_init(void *data)
 {
 	ngx_http_redis_ctx_t		*ctx = data;
-	
 	ngx_http_upstream_t			*u;
 
 	u = ctx->request->upstream;
 
 	//TODO设置一些值
-	u->length = u->length;
+	//u->length = u->length;
 
 	return NGX_OK;
 }

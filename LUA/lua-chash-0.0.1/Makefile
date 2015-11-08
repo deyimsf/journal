@@ -5,7 +5,7 @@ CFLAGS			=		-O3 -Wall -pedantic -DNDEBUG
 CHASH_CFLAGS	=		-fpic -g
 CHASH_LDFLAGS	=		-shared
 #MacOs
-#CHASH_LDFLAGS	=		-bundle -undefined dynamic_lookup
+CHASH_LDFLAGS	=		-bundle -undefined dynamic_lookup
 
 LUA_INCLUDE_DIR	=		$(PREFIX)/luajit/include/luajit-2.1
 

@@ -461,7 +461,11 @@ struct ngx_output_chain_ctx_s {
 	
 	ngx_http_upstream_conf_t		*conf;
 
+	ngx_http_upstream_headers_in_t  headers_in;
+	
+	ngx_http_upstream_resolved_t	*resolved;
 
+	ngx_buf_t						from_client;
 
 	void							*input_filter_ctx;	
 
