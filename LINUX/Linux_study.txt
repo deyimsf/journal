@@ -1657,3 +1657,48 @@ $ iostat -xk
   
 #ab 测试
  ./ab -n 10 -c 10 -H "Accept-Encoding: gzip"  http://www.jd.com/
+ 
+ 
+#补丁patch用法
+#使用diff产生patch补丁包
+ diff [option] 旧文件(夹)  改动过的文件(夹)
+ -r 递归选项，比较文件夹时使用
+ -N 是否比较两者不存在的文件，加上这个选项在打补丁的时候回自动创建和删除文件
+ -u 用统一格式创建补丁
+ -w 忽略对空格的比较
+ -B 忽略对空行的比较
+ 
+ 例如对两个目录(p1,p2)进行比较，生成p1目录的补丁包
+ diff -ruN p1 p2 > p1.patch
+ 
+#使用patch打补丁
+ patch [option] [源文件 [补丁文件]]
+ 假设木补丁文件内容如下:
+	 --- old/test.txt     -----
+	 +++ new/test.txt     -----
+ -p0 从当前目录下朝找old目录下的test.txt
+ -p1 从当前目录下朝找test文件，这里忽略了old文件夹
+ -E  如果有空文件，那么久删除它
+ -R  把补丁文件中的 “新 旧”改变调换过来，相当于用旧的给新的到补丁，恢复成老版本
+ 
+#补丁举例
+ p1
+ --- test0
+ --- test1
+ 
+ p2
+ --- test0 
+ 
+ 两个目录p1和p2,我们为p1打补丁
+ diff -ru p1 p2 >p1.patch   //这里没有用-N参数，表示我们不想比较两者中不存在的文件
+ 
+ 为p1打补丁，首先进入p1目录
+ patch -p1 <p1.patch       
+ 执行完后p2/test0中的内容就会更新到p1/test0中，并且p1/test1也不会被删除,如果diff是加上-N那么p1/test1就会被删除
+ 
+ 
+ 
+ 
+ 
+ 
+ 
