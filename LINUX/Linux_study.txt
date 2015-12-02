@@ -1346,6 +1346,15 @@ $ iostat -xk
  $ vagrant box list     //查看当前安装的box
  $ vagrant box remove   //删除一个box
 
+#打包一个box
+ #两种方式,一种是在任意目录输入如下命令
+ $ vagrant package --base [NAME] --output my.box
+ [NAME]: virtualbox的名字或uuid(可以通过vboxmanage list vms获取)
+
+ #另一种,进入init virtualbox是的目录,然后执行该命令
+ $ cd /My/work/virtualbox/
+ $ vagrant package --output my.box
+
 #在本机直接用ssh登陆vagrant
  $ssh vagrant@localhost -p 2222  
  因为本地做了一个2222到22的映射所以可以,和使用vagrant ssh <ID>一样
