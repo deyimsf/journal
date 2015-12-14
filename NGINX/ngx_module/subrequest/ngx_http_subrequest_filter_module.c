@@ -4,7 +4,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-static ngx_int_t ngx_http_subrequest_init(ngx_conf_t *cf);
+static ngx_int_t ngx_http_add_hello_init(ngx_conf_t *cf);
 static void *ngx_http_subrequest_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_subrequest_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static ngx_int_t ngx_http_subrequest_header_filter(ngx_http_request_t *r);
@@ -34,7 +34,7 @@ static ngx_command_t ngx_http_subrequest_commands[]={
 	  NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
 	  ngx_conf_set_str_slot,
 	  NGX_HTTP_LOC_CONF_OFFSET,
-	  offsetof(ngx_http_subrequest_loc_conf,sub_after),
+	  offsetof(ngx_http_subrequest_loc_conf_t,sub_after),
 	  NULL
 	},
 
@@ -44,7 +44,7 @@ static ngx_command_t ngx_http_subrequest_commands[]={
 //上下文
 static ngx_http_module_t ngx_http_subrequest_filter_module_ctx={
 	NULL,
-	ngx_http_subrequest_init,
+	ngx_http_add_hello_init,
 
 	NULL,
 	NULL,

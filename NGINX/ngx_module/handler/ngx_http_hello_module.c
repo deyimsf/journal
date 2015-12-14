@@ -6,7 +6,7 @@
 
 static ngx_int_t ngx_http_hello_init(ngx_conf_t *cf);
 static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf);
-static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
+//static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
 static ngx_int_t ngx_http_hello_handler(ngx_http_request_t *r);
 
@@ -57,13 +57,13 @@ ngx_module_t ngx_http_hello_module = {
 	&ngx_http_hello_module_ctx,	/*模块上下文结构,可使用里面的一些函数*/
 	ngx_http_hello_commands,	/*模块定义的指令*/
 	NGX_HTTP_MODULE,		/*module type*/
-	NULL,				/*init master*/ master进程初始化时执行
-	NULL,				/*init module*/ master进程解析配置以后,初始化模块时调用一次
-	NULL,				/*init process*/worker进程初始化时调用一次
-	NULL,				/*init thread*/ 多线程时,线程初始化时调用,Linux下未使用
-	NULL,				/*exit thread*/ 多线程退出是调用一次
-	NULL,				/*exit process*/worker进程退出时调用一次
-	NULL,				/*exit master*/ master进程退出时调用一次
+	NULL,				/*init master  master进程初始化时执行*/
+	NULL,				/*init module  master进程解析配置以后,初始化模块时调用一次*/
+	NULL,				/*init process worker进程初始化时调用一次*/
+	NULL,				/*init thread  多线程时,线程初始化时调用,Linux下未使用*/
+	NULL,				/*exit thread  多线程退出是调用一次*/
+	NULL,				/*exit process worker进程退出时调用一次*/
+	NULL,				/*exit master  master进程退出时调用一次*/
 	NGX_MODULE_V1_PADDING
 };
 
@@ -106,7 +106,7 @@ static void *ngx_http_hello_create_loc_conf(ngx_conf_t *cf){
 }
 
 // 合并loc域的配置信息
-static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child){
+/*static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child){
 
 	ngx_http_hello_loc_conf_t *prev = parent;
 	ngx_http_hello_loc_conf_t *conf = child;
@@ -114,7 +114,7 @@ static char *ngx_http_hello_merge_loc_conf(ngx_conf_t *cf, void *parent, void *c
 	ngx_conf_merge_str_value(conf->hello_string,prev->hello_string,"defalut");	
 
 	return NGX_CONF_OK;
-}
+}*/
 
 //处理解析到的指令
 static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
@@ -122,7 +122,7 @@ static char * ngx_http_hello_string(ngx_conf_t *cf,ngx_command_t *cmd,void *conf
 	loc_conf = (ngx_http_hello_loc_conf_t *)conf;
 
 	//赋值解析到的值
-    char *rv = ngx_conf_set_str_slot(cf,cmd,loc_conf);
+        ngx_conf_set_str_slot(cf,cmd,loc_conf);
 	//ngx_str_set(conf->hello_string,"mashunfeng");
 	
 
