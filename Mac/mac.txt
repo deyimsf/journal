@@ -3,3 +3,7 @@
 
 #JDK安装目录
  /Library/Java/JavaVirtualMachines/1.6.0_41-b02-445.jdk/Contents/Home
+
+#Mac中idea运行tomcat控制台乱码问题
+ 默认tomcat获取file.encoding是拿的Mac本地的编码,是EUC_CN;
+ 需要在idea中配置tomcat的面板中,在VM options中设置 -Dfile.encoding=UTF-8

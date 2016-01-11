@@ -297,7 +297,7 @@ Nginx允许你定义location区段，通过指定的模式与客户端请求的U
 	location /sub2 {
 		echo   "sub2[$args]";
 	}
- 访问/main?c=3,则会串行执行并输出,不管对错。
+ 访问/main?c=3,则会串行输出,不管对错。
    	main[c=3]
 	sub1[]
     sub2[a=1&b=3]

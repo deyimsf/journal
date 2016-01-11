@@ -1719,10 +1719,14 @@ $ iostat -xk
  4.将公钥追加到目标机器的~/.ssh/authorized_keys文件中
    cat abc.pub >> ~/.ssh/authorized_keys
 
- 5.确保authorized_keys文件的权限只有用户自己可读写(600)
+ 5.确保authorized_keys文件的权限只有用户自己可读写(600) ?不是必须吧
    chmod 600 authorized_keys
 
+ 6.去掉目标主机的/etc/ssh/sshd_config文件中下面几行注释
+   RSAAuthentication yes
+   PubkeyAuthentication yes
+   AuthorizedKeysFile .ssh/aduthorized_keys 
  
- 
- 
+ 7.重启ssh
+   /etc/init.d/sshd restart 
  
