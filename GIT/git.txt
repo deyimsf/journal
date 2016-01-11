@@ -251,6 +251,10 @@ $ git mergetool
  如果想忽略某些文件,可以编写以下文件
  .git/info/exclude
 
+#撤销某个文件的add操作
+ git reset HEAD /path/filename
 
+#撤销某个文件在add操作之前的操作
+ git checkout /path/fielname
 
 
