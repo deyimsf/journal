@@ -16,12 +16,22 @@
 
 
   2.另一种挂载方式,按需挂载
-    ngx_http_core_locl_conf_t clcf;
+    ngx_http_core_loc_conf_t clcf;
 	clcf = ngx_http_conf_get_module_loc_conf(cf,ngx_http_core_module);
     clcf->handler = ngx_http_hello_handler;
 
     ?疑问，为什么这种方式在postconfiguration方法中挂载不上，好像只能在具体的指令
     处理函数中才能挂载上.
+    回答:
+	首先,这种方式挂载的指令只有出现在location{}块才会起作用
+	如果某个指令是用这种方式挂载的,那么指令只有出现在location{}块才有意义
+	出现在http{}和server{}块是没有意义的,因为这种方式只有匹配到某个具体的location后才会去
+	回调该location{}块所属的ngx_http_core_loc_conf_t结构体的handler方法
+
+	最后，只有在解析到某个location下的hello_string指令后，才会拿到属于该location{}块
+	的ngx_http_core_loc_conf_t结构体
+ 
+
     另外((ngx_http_conf_ctx_t *) cf->ctx)->loc_conf 变量在http{} server{} locaiton{} 
     和指令的处理函数中不一样
 

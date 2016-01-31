@@ -1907,7 +1907,6 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 	void		**loc_conf;		
  } ngx_http_conf_ctx_t;
 
- //?为没一个其他模块生成一个,还是始终只有一份
  struct ngx_http_core_loc_conf_s {
 	ngx_str_t		name;   //location name
 	.......
