@@ -179,7 +179,8 @@ ngx_http_redis_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 	u.url = value[1]; //将redis_pass的第一个参数赋值给u.url
 	u.no_resolve = 1; //
 
-	// 创建upstream吗?????
+	// upstream_conf.upsteam用来定义上游服务器的配置
+	// 只有当ngx_http_upstream_t->ressolved为null时,该结构体才会生效
 	mlcf->upstream_conf.upstream = ngx_http_upstream_add(cf, &u, 0);
 	if (mlcf->upstream_conf.upstream == NULL) {
 		return NGX_CONF_ERROR;

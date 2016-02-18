@@ -40,7 +40,10 @@
  (gdb) break [file:]函数名|行号
 
 #查看断点
- (gdb) b|break
+ (gdb) info b|break
+
+#删除断点
+ (gdb) delete 5 | 5-10
 
 #开始运行程序
  (gdb) run 	//这个时候会程序会停止在断点处
