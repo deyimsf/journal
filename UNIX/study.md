@@ -23,3 +23,17 @@ sys是curl调用内核函数执行的时间。
 sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时间)。
 
 
+#文件I/O
+这里介绍的I/O被称为不带缓冲的I/O(unbuffered I/O)。
+这些I/O函数不是ISO C的组成部分,是POSIX.1和Single UNIX Specification的组成部分。
+
+##open
+```c
+  #include <fcnt1.h> //oflag参数的常量定义在该头文件中
+  
+  int open(const char *path, int oflag, ... /* mode_t mode //比如文件权限等 */)
+```
+ * path 要打开的文件或目录名字 
+ * oflag常量
+  * O_RDONLY	只读打开 
+
