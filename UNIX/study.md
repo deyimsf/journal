@@ -36,6 +36,13 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
  * path 要打开的文件或目录名字 
  * oflag常量
   * O_RDONLY	只读打开 
+  * O_WRONLY	只写打开
+  * O_RDWR	读、写打开
+  * O_EXEC	只执行打开
+  * O_SEARCH	值搜索打开(应用于目录,不是所有的系统都支持该标记)
+  > 以上必须指定,且只能指定一个
+  * O_APPEND	
 
 
-[fdsf]
+
+
