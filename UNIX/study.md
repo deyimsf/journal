@@ -37,3 +37,5 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
  * oflag常量
   * O_RDONLY	只读打开 
 
+
+[fdsf]
