@@ -95,5 +95,94 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
 
   如果一个文件描述符指向的是一个管道、FIFO或网络套接字,则lseek返回-1，并经errno设置为ESPIPE
 
-  
+##函数read
+  ```c
+    #include <unistd.h>
+
+    ssize_t read(int fd, void *buf, size_t nbytes);
+    //返回值: 读到的字节数,若已到文件尾,返回0; 若出错,返回-1
+   
+    //其中ssize_t(有符号类型),size_t(无符号类型)是在1990 POSIX.1标准中引入的
+  ``` 
+  * fd		文件描述符
+  * buf		读到的数据
+  * nbytes	打算读的字节数
+
+##函数write
+  ```c
+    #include <unistd.h>
+
+    ssize_t write(int fd, const void *buf, size_t nbytes);
+    //返回值: 若成功,返回已写的字节数; 若出错,返回-1
+  ```
+  * fd		文件描述符
+  * buf		将要写入的数据
+  * nbytes	打算写入的数据
  
+##Unix用三种数据结构表示打开的文件 
+  * 描述符表(每个进程一个)
+   * fd号和文件指针(指向文件表项)
+ 
+  * 文件表项(每个fd一个,也可以多个fd一个)
+   * 文件状态标志(读、写、非阻塞等)
+   * 文件偏移量
+   * v_node节点指针
+
+  * v_node节点表项(代表一个物理文件,所有进程共享)
+   * 节点信息
+   * 文件大小
+   * 文件类型等
+
+##函数dup、dup2
+  复制一个现有的文件描述符 
+  ```c
+    #include <unistd.h>
+ 
+    int dup(int fd);
+
+    int dup2(int fd, int fd2);
+
+    //返回值: 若成功,返回新文件的描述符; 若出错,返回-1
+  ```
+  这个函数返回的新文件描述符一定是当前可用文件描述符中最小的值。
+  返回的新的文件描述符和老fd描述符指向同一个文件表项。
+ 
+  * fd2 指定新描述符的值
+    > 如果fd2已经打开,则先将其关闭。如果fd和fd2相等,则返回fd2,不关闭。
+    > 如果指定的fd2没有打开,则打开它,并且fd2的FD_CLOEXEC标志被清除
+    > FD_CLOEXEC表示在当前进程调用exec生成新的进程时,所有从父进程继承的描述符都将被关闭。
+    > 调用fork生成的进程不会。
+    > 如果是用dup2把fd2的FD_CLOEXEC清除掉后,exec生成的新进程就不会关闭继承的描述符。
+
+##函数sync、fsync和fdatasync
+  ```c
+    #include<unistd.h>
+	
+    int fsync(int fd);
+    
+    int fdatasync(int fd);
+    //以上两个函数返回值: 若成功,返回0; 若出错,返回-1
+
+    void sync(void);
+  ```
+  sync函数对所有fd起作用(?是当前进程还是所有进程),负责把用户态的数据复制到内核,然后返回,
+  它不保证数据实际写入磁盘。
+  fsync对指定文件起作用,并且等待文件写入磁盘。
+  fdatasync只对指定文件的数据部分起作用,保证文件数据写入磁盘,文件其它属性不管。
+
+##函数fcntl
+  可以改变或获取已打开文件的属性
+  ```c
+    #include<fcntl.h>
+	
+    int fcntl(int fd, int cmd, ... /* int arg */);
+    //返回值: 若成功,则依赖cmd的值; 若出错,返回-1
+  ```
+  cmd有如下值:
+  * F_DUPFD	复制文件描述符和dup函数类似。新文件描述符是返回值,但是
+		有自己的一套文件描述符标志,FD_CLOEXEC标记被清除,表示在exec时
+		新描述符不会被关闭。
+
+
+
+
