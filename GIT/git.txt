@@ -21,7 +21,7 @@
  $ git diff HEAD
 
 #查看某个文件的历史版本
- $ git log --oneline   //用一行显示历史提交
+ $ git log --oneline c.txt   //用一行显示历史提交
  $ git show 144b50:C/c.txt //显示144b50这个提交版本的C/c.txt这个文件的内容
  $ git show HEAD:C/c.txt
 
@@ -79,8 +79,8 @@ $ git fetch
 #查看fetch到本地的远程分支的内容
  $git checkout origin/master
 
-#查看文件内容都是谁提交的
-$ blame filename
+#查看文件内容的没一行都是谁以及什么时间提交的
+$git blame filename
 
 #当有合并冲突的时候.git目录下会出现以下文件
  ./git/MERGE_HEAD  记录所合并的提交的ID(origin/master)
@@ -251,7 +251,7 @@ $ git mergetool
  如果想忽略某些文件,可以编写以下文件
  .git/info/exclude
 
-#撤销某个文件在add之后的操作
+#撤销某个文件在add之后的操作(用本地版本库的文件,覆盖暂存区)
  git reset HEAD /path/filename
 
 #撤销某个文件在add之前的操作
