@@ -51,7 +51,7 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
   * O_NOCTTY	如果path引用的是终端设备,则不将该设备分配做为进程控制终端
   * O_NOFOLLOW  如果path引用的是一个符号连接,则出错
   * O_NONBLOCK	设置I/O操作为非阻塞方式
-  * O_SYNC	同步write操作 //TODO ? 和上面的参数是不是不能同时使用
+  * O_SYNC	同步write操作到磁盘,数据库程序一般使用该标记(Linux似乎对该标记不感冒)
   * O_TRUNC	如果文件存在,并且为只写或读写方式打开,则将其长度截断为0
   * O_RSYNC	同步read操作,直至所有对文件同一部分挂起的写操作都完成 //?同一部分是啥意思。
 		另外Linux3.2在处理该标记和O_SYNC时相同
@@ -183,7 +183,289 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
   * F_DUPFD	复制文件描述符和dup函数类似。新文件描述符是返回值,但是
 		有自己的一套文件描述符标志,FD_CLOEXEC标记被清除,表示在exec时
 		新描述符不会被关闭。
+  * F_DUPFD_CLOEXEC	同上,不同的是新描述符会被设置FD_CLOEXEC标记 
+  * F_GETFD	获取fd的文件描述符标志，当前只定义了一个文件描述符标记,即FD_CLOEXEC 
+  * F_SETFD	设置fd的文件描述符标志。0(系统默认,exec时不关闭)或1(在exec时关闭)
+  * F_GETFL	获取fd的文件状态标志(O_RDONLY、O_WRONLY等),需用返回值和O_ACCMODE按位与
+		然后在跟O_RDONLY等标记进行对比		
+  * F_SETFL	设置fd的文件状态标志(O_APPEND、O_NONBLOCK、O_SYNC等)
+  * F_GETOWN	获取当前SIGIO和SIGURG信号的进程ID(正数代表)或进程组ID(负数代表)
+  * F_SETOWN	设置接收SIGIO和SIGURG信号的进程ID或进程组ID
 
 
+#文件和目录
 
+##获取文件和目录信息的函数
+ ```c
+   #include <sys/stat.h>
+   
+   int stat(const char *filepath, struct stat *buf);
+
+   int fstat(int fd, struct stat *buf);
+
+   int lstat(const char *filepath, struct stat *buf);
+   int fstat(int fd, const char *filepath, struct stat *buf);
+
+   //返回值: 若成功,返回0, 若出错,返回-1
+ ```
+ * stat函数
+   * filepath	文件路径
+   * buf	返回的文件信息
+
+ * fstat函数
+   * fd		文件描述符
+   * buf	返回的文件的信息
+
+ 其中,struct stat结构如下:
+ ```c
+   struct stat {
+   	dev_t		st_dev;		/*文件设备编号*/
+	ino_t		st_ino;		/*i-node节点号*/
+	mode_t		st_mode; 	/*文件的类型和存取权限*/
+	nlink_t		st_nlink;	/*到该文件的硬链接数目*/
+	uid_t		st_uid;		
+	gid_t		st_gid;
+	dev_t		st_rdev;
+	off_t		st_size;
+	struct timespec	st_atime;
+	struct timespec st_mtime;
+	struct timespec st_ctime;
+	blksize_t	st_blksize;   /*文件系统I/O缓冲区大小*/
+	blkcnt_t	st_blocks;    /*磁盘块数*/
+   };
+ ```
+
+##测试访问权限
+ ```c
+   #include <unistd.h>
+  
+   int access(const char *pathname, int mode);
+  
+   int faccessat(int fd, const char *pathname, int mode, int flag);
+   //成功返回0,错误返回-1
+ ```
+ * pathname	要测试的文件路径名
+ * mode		
+   * R_OK	测试读权限
+   * W_OK	测试写权限
+   * X_OK	测试执行权限
+
+##umask
+  为当前进程设置,文件创建时不能具有的权限(如，用户读,组用户写)。
+  ```c
+    #include <sys/stat.h>
+    
+    mode_t umask(mode_t cmask);
+    // 返回值是之前进程创建文件时,不能具有的权限位
+  ```
+  * cmask	要屏蔽的权限
+    * 0 400	用户读 (r-- --- ---)
+    * 0 200	用户写 (-w- --- ---)
+    * 0 100	用户执行(--x --- ---)
+    * 0 040	组读(--- r-- ---)
+    * 0 020     组写(--- -w- ---)
+     ...
+    * 0 001	其他执行(--- --- --x) 
+
+ ```shell
+  // 打印当前进程默认创建新文件时屏蔽的权限
+  $ umask
+  0022
+
+  // 打印符号形式的屏蔽权限
+  $ umask -S
+  u=rwx,g=rx,o=rx
+ ```
+  
+##改变文件的访问权限
+ ```c
+   #include <sys/stat.h>
+ 
+   int chmod(const char *pathname, mode_t mode);
+   int fchmod(int fd, mode_t mode);
+   int fchmodat(int fd, const char *pathname, mode_t mode, int flag);
+   //成功返回0, 出错返回-1
+ ```
+
+##更改用户id和组id
+ ```c
+   #include <unistd.h>
+
+   int chown(const char *pathname, uid_t owner, gid_t group);
+   int fchown(int fd, uid_t owner, git_t group);
+   //成功返回0,错误返回-1
+ ```
+
+##文件截断
+ ```c
+   #include <unistd.h>
+
+   int truncate(const char *pathname, off_t length);
+   int ftruncate(int fd, off_t length);
+   //成功返回0,出错返回-1
+ ```
+
+##硬链接和软连接
+  硬链接表示代表当前文件的i节点,指向的内容就是文件的实际磁盘内容。
+  软链接所代表的i节点,指向的内容是某个实际文件的路径名字。
+
+##函数link,linkat
+ ```c
+   #include <unistd.h>
+	
+   int link(const char *existingpath, const char *newpath);
+   int linkat(int efd, const char *existingpath, int nfd, const char *newpath, int flag);
+   //成功返回0,出错返回-1
+ ```
+ 为现有的文件existingpath创建一个硬链接。
+
+##函数unlink,unlinkat,remove
+ ```c
+   #include <unistd.h>
+
+   int unlink(const char *pathname);
+   int unlinkat(int fd, const char *pathname, int flag);
+   // 成功返回0，失败返回-1
+ ```
+ 这两个函数用来删除目录项(并不是删除磁盘文件),并对所引用文件的链接计数器减1。
+ 如果该文件还有其他链接,则仍可通过其他连接访问该文件的数据。
+ 如果最后没有任何链接指向该文件,那么该文件所占的空间就可以被随意使用了。
+
+ ```c
+   #include <stdio.h>
+	
+   int remove(const char *pathname);
+ ```
+ 如果pathname是文件则调用unlink函数，如果是目录则调用rmdir函数。
+
+##目录或文件重命名
+ ```c
+   #include <stdio.h>
+
+   int rename(const char *oldname, const char *newname);
+   int renameat(int oldfd, const char *oldname, int newefd, const char *newname);
+   //成功返回0,出错返回-1
+ ```
+
+##创建和读取符号链接
+  创建符号链接
+  ```c
+    #include <unistd.h>
+
+    int symlink(const char *actualpath, const char *sympath);
+    int symlinkat(const char *actualpath, int fd, const char *sympath);
+    //成功返回0,出错返回-1
+  ``` 
+ 
+  读取符号链接中的内容
+  ```c
+    #include <unistd.h>
+
+    ssize_t readlink(const char *pathname, char *buf, size_t bufsize);
+    ssize_t readlinkat(int fd, const char *pathname, char *buf, size_t bufsize);
+    //成功返回读取的字节数,出错返回-1
+  ```
+
+##创建目录和删除目录
+  创建目录
+  ```c
+    #include <sys/stat.h>
+
+    int mkdir(const char *pathname, mode_t mode);
+    int mkdirat(int fd, const char *pathname, mode_t mode);
+    //成功返回0，出错返回-1
+  ```
+
+  删除目录
+  ```c
+    #include <unistd.h>
+   
+    int rmdir(const char *pathname);
+    //成功返回0，出错返回-1
+  ```
+
+##读目录
+ ```c
+   #include <dirent.h>
+
+   // 打开一个目录,返回该目录的句柄
+   // 成功则返回指针，错误返回NULL
+   DIR *opendir(const char *pathname);
+     
+   // 读取目录中的内容
+   // 成功则返回指针,错误返回NULL
+   struct dirent *readdir(DIR *dp);
+
+   // 关闭打开的目录流
+   // 成功返回0,错误返回-1
+   int closedir(DIR *dp);
+ ```
+ 其中struct dirent结构如下(操作系统不一样,该结构也会有差异):
+ ```c
+   struct dirent {
+	ino_t d_ino;			/* file number of entry */
+	__uint16_t d_reclen;		/* length of this record */
+	__uint8_t  d_type; 		/* file type, see below */
+	__uint8_t  d_namlen;		/* length of string in d_name */
+	char d_name[__DARWIN_MAXNAMLEN + 1];	/* name must be no longer than this */
+   };
+ ```
+ d_ino  文件或目录的i_node号
+ d_name 文件或目录名字
+
+
+#文件锁
+##建议性锁
+  不具备强制性。比如一个进程将某个文件锁住,另一个进程可以对该文件进行修改操作。 
+  就想红路灯就是建议行锁,红灯只是建议不能通过,但是没办法强制你不通过。
+  所以如果大家都遵守交通负责的话,多个进程仍然可以协同工作。
+
+##强制性锁
+  具有强制性。比如一个进程锁定某人文件后,另一个进程无法对其进行修改操作。
+
+##共享锁
+  也可以叫,读锁。
+  当某个进程获取到共享锁后,其他进程也可以获取这个锁,但任何进程都不能再获取它的写锁。
+  只有所有进程都释放共享锁后才能对其加写锁。 
+
+##排他锁
+  也可以叫,写锁。
+  该锁有排他性,只能被一个进程获取。
+
+##flock()函数对文件加锁解锁
+  这是一个建议性锁,并且锁住的是整个文件,无法锁定某一区域。
+  ```c
+    #include <sys/file.h>
+   
+    int flock(int fd, int operation);
+    // 成功返回0,错误返回-1  
+  ```
+  operation参数设定值如下:
+  * LOCK_SH  获取共享锁
+  * LOCK_EX  获取互斥锁(写锁) 
+  * LOCK_NU  解锁
+  * LOCK_NB  当文件已经被另一个进程获取写锁时,不阻塞该操作
+   
+    > flock(fd, LOCK_EX),当fd被其他进程锁住时,当前进程阻塞；
+    > ret = flock(fd, LOCK_EX|LOCK_NB),当fd已经被其他进程锁住时,返回错误,
+    > 同时ret = -1, errno = EWOULDBLOCK。
+
+##lockf文件区域锁
+  可以对文件的某个区域进行加锁,仍然是建议性锁。
+  ```c
+    #include <unistd.h>
+  
+    int lockf(int fd, int cmd, off_t len);
+    //成功返回0，错误返回-1并设置errno值
+  ``` 
+  cmd参数值如下:
+  * F_ULOCK   解锁
+  * F_LOCK    写锁(阻塞)
+  * F_TLOCK   写锁(非阻塞,[EAGIN]错误)
+  * F_TEST    如果被锁,返回-1;否则返回0 
+  
+  len是要锁定或解锁的连续字节数
+
+
+#标准I/O库
 
