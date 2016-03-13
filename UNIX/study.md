@@ -528,8 +528,7 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
    time_t time(time_t *calptr);
    // 若成功则返回时间值;失败则返回-1
  ```
- * 如果calptr参数不为NULL,则时间也放在calptr指向的结构体内。
-
+ 如果calptr参数不为NULL,则时间也放在calptr指向的结构体内。
 
  clock_gettime函数可以获取指定时钟的时间。(?什么是指定时钟)
  ```c
@@ -538,8 +537,8 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
    int clock_gettime(clockid_t clock_id, struct timespec *tsp);
    // 成功则返回0,出错返回-1
  ```
- * 当时钟id(clock_id)设置为CLOCK_PEALTIME时该函数和time函数相似,
-   只是存放时间的结构体不一样。
+ 当时钟id(clock_id)设置为CLOCK_PEALTIME时该函数和time函数相似,只是存
+ 放时间的结构体不一样。
 
  可以获得微妙精度的函数
  ```c
@@ -548,6 +547,7 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
    int gettimeofday(struct timeval *tp, void *tzp);
    // 总是返回0 
  ```
+
  * tp  返回的时间值
  * tzp 只能是NULL
 
