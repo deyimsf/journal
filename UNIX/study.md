@@ -468,4 +468,150 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
 
 
 #标准I/O库
+##打开流
+ ```c
+   #include <stdio.h>
+
+   FILE *fopen(const char *pathname, const char *type);
+   FILE *freopen(const char *pathname, const char *type, FILE *fp);
+   FILE *fdopen(int fd, const char *type);
+   //若成功,返回文件指针; 若出错,返回-1
+ ```
+
+##格式化I/O
+ ```c
+   #include <stdio.h>
+   
+   // 输出到标准输入流
+   int printf(const char *format, ...);
+   
+   // 输出到fp中
+   int fprintf(FILE *fp, const char *format, ...);
+   
+   // 输出到fd中
+   int dprintf(int fd, const char *format, ...);
+
+   //以上三个函数,成功则返回输出字符数;出错则返回负值
+
+   int sprintf(char *buf, const char *format, ...);
+   // 成功返回存入到buf中的字符数; 出错则返回负值
+
+   int snprintf(char *buf, size_t n, const char *format, ...);
+   // 若缓冲区足够大,返回将要存入buf的字数数; 出错返回负值
+ ```
+
+
+#系统数据文件和信息
+##系统标识
+ ```c
+   #include <sys/utsname.h>
+
+   int uname(struct utsname *name);
+   // 若成功,返回非负值; 若出错,返回-1
+ ```
+ 该函数负责填充的struct utsname结构体如下:
+ ```c
+   struct utsname {
+	char sysname[];
+	char nodename[];
+	char release[];
+	char version[];
+	char machine[];
+   }
+ ```
+
+##时间和日期
+ 返回当前时间和日期
+ ```c
+   #include <time.h>
+   
+   time_t time(time_t *calptr);
+   // 若成功则返回时间值;失败则返回-1
+ ```
+ * 如果calptr参数不为NULL,则时间也放在calptr指向的结构体内。
+
+ clock_gettime函数可以获取指定时钟的时间。(?什么是指定时钟)
+ ```c
+   #include <sys/time.h>
+
+   int clock_gettime(clockid_t clock_id, struct timespec *tsp);
+   // 成功则返回0,出错返回-1
+ ```
+ * 当时钟id(clock_id)设置为CLOCK_PEALTIME时该函数和time函数相似,
+   只是存放时间的结构体不一样。
+
+ 可以获得微妙精度的函数
+ ```c
+   #include <sys/time.h>
+  
+   int gettimeofday(struct timeval *tp, void *tzp);
+   // 总是返回0 
+ ```
+ * tp  返回的时间值
+ * tzp 只能是NULL
+
+ 一般我们获取到特定的时间秒数后,需要通过某些函数,将其转换为分解的时间
+ 结构,比如 struct tm结构体,然后调用另一个函数,生成人们可读的时间。
+
+ 函数localtime和gmtime可以将time_t表示的时间,转换成分解的时间struct tm。
+ ```c
+   #include <time.h>
+   
+   struct tm *gmtime(const time_t *calptr);
+   struct tm *localtime(const time_t *calptr);
+   // 成功则返回分解的tm结构体;出错返回NULL
+ ```
+ * localtime 将日历时间转换成本地时区的时间
+ * gmtime 将日历时间转换成统一的分解时间
+
+ 函数strftime用来将分解的时间tm转换成人类可读的时间串。
+ ```c
+   #include <time.h>
+ 
+   size_t strftime(char *buf, size_t maxsize, const char *format, 
+		    const struct tm *tmptr);
+   size_t strftime_t(char *buf, size_t maxsize, const char *format, 
+		      const struct tm *tmptr, locale_t locale);
+   // 返回存入到buf中的字符数; 否则返回0
+ ```
+ 
+ 一个例子如下:
+ ```c
+   #include <stdio.h>
+   #include <stdlib.h>
+   #include <time.h>
+
+   int 
+   main(void){
+	time_t t;
+   	struct tm *tmp;
+ 	char buf[64];
+
+	// 获取本地时间
+        time(&t);
+	// 将本地时间time_t转换成分解的时间tm
+	tmp = localtime(*t);
+
+        // 使用strftime函数将tm转换成人类可读的时间串
+	if (strftime(buf, 64, "time is: %r, %a %b %b %d, %Y", tmp) == 0) {
+		printf("buf length 64 is too small\n");
+	}else{
+		printf("%s\n", buf);
+	}
+
+   }
+
+ ```
+ 结果输出 time is: 11:48:45 PM, Thu Jan 19, 2016
+
+ ```c
+   #include <time.h>
+   
+   char *strptime(const char *buf, const char *format, struct tm *tmptr);
+   // 成功返回指针; 错误返回NULL
+ ```
+ 该函数和strltime相反,函数把一个人类可读的时间字符串,转换成分解的时间数据结构tm。
+
+
+
 
