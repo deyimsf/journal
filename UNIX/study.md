@@ -530,6 +530,7 @@ sys+user表示curl在这次执行中总共使用的cpu时间(不包括阻塞时�
  ```
  * 如果calptr参数不为NULL,则时间也放在calptr指向的结构体内。
 
+
  clock_gettime函数可以获取指定时钟的时间。(?什么是指定时钟)
  ```c
    #include <sys/time.h>
