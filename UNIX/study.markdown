@@ -611,13 +611,13 @@ clock_gettime函数可以获取指定时钟的时间。(?什么是指定时钟)
 ```
 结果输出 time is: 11:48:45 PM, Thu Jan 19, 2016
 
+下面的函数和strltime相反,函数把一个人类可读的时间字符串,转换成分解的时间数据结构tm。
 ```c
    #include <time.h>
    
    char *strptime(const char *buf, const char *format, struct tm *tmptr);
    // 成功返回指针; 错误返回NULL
 ```
-该函数和strltime相反,函数把一个人类可读的时间字符串,转换成分解的时间数据结构tm。
 
 
 
