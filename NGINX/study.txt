@@ -2196,3 +2196,50 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
    ngx_http_finalize_request函数来实现的。 
    ??? 后续查看ngx_http_postpone_filter方法是什么时候调用的
 	
+
+#upstream模块中keepalive指令
+ Syntax: keepalive connections;
+ Default: --
+ Context: upstream
+ 
+ 该指令用来设置nginx与上游服务器保持长链接的个数,也就是ngx与上游server保持的链接池的大小。  
+
+ ngx用两个队列来维护这个池大小,分别是ngx_queue_t cache和ngx_queue_t free。
+ cache 已经缓存的和上游server建立起socket的链接,后续获取链接都从cache中取。
+ free 剩余的可以向cache中释放的链接;后续释放链接前,先从free中获取一个壳子。 
+
+ 最开始当ngx启动后,cache的大小为0,free的大小为keepalive指令指定的大小。
+ 
+ 1.获取链接(ngx_http_upstream_get_keepalive_peer)
+  当ngx向上游server发送请求前,首先遍历cache队列,寻找匹配的上游socket地址。
+
+  匹配不到,则返回,后续ngx会新建一个ngx_connection_t,并在发送请求前创建socket。
+
+  匹配到,则从cache队列中移除该链接,然后将代表该链接的壳子插入到free队首。
+
+ 2.释放链接
+  先从free队列中获取一个壳子。
+
+  如果free队列不为空,则将壳子中的链接和socket地址替换成当前要释放的链接和socket地址。
+  需要注意的是,这里并没有把壳子中的原始链接关闭掉,因为壳子中的链接可能正处于活跃状态。
+  free中的壳子个数,就是剩余的可缓存链接的个数。
+
+  如果free队列为空,则说明链接池已满(cache当前缓存的链接数已经等于keepalive指令设置的大小)。
+  这时从cache队尾(最近最少使用)获取一个壳子,将其从队列中移除,关闭这个壳子中的链接,然后
+  将要释放的链接和socket放入到该壳子中,最后将该壳子插入到cache队头。
+
+ 总结:
+  从以上可看到,keepalive指令只是限制了最多可以缓存的链接的大小,当需要向后端发起的请求数
+  大于(当cache为空时)这个设置后,ngx会按照正常流程新建链接和socket。
+
+  常规的链接池,比如java中的common pool,当连接池中的空闲链接为空后,都是等待。
+ 
+  感觉用一个计数器来替代free会更好理解。
+  计数器n代表当前链接池实际大小,当n等于0是表示链接池已经被用完,后续再来请求则需要按常规
+  方式去创建链接。每次向cache中释放链接时,n都会加一;每次从链接池中获取链接时n都会减一。
+  当n大于keepalive的设置值时,将要释放的链接和cache队尾的链接进行替换。
+   
+
+
+
+
