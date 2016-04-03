@@ -620,5 +620,100 @@ clock_gettime函数可以获取指定时钟的时间。(?什么是指定时钟)
 ```
 
 
+#进程环境
+
+###进程退出
+进程主要有以下方式终止程序
+* 从main返回
+* 调用exit
+* 调用_exit或_Exit
+* 调用abort异常终止
+* 接到一个信号异常终止 
+
+```c
+ #include <stdlib.h>
+
+ void exit(int status);
+ void _Exit(int status);
+
+ #include <unistd.h>
+ void _exit(int status);
+ 
+ //_Exit和_exit会直接进入内核去终止程序;exit会先执行一些清理程序,然后进入内核。
+```
+
+###atexit函数
+该函数用来向进程注册清理程序,当进程显示或隐士的调用exit退出程序时,这些程序会被
+exit执行,但如果是异常终止,或者时调用的_exit和_Exit则不会调用这些清理程序。
+
+```c
+ #include <stdlib.h>
+
+ int atexit(void (*func)(void));
+ //返回值; 若成功,返回0; 若出错,返回非0
+```
+
+###命令行参数
+```c
+int
+main(int argc, char **argv){
+
+}
+```
+
+ISO C和POSIX.1都要求argv[argc]是一个空指针。所以对参数的循环处理可以写成这样:
+```c
+for (i = 0; argv[i] != NULL; i++)
+```
+
+###环境表
+每个进程都会接收到一个环境表。环境表和参数一样,是一个指针数组。全局变量environ
+包含指针数组地址:
+```c
+extern char **environ;
+```
+		 环境指针	  环境表
+		---------	---------
+	environ	|	|-----> |	|-----> HOME=/home/sar\0
+		---------	---------
+				|	|----->PATH=:/bin:/usr/bin\0
+				---------
+				|	|----->SHELL=/bin/bash\0
+				---------
+				| NULL	|
+				---------
+
+例子：
+```c
+#include <stdio.h>
+
+extern char **environ;
+
+int 
+main(int argc, char **argv){
+        int i = 0;
+        char *s; 
+        while(environ[i] != '\0'){
+                s = environ[i];
+                ++i;
+    
+                printf("%s\n",s);    
+        }    
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
