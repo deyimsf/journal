@@ -703,17 +703,198 @@ main(int argc, char **argv){
 ```
 
 
+###存储空间分配
+ISO C阐述了3个用于存储空间动态分配的函数。
+ * malloc 分配指定字节的存储区。存储区的初始值不确定。
+ * calloc 分配指定个数指定大小的存储空间。初始化所有值为0。
+ * realloc 重新分配存储空间。当增长时,可能需将以前分配的内容移到一个足够大的区域。
+
+```c
+ #include <stdlib.h>
+
+ void *malloc(size_t size);
+ void *calloc(size_t nobj, size_t size);
+ void *realloc(void *ptr, size_t newsize);
+ //以上函数若成功,返回非空指针; 若出错,返回NULL
+
+ void free(void *ptr);
+ //释放分配的空间
+```
 
 
+###环境变量
+ISO C定义了一个函数来获取环境变量值
+```c
+ #include <stdlib.h>
+
+ char *getenv(const char *name);
+ //返回名字是name的环境变量的value; 若未找到,返回NULL
+```
+
+下面这几个函数来自POSIX.1和XSI
+```c
+ #include <stdlib.h>
+
+ int putenv(char *str);
+ 	//若成功,返回0;若出错,返回非0
+
+ int setenv(const char *name, const char *value, int rewrite);
+ int unsetenv(const char *name);
+ 	//若成功返回0; 若出错,返回-1
+```
+
+* putenv中str是"name=value"形式的字符串,将其放入环境表中。如果name已经存在,
+  则先删除其原来的定义。
+* setenv将name设置为value。如果name存在则rewrite不为0,覆盖原来的值;若rewrite
+  为0,则不设置。
+* unsetenv 删除环境变量name。
 
 
+###函数setjmp和longjmp
+在C中,goto语句是不能跨越函数的,想要跨函数需要setjmp和longump两个函数。
+```c
+ #include <setjmp.h>
+
+ int setjmp(jmp_buf env);
+	//若直接调用,返回0; 若从longjmp返回,则为非0
+ 
+ void longjmp(jmp_buf env, int val);
+```
+* env 存放着在调用longjmp时能用来恢复栈的所有信息。因为需要在别的函数中
+ 引用env变量,所以一般将env变量定义为全局变量。
+
+在需要返回的位置调用setjmp,调用longjmp可以返回到调用setjmp的位置。
+
+例子：
+```c
+ #include <setjmp.h>
+
+ jmp_buf env;
+
+ int
+ main(int argc, char **argv){
+	int f = setjmp(env);
+	if (f != 0) { //如果是直接调用,该函数肯定返回的是0
+		printf("被longjmp调用,返回值%d\n",f);	
+	}
+
+	cmd();
+ }
+
+ void
+ cmd(){
+	//直接调用该函数,返回到setjmp处
+	longjmp(env,1);
+ }
+
+```
+
+在调用longjmp函数后,变量是回滚到调用setjmp之前,还是保持当前值,变量不同则行为也不同:
+```c
+ jmp_buf env;
+ int globval;	//全局变量,保持当前值,不回滚
+
+ int
+ main(){
+     int 		autoval;  //自动变量,不确定
+     register int 	regival;  //寄存器变量,不确定
+     volatile int	volaval;  //易失变量,保持当前值,不回滚
+     static int		statval;  //静态变量,保持当前值,不回滚
+ }
+
+```
 
 
+###进程标识
+```c
+ #include <unistd.h>
+
+ //获取进程id
+ pid_t getpid(void);
+
+ //获取进程父id
+ pid_t getppid(void);
+
+ //获取进程实际用户id
+ uid_t getuid(void);
+
+ //获取进程的有效用户id
+ uid_t geteuid(void);
+
+ //获取进程实际组id
+ gid_t getgid(void);
+
+ //获取进程的有效组id
+ gid_t getegid(void);
+```
 
 
+###函数fork
+fork函数用来创建子进程,该函数调用一次返回两次。
+子进程的返回值是0,父进程的返回值是新建子进程的id。
+
+```c
+ #include <unistd.h>
+
+ pid_t fork(void);
+ //子进程返回0, 父进程返回子进程id；出错返回-1
+```
+
+当fork之后是父进程先执行还是子进程先执行是不确定的。
+fork的一个特性是父进程的所有打开的文件描述符都被复制到子进程中。
+并且对于复制的文件描述符,父进程和子进程共享同一个文件偏移量。
+假定所有的描述符是在fork之前打开的,父进程和子进程写同一描述符指向的文件,
+但又没有任何形式的同步,那么他们的输出将是混乱的。
+子进程不继承父进程设置的文件锁。
 
 
+###函数wait和waitpid
+这两个函数用来等待子进程终止。
+如果所有的子进程都还在运行,则阻塞(waitpid方法有一个选项可以设置为非阻塞)
+如果一个子进程已经终止,正等待父进程获取其终止状态,则会取得该子进程的终止
+状态立即返回。
+如果没有任何子进程,则出错返回。
+
+```c
+ #include <sys/wait.h>
+
+ pid_t wait(int *statloc);
+
+ pid_t waitpid(pid_t pid, int *statloc, int options);
+ //若成功,返回进程id; 若出错,返回0或-1
+```
+ * statloc 如果该参数不为空,则子进程终止后的状态存放在该参数中
+
+使用<sys/wait.h>中的各个宏可以查看终止状态原因:
+* WIFEXITED(statloc) 若子进程为正常终止,则为真。
+  这时使用WEXITSTATUS(statloc)可以获取子进程退出时的返回码。
+* WIFSIGNALED(statloc) 若子进程异常终止,则为真。
+  这时使用WTERMSIG(statloc)可以获取子进程终止的信号值。
+* WIFSTOPPED(statloc)
+* WIFCONTINUED(statloc)
+
+对于waitpid方法参数pid和options有如下行为:
+* pid == -1  等待任一子进程终止。此时和wait等效。
+* pid > 0 等待pid这个子进程终止。
+* pid ==0 等待一个子进程终止,等待的子进程的组id,必学和调用该方法的进程的组id一致。
+* pid < -1 
+
+options:
+* WCONTNUED
+* WNOHANG    设置为不阻塞等待
+* WUNTRACED 
 
 
+###函数waitid
+有Single UNIX Specification定义,类似waitpid函数
+```c
+ #include <sys/wait.h>
+ 
+ int waitid(idtype_t idtype, id_t id, siginfo_t *infop, int options);
+ //返回0,出错返回-1
+```
+
+
+###函数wait3和wait4
 
 

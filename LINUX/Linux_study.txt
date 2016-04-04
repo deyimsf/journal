@@ -725,7 +725,7 @@ top执行过程中可以使用的按键
     id = idle task, 显示CPU没有磁盘I/O请求时候的空闲时间比 
     wa = iowait,显示CPU在有磁盘I/O请求时空闲时间比.	
     hi = servicing IRQs 硬中断占cpu的百分比 
-    si = servicing soft IRQs 软终端占cpu的百分比 
+    si = servicing soft IRQs 软中断占cpu的百分比 
     st = steal (time given to other DomU instances) 
 	其中：
 	%usr+%nice+%sys是真正CPU在忙的时间,其他都属于空闲期.
@@ -1499,9 +1499,10 @@ $ iostat -xk
   0:        148    XT-PIC-XT        timer
   1:          8    XT-PIC-XT        i8042
   ...
-  23		2395   xxx				eth0
+  23	    2395   xxx		    eth0
  第一列是中断号
  第二列是对应的cpu核心,下面的数字是中断次数
+ 第三列是可编程中断控制器
  最后一列是对应的设备
 
 # 根据设备硬中断号设置设备的cpu亲缘性

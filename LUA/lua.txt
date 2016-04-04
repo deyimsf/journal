@@ -399,7 +399,7 @@ lua> print(debug.traceback())
  string.format("%d=%d",4,5);//格式和C语言的print一样
 
 #查找字符串string.find(str,substr,index)  index是开始搜索位置
- i,j=stringfind("hello world","hello"); 
+ i,j=string.find("hello world","hello"); 
  print(i,j); -->1,5 //查找成功,返回子串的开始和结束索引;否则返回nil
 
 #全局字符串替换 string.gsub(str,arg1,arg2,scope) scope是要替换的个数
