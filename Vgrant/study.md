@@ -17,6 +17,10 @@
  $ vagrant box remove   //删除一个box
 ```
 
+vagrant box资源
+http://www.vagrantbox.es/
+
+
 
 #打包一个box
 两种方式,一种是在任意目录输入如下命令 
