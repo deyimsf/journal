@@ -712,10 +712,10 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 			server 127.0.0.1:8080 weight=1;
 		}
 	
-	    #分别代表:缓存的文件存入磁盘的位置; 存入文件深度;  共享内存的名字和大小
+	        #分别代表:缓存的文件存入磁盘的位置; 存入文件深度;  共享内存的名字和大小
 		proxy_cache_path /My/work/nginx/nginx/ccc levels=1:2 keys_zone=abc:1m;	
 
-	    #前端代理nginx
+	        #前端代理nginx
 		server {
 			listen 80;
 			server_name test;
@@ -726,7 +726,7 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 				#指定共享缓存名字
 				proxy_cache abc;       
 				#指定缓存key,如果当前参数name=zs, 那么
-                #这个缓存key就是 test/app.actionzs
+                                #这个缓存key就是 test/app.actionzs
 				proxy_cache_key  $host$uri$arg_name 
 				#指定对那种响应状态码缓存,以及缓存时间,
 				#这里的时间可以被后端应用的Expires和Cache-Control:max-age=60覆盖 				

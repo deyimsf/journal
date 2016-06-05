@@ -898,3 +898,77 @@ options:
 ###函数wait3和wait4
 
 
+###函数exec
+当进程调用一种exec函数时,该进程执行的程序完全替换为新程序,新程序从其main函数开始执行。
+exec函数并不创建新进程,当前进程id不会改变。该函数只是用磁盘上的一个新程序替换当前进程
+的正文段、数据段、堆段和栈段。
+
+```c
+#include <unistd.h>
+int execl(const char *pathname, const char *arg0, ...);
+int execv(const char *pathname, char *const argv[]);
+int execle(const char *pathname, const char *arg0, ...);
+int execve(const char *pathname, char *const argv[], char *const envp[]);
+int execlp(const char *filename, const char *arg0,...);
+int execvp(const char *filename, char *const argv[]);
+int fexecve(int fd, char *const argv[], char *const envp[]);
+//若出错，返回-1；若成功,不返回
+```
+
+
+###解析器文件
+语法:
+```shell
+ #! pathname [potional-argument]
+```
+
+常见的解析器文件以"#!"行开始:
+```shell
+ #! /bin/sh
+ #! /bin/awk -f
+ #! /bin/echo hello world
+```
+
+解析器文件是一个文本文件,它以#!开头
+
+解析器是解析器文件中第一行中的pathname
+
+例子1:
+如果有一个解析器文件ncat内容如下
+```shell
+ #! /bin/cat /my/path/aa.txt
+```
+
+执行
+```shell
+ $ ncat
+```
+则会打印出 /my/path/aa.txt 中的内容
+
+例子2:
+如果有一个解析器文件nawk内容如下
+```shell
+ #! /bin/awk -f
+ BEGIN {
+    for (i = 0; i < ARGC; i++)
+	printf "ARGV[%d] = %s\n", i, ARGV[i]
+    exit
+ }
+```
+
+执行
+```shell
+ $ nawk
+```
+则nawk文件中从第二行开始的所有内容都被视为awk的程序。
+
+如果要用awk执行,其命令参数如下
+```shell
+ $ /bin/awk -f  /my/path/nawk
+```
+因为符号"#"正好是awk的注释符,所以*$ nawk* 和 *$ /bin/awk -f /my/path/nawk*等价。
+
+
+
+
+
