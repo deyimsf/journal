@@ -929,9 +929,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
  #! /bin/echo hello world
 ```
 
-解析器文件是一个文本文件,它以#!开头
-
-解析器是解析器文件中第一行中的pathname
+* 解析器文件是一个文本文件,它以#!开头
+* 解析器是解析器文件中第一行中的pathname
 
 例子1:
 如果有一个解析器文件ncat内容如下
@@ -943,7 +942,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ```shell
  $ ncat
 ```
-则会打印出 /my/path/aa.txt 中的内容
+则会打印出 /my/path/aa.txt 中的内容。
+
 
 例子2:
 如果有一个解析器文件nawk内容如下
@@ -970,5 +970,5 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 
 
 
-
+###函数system
 
