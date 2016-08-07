@@ -49,6 +49,22 @@
  $ git tag  
  不带参数则是直接查看里程碑
 
+#打标签
+ $ git tag version
+
+#删除标签
+ $ git tag -d version
+
+#单独push一个tag到远程
+ $ git push origin version
+
+#push所有的tag到远程
+ $ git push --tags
+
+#删除一个远程标签
+ $ git push --delete origin version
+
+
 #查看在暂存区和工作树文件的信息：ls-files
  $ git ls-files  //-c参数只列出当前目录下的文件、其他参数未验证 
   -c|--cached	:显示工作区中提交到暂存区中得文件

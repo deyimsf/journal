@@ -1731,3 +1731,4 @@ $ iostat -xk
  7.重启ssh
    /etc/init.d/sshd restart 
  
+##sudo例外需要配置文件 /etc/sudoers
