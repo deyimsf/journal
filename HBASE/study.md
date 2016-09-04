@@ -83,6 +83,17 @@ hbase(main):001:1> scan 'mytable'
  * 一个region可以包含很多的列族
  * 一个列族在物理上用HFile存储,HFile会被切割成很多块(默认64K)放到不同的机器上
 
+#通过REST访问HBase
+```shell
+ #启动REST服务
+ $ hbase rest start -p 9999
+
+ #获取JSON形式的值
+ $ curl -H "Accept: application/json" http://localhsot:9999/users/rowkey/info:name
+ 
+ #向HBase put数据
+```
+
 
 
 
