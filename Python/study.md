@@ -78,7 +78,7 @@
 >>> d = dict(items)
 >>> d
 {'age':42,'name':'Gumby'}
->>> ['age']
+>>> d['age']
 42
 ```
 
@@ -278,5 +278,98 @@ def hello(name):
 
 #局部变量是vals函数
 
+#类
+```Python
+  __metaclass__ = type #使用新式类
+  class Person:
+	#使用类名+属性可以直接访问(Person.name)
+	name = "default";
+	
+	#私有属性,使用类名+属性无法访问(Person.__age);实际上被翻译成了_Person__age,
+	#所以使用Person._Person__age可以访问该属性	
+	__age = 23;
+	
+	 #前面带有下划线的名字不会被带星号的import语句导入;(from module import *)
+	_alias = "lisi";
+	
 
+	def getName(self):
+		return self.name;
+
+
+	def setName(self,name):
+		self.name = name;
+
+
+   #使用例子
+   p = Person(); #这样就创建了一个对象
+   p.getName(); #调用方法
+   print Person.name; #直接访问类的属性
+   >>> default; 
+```
+* 在类中的叫方法,不在类中的叫函数。
+* 方法和函数区别在于,方法在被调用时会将调用者自身作为第一个参数传递给方法。
+
+#类的定义其实就是执行代码块
+```Python
+   calss Person:
+	print "类Person被定义...";
+
+	def getName(self):
+		return "name";
+
+   #类代码被第一次加载时就会执行内部代码
+   类Person被定义...
+
+   #例子
+   >>> p = Person();
+   >>> p.getName();
+   name
+```
+
+#类内部变量对其实例可见
+```Python
+   class Person:
+	age1 = 0;
+	age2 = 0;
+
+	def init(self):
+		self.age1 = self.age1 + 1; #改变某个实例的age1值,类属性值不会变
+		Person.age2 = Person.age2 +1; #类属性值和实例值都会变
+
+    #例子
+    >>> p = Person();
+    >>> p.init();
+    >>> Person.age1
+    0
+    >>> Person.age2
+    1
+    >>> p.age1
+    1
+    >>> p.age2
+    1
+
+    >>> p1 = Person();
+    >>> p1.init();
+    >>> Person.age1;
+    0
+    >>> Person.age2
+    2
+    >>> p1.age1
+    1
+    >>> p2.age2
+    2
+```
+
+#继承
+```Python
+   class Father:
+	def init(self):
+		self.name = "superclass";
+
+    class Person(Father):
+	def init(self)
+		self.name = "subclass";
+  
+```
 

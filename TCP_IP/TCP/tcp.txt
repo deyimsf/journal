@@ -207,6 +207,9 @@ Tcp慢启动和避免拥塞算法
  最后根据上面看到的中断号,看是否每个队列对应到了不同的CPU
   $ cat /proc/irq/终断号/smp_affinity
 
+##irq中断平衡进程
+ irqbalance 如果这个进程不开,即使绑定cpu也不起作用?(有待验证,个人觉得即使不开,绑定完也应该起作用)
+
 ##网卡中的RingBuffer队列
  Ring Buffer位于NIC和IP层之间,NIC是网卡最开始存放数据的地方。
  该队列是一个FIFO(先进先出)环形队列。里面只是包含了指向sk_buff

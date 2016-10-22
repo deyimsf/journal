@@ -92,6 +92,9 @@ $ git fetch
   $git checkout test_s   //切换test_s为当前分支
   $git merge master 
 
+ //将master分支合并到test_s分支
+  $git merge master test_s
+
 #查看fetch到本地的远程分支的内容
  $git checkout origin/master
 
