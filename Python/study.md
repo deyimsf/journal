@@ -373,3 +373,161 @@ def hello(name):
   
 ```
 
+#捕获异常
+```Python
+   try:
+	x = input("输入一个数:");
+	y = input("输入第二个数:");
+	print x/y;
+   except ZeroDivisionError:   #捕获一个异常
+	print "第二个数不能是零";
+   except TypeError,e: #捕获一个异常,e代表捕获的异常信息
+	print "发生异常,异常信息是:",e;
+   except (NameError,UnicodeDecodeError),e:
+	print "当前捕获的异常是:",e;
+   except Exception,e: #该异常类是所有异常的基类
+	print "其它异常:",e;
+	raise e; #再次抛出这个异常
+   else:
+	print "没有发生异常";
+   finally:
+	print "不关有没有异常都会执行";
+```
+
+#特殊(魔法)方法
+前后有两个下划线(__method__)的方法叫做特殊方法
+
+#构造方法
+init前后各自加上两个下划线就变成了类的构造方法
+```Python
+   class Person:
+	__init__(self):
+		print "构造方法...";
+```
+
+#构造方法重写
+子类重写构造函数后,需要调用父类的构造函数.
+* 调用未绑定的超类构造函数
+* 使用super方法
+ ```Python
+	class Father:
+		def __init__(self):
+			print "I'm super class";
+
+	class Person(Father):
+		def __init__(self):
+			Father.__init__(self); #调用父类的未绑定方法
+			super(Person, self).__init__(); #使用super方法
+ ```
+
+#规则
+在Python中只需要遵守几个规则,类就会变成一个序列(list)或者影响(map)
+```Python
+   class MyList:
+	 def __init__(self):
+		self.box = [];
+  	 def __len__(self): #该方法返回集合中项目数量;如果是list则是元素个数,map则是键值对个数
+		pass;
+	 def __getitem__(self,index): #定义list[index]或list.get(index)方法的行为
+		return self.box[index];
+
+
+   class MyCounterList(list): #继承集合
+	def __init__(self, *args):
+		super(MyCounterList, self).__init__(*args);
+		self.counter += 1;
+		return super(CounterList, self).__getitem__(index);
+```
+
+#拦截特性访问(可以拦截字段和方法访问)
+有四个特殊方法可以实现拦截功能
+* __getattribute__(self, name) 当name被访问时自动调用(新式类中使用)
+* __getattr__(self, name) 当name被访问切对象没有相应的属性是被自动调用
+* __setattr__(self, name, value)  给属性赋值时调用
+* __delattr__(self, name) 删除name属性时调用
+
+```Python
+  class Rectangle:
+	def __init__(self):
+		self.width = 0;
+		self.height = 0;
+
+	def __setattr__(self, name, value):
+		if name == 'size':
+			self.width, self.height = value;
+		else:   #__dict__方法包含一个字典,字典里面是实例的所有属性
+			self.__dict__[name] = value;
+ 	def __getattr__(self, name):
+		if name == 'size':
+			return self.width,self.height;
+		else:
+			raise AttributeError;
+	def __getattribute__(self, name): #该方法拦截所有的属性访问,所以也会拦截__dict__
+		#??如何防止递归??	
+		
+```
+
+#模块
+* 模块默认搜索路径
+```python
+   >>> import sys, pprint
+   >>> pprint.pprint(sys.path)
+   ['',
+    '/System/.../lib/python27.zip',
+    '/System/.../lib/python2.7',
+    '...',
+    '/Library/Python/2.7/site-packages']
+
+   #自定义的模块可以放在上面的目录中,一般放在site-packages目录中
+```
+* 指定模块搜索路径
+```python
+   >>> import sys
+   >>> sys.path.append('/My/path/python'); #为sys.path增加一个搜索路径
+  
+   #在操作系统中设置PYTHONPATH环境变量
+   export PYTHONPATH=$PYTHONPATH:/My/path/python
+```
+
+* 模块和类一样也是一段可以被执行的程序,不同的是模块在被导入的时候回被执行
+  一次,导入模块多次和导入一次效果一样。
+```Python
+   #hello_module.py
+   def hello():
+	print "Hello world!";
+   
+   print "load module hello_module ...";	
+
+   #使用模块
+   >>>import sys
+   >>>sys.path.append('/My/path/python');
+   >>>import hello_module #第一次导入
+   load module hello_module ... #第一导入会打印该语句
+   >>>import hello_module #第二次导入不会导入上面的语句
+```
+
+# 变量__name__ 表示当前模块名字
+```python
+   >>> __name__
+   '__main__' #main模块
+   >>> sys.__name__
+   'sys'  #sys模块
+```
+
+#包,比模块更大的组织代码的方式
+*如果一个目录下有__init__.py文件那么他就是一个包.
+> 假设在draw目录下有__init__.py,color.py,shape.py三个文件,那么draw就是一个包
+
+```python
+   #单独加载一个包,这时没办法使用包下的模块,只用__init__.py中的内容可用
+   >>> import draw
+
+   #加载包中的一个模块
+   >>> import draw.color
+   >>> draw.color.hello(); #使用color模块方法时需要加上包名
+
+   #直接导入包中的一个模块
+   >>> from draw import color
+   >>> color.hello();  #不需要加包名
+``` 
+
