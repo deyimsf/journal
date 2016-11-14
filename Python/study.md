@@ -417,11 +417,11 @@ init前后各自加上两个下划线就变成了类的构造方法
 	class Person(Father):
 		def __init__(self):
 			Father.__init__(self); #调用父类的未绑定方法
-			super(Person, self).__init__(); #使用super方法
+			super(Person, self).__init__(); #或者使用super方法
  ```
 
 #规则
-在Python中只需要遵守几个规则,类就会变成一个序列(list)或者影响(map)
+在Python中只需要遵守几个规则,类就会变成一个序列(list)或者映射(map)
 ```Python
    class MyList:
 	 def __init__(self):
@@ -530,4 +530,94 @@ init前后各自加上两个下划线就变成了类的构造方法
    >>> from draw import color
    >>> color.hello();  #不需要加包名
 ``` 
+
+#模块和类一起使用的一个例子
+```python
+   #/My/python/MyModule.py 该模块下包含类Person
+   class Person:
+	def __init__(self):
+		print "我是构造函数";
+	
+   	def getName(self):
+		return "My name is zhangsan";
+
+
+    #使用这个类
+    >>>import sys;
+    >>>sys.path.append('/My/python');
+    >>>import MyModule; #导入模块
+    >>>p = MyModule.Person();
+    >>>p.getName();
+    'My name is zhangsan'
+
+    >>>from MyModule import Person; #导入这个类   
+    >>>p = Person();
+    >>>p.getName();
+    'My name is zhangsan'
+```
+
+#查看模块中的内容
+```python
+   >>>import copy
+   >>>dir(copy) #会打印出copy模块中的可用的变量
+   ['Error','PyStringMap','__all__',...] 
+
+   >>>copy.__all__
+  ['Error', 'copy', 'deepcopy']
+
+  #变量__all__决定在使用 from copy import * 时可以导入的变量,如果
+  #没有__all__则会导入所有不以下划线开头的全局名称  
+```
+
+#help函数,查看模块更详细的信息
+```python
+   >>>import copy
+   >>>help(copy) #会打印出模块的更详细信息
+
+```
+
+#一些标准库
+##sys
+通过dir(sys)可以看到里面的函数或变量
+```python
+   >>>import sys
+   >>>print sys.argv   
+   [''] #因为在python客户端运行所以没有参数
+```
+
+##webbrowser 浏览器模块
+```python
+   #打开浏览器打开某个网址
+   >>>import webbrowser
+   >>>webbrowser.open('http://www.python.org')
+```
+
+##os
+```python
+   >>>import os
+   >>>os.sep #查看路径中的分隔符
+   '/'
+```
+
+##fileinput 遍历多个文件的所有行
+```python
+   #script.py
+   import fileinput
+   for line in fileinput.input():
+	#line就表示文件中的一行
+        num = fileinput.lineno(); #行号
+        print line; #打印每行的内容
+   
+   #使用
+   >>>python script.py aa.txt bb.txt
+   ... #这里会打印aa.txt和bb.txt文件的内容
+```
+
+
+
+
+
+
+
+
 
