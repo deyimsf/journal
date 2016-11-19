@@ -613,11 +613,64 @@ init前后各自加上两个下划线就变成了类的构造方法
    ... #这里会打印aa.txt和bb.txt文件的内容
 ```
 
+##集合
+```python
+   #创建一个set集合(无需,不可重复)
+   >>>a = set([1,3,2]);
+
+   #求集合并集
+   >>>b = set([2,3,4]);
+   >>>a.union(b) 或者 a | b
+
+   #集合本身只能包含不可变(可散列)的值
+   #但集合本身又是可变的,所有集合不能包含集合
+   #frozent函数可以创建集合的副本,可以固化集合(将集合变为不可变)
+   >>>a.add(frozenset(b));
+
+```
+
+#堆
+```python
+   #python中的堆就是一个有序队列
+   >>>from heapq import *
+   >>>heap = [];
+   >>>heappush(heap,3); #向堆中增加一个元素
+   >>>heappush(heap,2);
+   >>>heap; 
+   [2,3]
+   >>>heappon(heap); #弹出一个最小的元素
+   2
+  
+   #注意: 如果没用heappush建立堆,那么在使用heappush和heappop前应该使用heapify
+   #利用heapify对堆进行排序
+   >>>heap=[2,1,9,3]
+   >>>heapify(heap)
+   >>>heap
+   [1,2,3,9]
 
 
+```
 
+#双端队列
+```python
+   #python中双端队列就是一个双向链表(猜的)
+   >>>from collections import deque
+   >>>q = deque(range(5)) #生成一个双端队列
+   >>>q.append(5); #队列尾部增加一个元素
+   >>>q.appendleft(6);#队列左侧增加一个元素
+   >>>q
+   deque([6,0,1,2,3,4,5])   
+   >>>q.pop()
+   5
+   >>>q.popleft()
+   6
 
+```
 
+#re 正则表达式模块
+* compile(pattern [, flags]) 根据包含正则表达式的字符串创建模式对象
+* search(pattern, string[, flags]) 在字符串中寻找模式
+* match(pattern, string[, flags]) 在字符串的开始处匹配模式
 
 
 
