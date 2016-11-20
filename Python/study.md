@@ -94,6 +94,17 @@
 </html>
 ```
 
+#跨行字符串用三个''' 或者"""
+```python
+   name = ''' my name 
+	is zhang
+	san	
+    ''';
+```
+
+
+
+
 #字典的一些方法
 *clear 清除字典中的所有项
 ```python
@@ -671,6 +682,89 @@ init前后各自加上两个下划线就变成了类的构造方法
 * compile(pattern [, flags]) 根据包含正则表达式的字符串创建模式对象
 * search(pattern, string[, flags]) 在字符串中寻找模式
 * match(pattern, string[, flags]) 在字符串的开始处匹配模式
+
+
+#操作文件open函数
+```python
+   #open函数语法
+   #name:文件名字
+   #mode:打开文件的模式
+   #     ‘r’:读 ‘w’:写 'a':追加  'b':二进制 '+':读写模式
+   #buffering:缓冲区,0代表不用缓冲区;-1使用默认缓冲区;大于1表示缓冲区大小
+   open(name[, mode[, buffering]])
+
+   #例子
+   >>>f = open('aa.txt','w');
+   >>>f.write("hello \n");
+   >>>f.write("world\n");
+   >>>f.close();
+   >>>f = open('aa.txt','r');
+   >>>f.read(4);#读四个字节
+   'hell'
+```
+
+#GUI
+Python中有各种GUI平台,这里我们使用wxpython平台。
+下载地址http://wxpython.org,下载并安装后看例子:
+```python
+   import wx
+   
+   app = wx.App();
+   win = wx.Frame(None, title="Editor", size=(410,335));
+   win.Show();
+
+   loadBu = wx.Button(win, label="Open",pos=(225,5),size=(80,25));
+   saveBu = wx.Button(win, label="Save",pos=(315,5),size=(80,25));
+
+   app.MainLoop();
+```
+
+#字符前缀r/u
+* 以r开头的字符串如 r'abd\n'表示r后面是一个非转义的原始字符串,\n在这里不代表换行就代表其分身字面意思。
+
+* u开头表示这是一个unicode字符串
+
+#数据库操作
+操作不同的数据库,需要下载不同的python数据库模块,python为数据库编程定义了编程接口,不同数据库模块会实现这些接口。
+
+```python
+	#coding:utf8
+	import sqlite3
+
+	#连接数据库,如果库不存在则创建
+	conn = sqlite3.connect("person.db");
+
+	#用游标操作sql
+	#创建一个表
+	curs = conn.cursor();
+	curs.execute('''
+        	create table personC (
+                	id   float primary key,
+                	name TEXT,
+                	age Float
+        	)
+	''');
+
+	#插入一条数据
+	query = "insert into personC values(?,?,?)";
+	#用游标操作
+	curs.execute(query,[1,"zhangsan",23]);
+
+	conn.commit();
+	conn.close();
+
+
+	#查询数据库
+	conn = sqlite3.connect("person.db");
+	curs = conn.cursor();
+
+	query = "select * from personC";
+	curs.execute(query);
+	
+	#打印结果
+	print curs.fetchall();
+
+```
 
 
 
