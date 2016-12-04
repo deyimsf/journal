@@ -766,5 +766,61 @@ Python中有各种GUI平台,这里我们使用wxpython平台。
 
 ```
 
+#网络套接字模块
+```python
+   #socket模块
+   import socket;
+
+   #urllib和urllib2模块
+   from urllib import urlopen
+   web_page = urlopen('http://www.python.org');
+   text = webpage.read();
+   print text;
+
+   #其它
+   from SocketServer import TCPServer, StreamRequestHandler
+
+   #select和poll
+   import socket,select
+   a,b,c = select.select(inputs,[],[]);
+   
+   s = socket.socket();
+   p = select.poll();
+   p.register(s); 
+   while True:
+	events = p.poll();
+        for fd, event in events:
+		#do something
+
+   #Twisted框架
+
+```
+
+#使用cgi写web应用
+```python
+   --------simple.cgi-----------
+   #!/usr/bin/env python
+   
+   import cgi;
+   form = cgi.FiledStorage();
+   
+   name = form.getvalue('name','world');
+   
+   print """
+	<html>
+	  <head>
+		<title>web page</title>
+	  </head>
+	  <body>
+		<h1> Hello, %s!</h1>
+	  </body>
+   """ % name;
+```
+
+
+
+
+
+
 
 
