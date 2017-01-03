@@ -6,3 +6,10 @@
  protocol preference中取消掉就可以看到绝对序号了。
    点击菜单上的Statistics->Flow Graph 可以以图形的形式看到包得流动。 
 
+#三板斧
+1.Statistics-->Summary
+2.Statistics-->Service Response Time-->ONC-RPC?
+3.Analyze-->Expert Info Composite
+
+
+
