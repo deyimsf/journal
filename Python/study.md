@@ -162,6 +162,27 @@ False
 >>> list(it)
 ```
 
+#生成器
+* 任何包含yield语句的函数称为生成器
+* 生成器有两部分组成:生成器的函数和生成器的迭代器
+  > 生成器的函数使用def语句定义的,包括yield部分。
+  > 生成器的迭代器是这个函数返回的部分。
+
+例子:
+```python
+  def list(array):
+	for a in array:
+		yield a;
+
+  >>> cc = list([1,2,3]);
+  >>> print(cc.next())
+  1
+  >>> print(cc.next())
+  2
+  >>> print(cc.next())
+  3
+```
+
 *keys、iterkeys
  keys方法将字典中的建一列表形式返回,iterkeys返回迭代器
 
