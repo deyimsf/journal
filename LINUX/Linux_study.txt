@@ -335,7 +335,7 @@ $ new_var=${old_var:-content}
  set hlsearch: 高亮显示查找到的数据
 
 
-#vim多窗口功能 
+#vim多窗口功能(分屏) 
 :sp[filename]  //上下窗口
 [ctrl]+w+j或[ctrl]+w+[向下箭头]  //光标移动到下方的窗口 
 [ctrl]+w+k或[ctrl]+w+[向上箭头]  //光标移动到上方的窗口 
@@ -1732,3 +1732,9 @@ $ iostat -xk
    /etc/init.d/sshd restart 
  
 ##sudo例外需要配置文件 /etc/sudoers
+
+
+#用dig命令查询dns请求路径
+  dig +trace www.jd.com
+
+

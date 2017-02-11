@@ -972,3 +972,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 
 ###函数system
 
+
+###函数memset
+
+
+

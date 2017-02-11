@@ -20,3 +20,24 @@ ngx_http_core_find_config_phase
 ngx_http_core_find_location
 	子请求在这方法后看p *r->main->postponed->next->out->buf
    会有乱码
+
+
+
+ types {}
+ default_type "text/html";
+ charset gbk;
+
+
+
+recursive_error_pages on;
+    proxy_intercept_errors  on;
+    error_page 400 401 402 403 404 405 408 410 412 413 414 415 500 501 502 503 506 = @error;
+    location @error {
+        root /export/App/brand.jd.local/WEB-INF/classes;
+        types {}
+        default_type "text/html";
+        charset utf-8;
+        rewrite / /html/index.properties break;
+
+        error_page 404 = http://www.jd.com/error2.aspx;
+    }

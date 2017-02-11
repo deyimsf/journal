@@ -47,8 +47,8 @@
 		gcc -c part1.c
    //-------------------------------------------
  在该文件所在的目录下执行不加参数的make命令,执行顺序如下:
-	1)make命令在当前目录下找相应的xxxfile文件如果都没找到就报错.
-	2)在xxxfile文件中找all这个目标,如果没有则执行第一个目标。
+    1)make命令在当前目录下找相应的xxxfile文件如果都没找到就报错.
+    2)在xxxfile文件中找all这个目标,如果没有则执行第一个目标。
     3)查找all后面的三个文件是否存在,如果存在就执行下面的action。
       如果不存在,就把第一个main.o作为目标,查找文件中是否有该目标,
       如果有,就执行该目标并最终得到需要的main.o文件。
@@ -75,18 +75,18 @@
   $()|${} 这两个符号用来展开变量
  
  例子:
-	CC		:=	gcc		//编译命令的变量
+    CC		:=	gcc		//编译命令的变量
     LD		:=  gcc	    //链接命令的变量
     CFLAGS  :=  -g -W -std=c99 -c //编译用到的参数
     LDFLAGS :=  -lcurses  //链接用到的参数
 
     all: MyC
 
-	Myc: main.o part.o
-		$(LD) $(LDFLAGS) main.o part.o -o my
+    Myc: main.o part.o
+	$(LD) $(LDFLAGS) main.o part.o -o my
 
     main.o: main.c main.h
-		$(CC) $(CFLAGS) -o main.o main.c
+	$(CC) $(CFLAGS) -o main.o main.c
     part.o: part.c part.h
 		$(CC) $(CFLAGS) -o part.o part.c
 
@@ -315,4 +315,22 @@
  endif
 
  if-condition: ifdef、ifndef、ifeq、ifneq
+
+
+#wildcard
+ 通配符命令,用来匹配文件。
+ SOURCES=$(wildcard src/**/*.c src/*.c)
+ 匹配src目录下的所有 .c 文件,然后将其赋值给SOURCES变量 
+
+ 结果如下:
+	SOURCES= src/a/aa.c src/b.c
+
+#patsubst
+ OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
+ 将$(SOURCES)的所有 .c 文件转换成 .o 文件,并赋值给OBJECTS变量
+	OBJECTS= src/a/aa.o src/b.o
+	
+
+
+
 

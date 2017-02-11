@@ -794,7 +794,7 @@ Python中有各种GUI平台,这里我们使用wxpython平台。
 
    #urllib和urllib2模块
    from urllib import urlopen
-   web_page = urlopen('http://www.python.org');
+   webpage = urlopen('http://www.python.org');
    text = webpage.read();
    print text;
 
