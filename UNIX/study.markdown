@@ -976,4 +976,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ###函数memset
 
 
+###地址对齐函数posix_memalign
+
+
 

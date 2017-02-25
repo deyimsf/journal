@@ -769,6 +769,24 @@ a[i] = i++; 存在同样的问题
 	    printf("%d\n",hh);
 	}
 
+定义一个函数类型
+	typedef int (*FUN)(int a,int b);
+	从此以后FUN就代表 int xxx(int a, int b) 类型的函数.
+
+	例如:
+		int a;
+		FUN add;
+	其中a是一个整数的变量;add则是一个 int xxx(int a, int b)类型的变量.
+
+一个对比
+	typedef long bb;
+	typedef int (*FUN)(int a);
+	long类似 int (*FUN)(int a);
+	bb类似   FUN	
+
+	bb long_var;
+	FUN FUN_var;
+
 C数组指针
  int bb[13];
  bb是一个指针，但不是指针变量；bb这个指针指向的是一个int型;
@@ -945,11 +963,11 @@ C实现的头文件，在unix系统中一般放在 /usr/include 目录中
  上一个'\n'。
 
 #系统接口open、read等和C标准函数库fopen,fgets等函数的区别
-	fopen是ANSIC标准中得C语言函数，在不同的系统中(window或linux)调用不同
+  fopen是ANSIC标准中得C语言函数，在不同的系统中(window或linux)调用不同
   的api。在linux中open是系统函数，fopen是其封装函数，fopen最终还是要调用
   底层系统的open函数。
-    但是fopen函数在window的实现时就需要调用window的系统函数。
-	linux中open、read等系统函数被称为无缓冲I/O函数，用这个函数读写每次都
+   但是fopen函数在window的实现时就需要调用window的系统函数。
+  linux中open、read等系统函数被称为无缓冲I/O函数，用这个函数读写每次都
   要进内核，调用一个系统调用比调用一个用户空间的函数要慢很多，C标准I/O库
   函数会再用户空间开辟I/O缓冲区，省去了自己管理I/O缓冲区的麻烦。
 
@@ -2326,7 +2344,11 @@ IO多路复用select的例子:
   int areas[] = {10,32,13};
   char name[] = "张三";
 
-#练习20
+#练习38 哈希算法
+FNV-1a
+Adler-32
+DJB Hash
+
 
 
 
