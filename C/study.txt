@@ -2349,8 +2349,45 @@ FNV-1a
 Adler-32
 DJB Hash
 
+#关于include先后顺序问题
+ 在看联系nginx数据结构是遇到这样一个问题,当直接include <ngx_palloc.h>
+ 时编译失败,说是有隐式的声明(implicit declaration of function 'ngx_palloc'),
+ 按道理是不应该的,因为ngx_palloc函数的声明就在<ngx_palloc.h>文件中,既然我
+ 引用了<ngx_palloc.h>这文件为什么还会报错呢? 
+ 仔细再看报错信息,会看到这个错误出现在/src/core/ngx_array.h这个文件中,在这个文件中
+ 有一个静态方法ngx_array_init,而在这个方法中有
+	array->elts = ngx_palloc(pool, n * size);
+ 这样一行代码,从提示信息可以判断出,编译器把这里的ngx_palloc方法当成了隐式声明,
+ 也就是说编译器直到现在,才第一次看到ngx_palloc方法。从这个现象可以判断出,
+ 编译器在看到<ngx_palloc.h>文件中对ngx_palloc方法声明之前,就已经提前include了
+ <ngx_array.h>文件。打开<ngx_palloc.h>文件的源码可以看到有这样一个引用
+	#include <ngx_core.h>
+ 从<ngx_core.h>这个文件中,我们确实看到了对<ngx_array.h>的引用,这也就是为什么编译器
+ 先看到了<ngx_array.h>中的ngx_palloc方法的原因了。
 
+ 在仔细看<ngx_core.h>文件中也有对<ngx_palloc.h>的include,并且是在<ngx_array.h>
+ 之前,可为什么还会出现上面的那种情况呢? 原因很简单,就是因为每个头文件的开始都有
+ 两行代码
+	#idndef _NGX_XXXX_H_INCLUDE_
+	#define _NGX_XXXX_H_INCLUDE_
+	...
+	#endif
+ 这是两个预处理命令,意思是如果没有定义 _NGX_XXXX_H_INCLUDE_ 这个变量,则定义它。
+ 也就是说如果你提前定义了这个变量,那么就不会定义它了,并且#ifndef之后的代码也就
+ 不会执行了。 
 
+ 有了上面的说明,我们在看看这个代码
+	#include <ngx_palloc.h>
+ 预处理其是这样处理的
+ 1.执行<ngx_palloc.h>文件中的 #ifndef _NGX_PALLOC_H_INCLUDE_ ,因为这个变量没有
+   被定义过所以,此时是第一次定义。
+ 2.执行 #include <ngx_core.h>,在执行过程中会再一次遇见#include <ngx_palloc.h>
+   当预处理器再次执行 <ngx_palloc.h> 时,因为_NGX_PALLOC_H_INCLUDE_宏定义已经存在
+   所以<ngx_palloc.h>中的内容就不会处理了。
+ 3.继续向下走就遇到了 #include <ngx_array.h> 然后开始执行,最终会遇到一句代码
+	array->elts = ngx_palloc(pool, n * size);
+ 4.继续向下走,当<ngx_core.h>被完全包含进来后才真正开始包含<ngx_palloc.h>文件下
+   的内容,最终所有包含处理完之后会看到,方法ngx_palloc的声明实际上放在了最后。
 
 
 
