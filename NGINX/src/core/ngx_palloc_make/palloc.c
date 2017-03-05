@@ -5,10 +5,8 @@
 
 
 int main(){
-	printf("sdfdfds\n");
-
 	ngx_pool_t *pool = NULL;
-	pool = ngx_create_pool(1024, NULL);
+	pool = ngx_create_pool(79, NULL);
 	
-	printf("%p\n",pool);
+	printf("%lu\n",pool->max);
 }
