@@ -2240,6 +2240,22 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
   当n大于keepalive的设置值时,将要释放的链接和cache队尾的链接进行替换。
    
 
+#Nginx中配置托底页面
+ recursive_error_pages on;
+ proxy_intercept_errors  on;
+ error_page 4xx 5xx = @error;
+ location @error {
+     root /export/App/brand.jd.local/WEB-INF/classes;
+
+     //自定义mime类型和Content-Type响应头中的charset值
+     types {}
+     default_type "text/html";
+     charset utf-8;
+
+     rewrite / /html/index.properties break;
+
+     error_page 404 = http://www.jd.com/error2.aspx;
+  }
 
 
 
