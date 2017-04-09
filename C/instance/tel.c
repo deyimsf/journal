@@ -59,35 +59,35 @@ int main(int argc,char *argv[]){
 		int ret = poll(fds,2,5000); //超时时间5秒
 		if(ret == -1){
 			perror("poll");
-          return 1;
-        }    
+ 		        return 1;
+       		 }    
              
-        //读标准输入数据 
-        if(fds[0].revents & POLLIN){
-            len = read(0,buf,buffer);
-            if(len < 0){
-                perror("read(stdin)");
-            }    
+        	//读标准输入数据 
+        	if(fds[0].revents & POLLIN){
+            		len = read(0,buf,buffer);
+            		if(len < 0){
+                		perror("read(stdin)");
+            		}    
 
-            write(socketfd,buf,len);
-        }    
+            		write(socketfd,buf,len);
+        	}    
 
-        //读socket数据
-        if(fds[1].revents & POLLIN){
-            //- 走到这里说明fd数据已经准备好,可以读 
-            //- 1.如果是fd是阻塞方式,那么将准备好的数据读完后再读一次则该方法会阻塞 
-            //- 2.如果fd是非阻塞方式,准备好的数据读完后再读一次则该方法不会阻塞 
-            len = read(socketfd,buf,buffer);
-            if(len < 0){
-                perror("read(socketfd)");
-                break;
-            }    
-            if(len == 0){
-                break;
-            }    
-            //向标准输出写数据   
-            write(1,buf,len);
-        }    
+        	//读socket数据
+        	if(fds[1].revents & POLLIN){
+            		//- 走到这里说明fd数据已经准备好,可以读 
+            		//- 1.如果是fd是阻塞方式,那么将准备好的数据读完后再读一次则该方法会阻塞 
+            		//- 2.如果fd是非阻塞方式,准备好的数据读完后再读一次则该方法不会阻塞 
+            		len = read(socketfd,buf,buffer);
+            		if(len < 0){
+                		perror("read(socketfd)");
+                		break;
+            		}    
+           		if(len == 0){
+                		break;
+            		}    
+            		//向标准输出写数据   
+            		write(1,buf,len);
+        	}    
     }    
  }           
 

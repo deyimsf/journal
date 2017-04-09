@@ -1910,21 +1910,21 @@ IP地址结构
  /* 向epoll增改删I/O句柄
   * epfd: epoll对象句柄
   * op: 要进行的操作
-  *	  EPOLL_CTL_ADD
-  *	  EPOLL_CTL_MOD
-  *	  EPOLL_CTL_DEL
+  *	  EPOLL_CTL_ADD : 向epoll中添加一个事件
+  *	  EPOLL_CTL_MOD : TODO ??
+  *	  EPOLL_CTL_DEL : 从epoll中删除一个事件
   * fd: 要增删的I/O句柄
   * event: 要监控的事件和用户的私有数据 
   * 	struct epoll_event {
-			__uint32_t		events;	//epoll事件集合
+			__uint32_t	events;	//epoll事件集合
 			epoll_data_t	data;	//是一个联合体,放用户私有数据,比如放fd
 		}
 
 		typedef union epoll_data {
 			void		*ptr;    //接收一个指针,任意类型
-			int			fd;		 //放一个int型数据
+			int		fd;		 //放一个int型数据
 			__uint32_t	u32;     //放一个无符号32位数据
-			__uint64_t  u64;     //
+			__uint64_t  	u64;     //
 		}
   * 返回值 :
   */
@@ -1932,10 +1932,12 @@ IP地址结构
 
  /*
   * 等待epoll所监控的I/O句柄有事件发生
+  *
   * epfd: epoll对象句柄
   * events: 数组,已发生事件都会放到该数组中
   * maxevents: 一次最多能返回的时间数,必须大于0且小于等于events的大小
   * to: 超时值,单位微秒
+  *
   * 返回值: 已发生事件个数
   */
  int epoll_wait(int epfd,struct epoll_event *events, int maxevents,int to);
@@ -1944,18 +1946,18 @@ IP地址结构
  一个不完整的例子:
 	int epollfd; 	//定义epoll句柄描述符
 	struct epoll_event event, events[MAX_EVETNS]; //定义事件和就绪事件数组
-
-    epollfd = epoll_create(256); //创建epoll对象
-    event.events = EPOLLIN;  	 //注册要监听的事件
+	
+	epollfd = epoll_create(256); //创建epoll对象
+	event.events = EPOLLIN;      //注册要监听的事件
 	event.data = listen_sock_fd; //记录文件描述符
 	
-    epoll_ctl(epollfd,EPOLL_CTL_ADD,listen_sock_fd,&event); //将event事件注册到epoll中
-    while(1){
+	epoll_ctl(epollfd,EPOLL_CTL_ADD,listen_sock_fd,&event); //将event事件注册到epoll中
+	while(1){
 		//事件到来后回放入到events中,并最多返回MAX_EVENTS个事件,nfds是事件个数
 		nfds = epoll_wait(epollfd,events,MAX_EVETNS,-1);
 		
 		//遍历所有事件
-	    for(n=0; n<nfds; n++){
+		for(n=0; n<nfds; n++){
 			//如果是可读事件,并且是listen_sock_fd则说明有链接可接入了
 			if(events[n].events & EPOLLIN && events[n].data.fd == listen_sock_fd){
 					//接收一个链接
@@ -1970,6 +1972,7 @@ IP地址结构
 
 			//如果是普通的读事件
 			if(events[n].events & EPOLLIN){
+				// TODO  是否需要再次向epoll中添加此事件
 				...
 			}else {
 				error
@@ -1982,6 +1985,8 @@ IP地址结构
   的,所以基于LT模式,写条件会一直满足,那么epoll_wait就会立刻返回。为了避免这种情况我们可以一直调用
   send或write向缓冲区写数据,当缓冲区已满就会返回EAGAIN错误,这时我们再对当前处理的fd注册EPOLLOUT
   事件,让epoll_wait去通知我们下一个可写事件到来。
+
+  LT模式是什么 TODO ??
 
 
 #IO多路复用poll的解释

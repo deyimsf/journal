@@ -4,7 +4,10 @@
 
 
 int main(){
+	char *a = "aaaa";
+	char ****b = "bbbb";
+	
+	a = b;
 
-	char *value = getenv("JAVA6_HOME");
-	printf("%s\n", value);
+	printf("%s %s %d\n", a, b, sizeof(*a));
 }
