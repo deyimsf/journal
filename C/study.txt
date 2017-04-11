@@ -1773,10 +1773,10 @@ IP地址结构
  //返回套接字描述符，出错则-1
  int socket(int domain, int type ,int protocol);
 
-客户端和服务器连接 <sys/socket.h>
+用套接字描述符和一个网络地址建立连接(类似绑定方法bind) <sys/socket.h>
  //客户端和服务器建立连接
- //sockfd 客户端套接字描述符
- //*serv_addr 服务端套接字地址 (一般结构表示法) 
+ //sockfd 套接字描述符
+ //*serv_addr 套接字地址 (内核结构) 
  //addrlen  sizeof(sockaddr_in)  网络结构表示法的 结构长度
  //成功返回0，出错则为-1
  int connect(int sockfd, struct sockaddr *serv_addr, int addrlen);
@@ -1785,7 +1785,7 @@ IP地址结构
  //配置服务器
  setsockopt()
  
- //sockfd 通过socket函数创建的，用于监听的，服务端的套接字描述符
+ //sockfd   通过socket函数创建的，用于监听的服务端的套接字描述符
  //*my_addr 服务端的套接字地址，需要我们自己赋值
  //addrlen sizeof(sockaddr_in)
  //成功为0，出错为-1

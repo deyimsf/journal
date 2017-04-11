@@ -969,6 +969,218 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 因为符号"#"正好是awk的注释符,所以*$ nawk* 和 *$ /bin/awk -f /my/path/nawk*等价。
 
 
+###htonl
+ 将无符号长整形的本地(host)字节序转换为网络字节序(大端法)
+ ```c
+	 unsigned long int htonl(unsigned long int host);
+ 
+ ```
+
+###htons
+ 将无符号短整形的本地(host)字节序转换为网络字节序(大端法)
+ ```c
+	unsigned short int htons(unsigned short int host);
+ ```
+
+###ntohl
+ 将无符号长整形网络字节序转成本地(host)字节序
+ ```c
+	unsigned long int ntohl(unsigned long int net);
+ ```
+ 
+###ntohs
+ 将无符号短整形网络字节序转成本地(host)字节序
+ ```c
+	unsigned short int ntohs(unsigned short int net);
+ ```
+
+###套接字结构体
+```c
+	//网络地址(Internet address)一个无符号整形
+	struct in_addr {
+		in_addr_t s_addr;
+	};
+
+	//套接字地址(socket address),因特网样式的(internet style)
+	//写代码时我们使用这个结构体赋值,然后强转成内核地址(struct sockaddr)
+	struct sockaddr_in {
+		__uint8_t	sin_len;
+		sa_family_t	sin_family;
+		in_port_t	sin_port;
+		struct in_addr	sin_addr;    //网络地址
+		char		sin_zero[8];
+	}
+
+        //内核使用的地址套接字地址,内核函数都接收这种地址	
+	struct sockaddr {
+		__uint8_t	sa_len; //用一个字节表示的长度
+		sa_family_t	sa_family;
+		char		sa_data[14];		
+	}
+```
+
+###inet_aton
+ 将字符形的ip地址转换成整形ip地址(网络IP地址如,struct in_addr)。
+ 成功返回1, 出错返回0
+ ```c
+	int inet_aton(const char *strip, struct in_addr *intip);
+ ```
+
+###inet_ntoa
+ 将一个网络ip地址(struct in_addr)转换成字符串形式的ip
+ ```c
+	char *inet_ntoa(struct in_addr in);
+ ```
+
+###创建一个套接字描述符
+* domain: AF_INET(因特网)
+* type:	  SOCK_ATREAM(因特网的一个端点)
+* protocal: 0 
+* 返回套接字描述符,出错则返回-1	 
+```c
+	int socket(int domain, int type, int protocol);
+```
+
+###connect
+* 用套接字描述符和一个网络地址建立连接(类似bind方法)。
+* sockfd: 一个套接字描述符
+* sock_addr: 内核套接字地址(struct sockaddr)
+* addrlen: 网络套接字对象长度 sizeof(sockaddr_in) 
+* 成功返回0,出错返回-1
+```c
+	int connect(int sockfd, struct sockaddr *sock_addr, int addrlen);
+
+	例子:
+	int socketfd = socket(AF_INET, SOCK_STREAM, 0);
+
+   	struct sockaddr_in sock_addr_in;
+	sock_addr_in.sin_family=AF_INET;
+	sock_addr_in.sin_port=htons(80);
+	inet_aton("192.168.134.89", &sock_addr_in.sin_addr);	
+	
+	int result = connect(socketfd, (struct sockaddr *)&sock_addr_in, sizeof(sock_addr_in));	
+```
+
+###setsockopt
+ 为套接字设置一些参数,比如tcp的缓冲区大小
+
+* sockfd: 套接字描述符
+* level: 层次(支持SOL_SOCKET、IPPROTO_TCP层) 
+* optname: 需设置的选项
+* optval: 存放选选项值的缓冲区
+* optlen: optval缓冲区长度
+```c
+	int setsockopt(int sockfd, int level, int optname, 
+			const void *optval, socklen_t optlen);	
+
+```
+
+###bind
+ 将套接字描述符和网络地址绑定上
+* sockfd: 套接字描述符
+* sock_addr: 内核网络地址
+* addrlen: 网络地址长度
+* 成功返回0, 出错返回-1
+```c
+	int bind(int sockfd, struct sockaddr *sock_addr, int addrlen);
+	使用方式跟connect类似
+``` 
+
+###listen
+ 将套接字设置为监听状态
+* sockfd: 套接字描述符
+* backlog: 等待队列大小
+* 成功返回0, 错误返回-1
+```c
+	int listen(int sockfd, int backlog);
+``` 
+
+###accept
+ 从监听的套接字描述符中,获取网络套接字描述符(包括内核地址)
+* listenfd: 用于监听的套接字描述符
+* *sock_addr: 要回填的内核地址(struct sockaddr)
+* *addrlen: 要回填的内核地址长度
+* 返回网络描述符,出错返回-1
+```c
+	int accept(int listenfd, struct sockaddr *sock_addr, int *addrlen);
+
+	例子:
+	struct sockaddr_in client_addr;
+	int addrlen;
+	int client_fd = accept(listenfd, (struct sockaddr*)&client_addr, &addrlen);
+```
+
+###epoll_create
+ 创建一个epoll描述符。
+* size: 可处理的描述符大小,一个建议值；Linux2.6.8之后会忽略这个值,但必须是正数 
+* 返回epoll描述符,错误返回-1
+```c
+	int epoll_create(int size);
+```
+
+###epoll_ctl
+* control interface for an epool file descriptor
+* 向epoll中注册事件的函数
+
+* epfd: epoll对象的文件描述符
+* op: 操作类型
+   * EPOLL_CTL_ADD: 将fd放入到epfd中,不可重复添加 
+   * EPOLL_CTL_MOD: 修改fd在epfd中注册的事件
+   * EPOLL_CTL_DEL: 将fd从epfd中删除
+* fd: 要注册事件的文件描述符
+* *event: 要注册的事件
+  ```c
+     typedef union epoll_data {
+	void		*ptr;
+	int 		fd;
+	uint32_t	u32;
+	uint64_t	u64;
+	
+     } epoll_data_t;
+
+     struct epoll_event {
+	uint32_t	events; //二进制掩码
+	epoll_data_t	data;	
+     }
+     
+     events这个二进制掩码有如下的可用类型:
+     EPOLLIN: 关联的fd对于read函数可操作
+     EPOLLOUT: 关联的fd对于write函数可操作
+     EPOLLRDHUP: (Linux 2.6.17)
+     EPOLLPRI:
+     EPOLLERR:
+     EPOLLHUP:
+     EPOLLET: 设置为边缘触发(Edge Triggered),默认是水平触发(Level Triggered)
+     EPOLLONESHOT: (Linux 2.6.2以后)只监听一次,想继续监听则需将fd在此放入到epoll中
+     EPOLLWAKEUP: (Linux 3.5)
+     EPOLLEXCLUSIVE: (Linux 4.5)
+  ```  
+* 成功返回0, 失败返回-1 
+
+```c
+	int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+```  
+
+###epoll_wait
+ 等待I/O事件的到来
+* epfd: epoll对象描述符
+* *events: 用于填充的就绪事件集合(数组) 
+* maxevents: 设定最多可以返回多少就绪事件
+* timeout: 超时时间,0会立即返回,-1表示indefinitely 
+* 成功则返回就绪描述符的个数,如果返回0则表示超时了,错误则返回-1
+```c
+	int epoll_wait(int epfd, struct epoll_event *events, 
+			int maxevents, int timeout);
+
+	例子:
+	int epfd = 5;
+	int maxevents = 1024;
+	int timeout = 1000;
+	struct epoll_event events[1024];
+	
+	int result = epoll_wait(epfd, events, maxevents, timeout);
+```
+
 
 ###函数system
 
@@ -984,3 +1196,4 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 
 
 
+ 
