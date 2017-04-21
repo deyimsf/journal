@@ -1032,9 +1032,10 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 	char *inet_ntoa(struct in_addr in);
  ```
 
-###创建一个套接字描述符
+###socket <netinet/in.h>
+ 创建一个套接字描述符
 * domain: AF_INET(因特网)
-* type:	  SOCK_ATREAM(因特网的一个端点)
+* type:	  SOCK_STREAM(因特网的一个端点)
 * protocal: 0 
 * 返回套接字描述符,出错则返回-1	 
 ```c
@@ -1194,6 +1195,6 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ###sigsuspend
 
 
-
+###strncmp
 
  
