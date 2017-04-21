@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#include <errno.h>
+#include <string.h>
+
 
 /*
  epoll学习
@@ -20,7 +23,7 @@ int main(){
 	//绑定
 	int ret = bind(socket_fd, (struct sockaddr *)&sock_addr_in,sizeof(sock_addr_in));
 	if(ret == -1){
-		printf("绑定socket错误\n");
+		printf("绑定socket错误 error: %s\n",strerror(errno));
 	}
 
 	//开始监听
