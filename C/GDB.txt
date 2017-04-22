@@ -93,3 +93,5 @@
       (gdb) x/3hx 0x10058009  //从该地址开始,双字节表示一个单位，显示三个单位的十六进制内容
 
 
+#gdb调试多进程
+set follow-fork-mode [parent|child]   set detach-on-fork [on|off]
