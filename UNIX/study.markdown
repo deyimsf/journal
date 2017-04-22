@@ -1183,18 +1183,39 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ```
 
 
-###函数system
+###sigemptyset
+* 将set中的信号集合初始化并清空
+* *set: 信号集合
+* 成功返回0,错误则返回-1
+```c
+	#include <signal.h>
+	int sigemptyset(sigset_t *set);
+```
 
+###sigaction
+* 设置信号sig要处理的函数,和sigal的不同的是sigal只能接收一次该信号
+* sig: 信号
+* *restrict: 信号函数放在该结构体中,如sigaction.sa_handler,
+	sa_handler是一个宏#define sa_handler __sigaction_u.__sa_handler
+* 成功返回0,错误返回-1
+```c
+	#include <signal.h>
+	int sigaction(int sig, const struct sigaction *restrict act
+			struct sigaction *restrict oact);
 
-###函数memset
+```
 
-
-###地址对齐函数posix_memalign
-
-
-###sigsuspend
+###信号SIGALRM
+ liunx中的信号,函数alarm和setitimer会产生SIGALRM信号
 
 
 ###strncmp
+
+
+###setitimer
+
+
+###getrlimit
+
 
  
