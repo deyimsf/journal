@@ -1209,13 +1209,53 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
  liunx中的信号,函数alarm和setitimer会产生SIGALRM信号
 
 
+###setitimer
+ 设置定时器,会覆盖上一次设置的同一种类型定时器
+* which: 定时器类型
+	* ITIMER_REAL: 记录一个真实的时间,触发后发送SIGALRM信号
+	* ITIMER_VIRTUAL: 记录进程运行的时间,不包括系统调用,触发后发SIGVTALRM信号
+	* ITIMER_PROF: 记录进程使用的cpu时间,包括系统调用,触发后发SIGPROF信号
+* *new_value: 要设置的时间
+* *old_value: 如果该值不为空,则返回上一次的定时器设置
+* 成功返回0,错误返回-1
+```c
+	struct timeval{
+		time_t		tv_sec; //秒
+		suseconds	tv_usec; //微秒
+	}
+
+	struct itimerval{
+		struct timeval	it_interval; //间隔时间
+		struct timeval	it_value; //定时器启动时间
+	}
+
+	#include <sys/time.h>
+	int setitimer(int which, const struct itimerval *new_value,
+			struct itimerval *old_value);
+```
+
+
+###getrlimit/setrlimit
+ 获取或设置资源限制
+* resource: 要获取或设置的资源
+	* RLIMIT_NOFILE: 当前进程可代开的最大文件描述符
+	* RLIMIT_AS: 允许进程使用的最大虚拟空间
+* *rlim: 描述资源闲置的软硬结构体
+```c
+	struct rlimit{
+		rlim_t	rlim_cur; //软限制,内核限制的资源
+		rlim_t	rlim_max; //硬限制,软限制不可大于硬限制
+	};
+
+	#include<sys/resource.h>
+	int getrlimit(int resource, struct rlimit *rlim);
+	int setrlimit(int resource, const struct rlimit *rlim);
+```
+
+
+
+
+
 ###strncmp
 
 
-###setitimer
-
-
-###getrlimit
-
-
- 
