@@ -1024,7 +1024,7 @@ lua> print(debug.traceback())
     print(cdata.a); -->4
 	print(cdata.b); -->5
     
-##创建才数据对象
+##创建C数据对象
   cdata = ffi.new(ct [,nelem],[,init ...]); 
   ct: c数据类型
   nelem: 结构体中类似int[?]的变长数组的初始化值

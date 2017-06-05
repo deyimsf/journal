@@ -1,4 +1,4 @@
-#include <List.h>
+#include "list.h"
 
 
 List *
@@ -14,10 +14,15 @@ List_destroy(List *list)
 	LIST_FOREACH(list, first, next, cur){
 		if(cur->prev) {
 			free(cur->prev);
+			cur->prev=NULL;
 		}
 	}
 
-	free(list->last);
+	if(list->last){
+		free(list->last);
+		list->last = NULL;
+	}
+
 	free(list);
 }
 
@@ -26,7 +31,9 @@ void
 List_clear(List *list)
 {
 	LIST_FOREACH(list, first, next, cur){
-		free(cur->value);
+		if(cur->value){
+			free(cur->value);
+		}
 	}
 }
 
@@ -99,5 +106,8 @@ List_remove(List *list, ListNode *node)
 	list->count--;
 	result = node->value;
 	free(node);
+	node = NULL;
+	
+	return result;
 }
 

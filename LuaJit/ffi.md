@@ -76,3 +76,34 @@
     	print(c_str[1]);
 ```
 
+
+##lua中的字符串地址赋值给一个c变量
+```c
+	char ***str; //对这个str赋值如下
+	
+	char *a = "hello";
+	char *b = &a;
+	char *c = &b;	
+	
+	str = c; //搞定
+```
+上面的代码在lua中有如下对应:
+```lua
+	local str = "hello"; -- 一个lua字符串
+	
+	// 加1是因为c语言里面需要一个'\0'作为字符串的结尾
+	local c_str_a = ffi.new("char [?]",string.len(str)+1, str);
+	local c_str_b = ffi.new("char *[1]", c_str_a);
+	local c_str_c = ffi.new("char *[1]", c_str_b);
+
+	-- 其中 c_str_c 就对应了c中的 ***str
+```
+
+在lua中声明一个指针类型的变量并赋值(如int *c_int_a = 15):
+```lua
+	local c_int_a = ffi.new("int[1]", 15);
+	print(c_int_a[0]);
+```
+
+
+

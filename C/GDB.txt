@@ -16,6 +16,13 @@
  $ gdb
  (gdb) attach <pid>
 
+#启动一个带参数的程序
+ $ sudo gdb -tui ./nginx
+ (gdb) set args -t
+ (gdb) run
+ 上面的命令等同于 ./nginx -t
+
+
 #图形方式启动gdb
   $ gdb -tui a.out
   加tui方式debug源代码会展示在窗口的上方
@@ -94,4 +101,29 @@
 
 
 #gdb调试多进程
-set follow-fork-mode [parent|child]   set detach-on-fork [on|off]
+ set follow-fork-mode [parent|child] 
+ parent: 表示gdb跟着主进程代码走(默认)
+ child: 表示gdb跟着子进程代码走
+
+ set detach-on-fork [on|off]
+ on: 表示和fork分离(默认)
+ off: 表示和fork分离 
+ 
+ 从上面的默认参数可知,默认gdb只调试主进程代码,只要主进程退出
+ 那么gdb也就调试完毕了。
+
+ 如果想只调试子进程,可以如下操作:
+	set follow-fork-mode child 
+ 这样gdb就一直跟着子进程代码走,不再关心主进程
+
+#查看正在调试的进程
+ (gdb) info inferiors
+  Num  Description     	 Executable    	   
+* 2    process 1861    	 /export/servers/nginx/sbin/nginx 
+  1    <null>  	       	 /export/servers/nginx/sbin/nginx 
+
+  *号表示正在调试的进程,其中<null>表示这个进程已经退出了
+  
+#切换调试的进程
+ (gdb) inferior <Num>
+
