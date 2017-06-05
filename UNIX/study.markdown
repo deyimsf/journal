@@ -227,7 +227,7 @@ cmd有如下值:
 	uid_t		st_uid;		
 	gid_t		st_gid;
 	dev_t		st_rdev;
-	off_t		st_size;
+	off_t		st_size;	/*文件大小(字节)*/
 	struct timespec	st_atime;
 	struct timespec st_mtime;
 	struct timespec st_ctime;
@@ -1066,8 +1066,34 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
  为套接字设置一些参数,比如tcp的缓冲区大小
 
 * sockfd: 套接字描述符
-* level: 层次(支持SOL_SOCKET、IPPROTO_TCP层) 
-* optname: 需设置的选项
+* level: 套接字存在的层次
+	* SOL_SOCKET: 通用套接字,该层支持的选项(optname)如下
+		* SO_BROADCAST: 延迟关闭连接
+		* SO_DEBUG: 允许调试
+		* SO_DONTROUTE: 不查找路由
+		* SO_ERROR: 获得套接字错误信息
+		* SO_KEEPALIVE: 保持连接
+		* SO_LINGER:是否延迟关闭连接(true|false),如果设置为0,则当调用close方法时直接发送RST报文来关闭连接
+		* SO_OOBINLINE:
+		* SO_RCVBUF: 接收缓冲区大小
+		* SO_SNDBUF: 发送缓冲区大小
+		* SO_RCVLOWAT: 接收缓冲区下限
+		* SO_SNDLOWAT: 发送缓冲区下限
+		* SO_RCVTIMEO: 接收超时
+		* SO_SNDTIMEO: 发送超时
+		* SO_REUSEADDR: 是否允许socket绑定处在TIME_WAIT状态的连接(true|false)
+		* SO_REUSEPORT: 是否允许多个socket绑定到相同的连接(ip和port相同)上。如果
+				第一个绑定某个地址和端口的socket没有设置SO_REUSEPORT,那么
+				其他的socket无论有没有设置SO_REUSEPORT都无法绑定到该地址和
+				端口直到第一个socket释放了绑定。
+		* SO_TYPE: get socket type		
+	* IPPROTO_TCP: 该层支持的选项如下
+		* TCP_MAXSEG: TCP最大数据段的大小
+		* TCP_NODELAY: 不使用Nagle算法
+	* IPPROTO_IP 
+	* IPPROTO_IPV6
+
+* optname: 需设置的选项,该值范围有level决定
 * optval: 存放选选项值的缓冲区
 * optlen: optval缓冲区长度
 ```c
@@ -1120,12 +1146,12 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ```
 
 ###epoll_ctl
-* control interface for an epool file descriptor
+* control interface for an epoll file descriptor
 * 向epoll中注册事件的函数
 
 * epfd: epoll对象的文件描述符
 * op: 操作类型
-   * EPOLL_CTL_ADD: 将fd放入到epfd中,不可重复添加 
+   * EPOLL_CTL_ADD: 将fd放入到epfd中,不可重复添加,重复添加会报错 
    * EPOLL_CTL_MOD: 修改fd在epfd中注册的事件
    * EPOLL_CTL_DEL: 将fd从epfd中删除
 * fd: 要注册事件的文件描述符
@@ -1147,10 +1173,10 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
      events这个二进制掩码有如下的可用类型:
      EPOLLIN: 关联的fd对于read函数可操作
      EPOLLOUT: 关联的fd对于write函数可操作
-     EPOLLRDHUP: (Linux 2.6.17)
-     EPOLLPRI:
-     EPOLLERR:
-     EPOLLHUP:
+     EPOLLRDHUP: (Linux 2.6.17) 表示TCP连接的远端关闭或半关闭连接
+     EPOLLPRI: 对应的连接上有紧急数据需要连接
+     EPOLLERR: 连接发生错误
+     EPOLLHUP: 连接被挂起
      EPOLLET: 设置为边缘触发(Edge Triggered),默认是水平触发(Level Triggered)
      EPOLLONESHOT: (Linux 2.6.2以后)只监听一次,想继续监听则需将fd在此放入到epoll中
      EPOLLWAKEUP: (Linux 3.5)
@@ -1192,12 +1218,94 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 	int sigemptyset(sigset_t *set);
 ```
 
+
+###sigprocmask
+* 屏蔽或解除屏蔽当前进程的信号;屏蔽的意思就是信号过来后不会立即
+  执行信号绑定的方法,而是阻塞在内核。
+* how:
+   * SIG_BLOCK: 为当前进程追加屏蔽信号
+   * SIG_UNBLOCK: 删除当前进程set集合中的屏蔽信号,保存oldset中的信号
+   * SIG_SETMASK: 重置当前进程中的屏蔽信号为set中的信号 
+
+```c
+	#include <signal.h>
+	int sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+
+
+	#例子:
+	#include <stdio.h>
+	#include <siganl.h>
+	#include <unistd.h>
+	#include <string.h>
+
+	void func(int sig){
+		printf("--\n");
+	}
+
+	int main(int argc, char** argv){
+		sigset_t set;
+		sigset_t set_empty;
+	
+		// 清空这两个信号集合
+		sigemptyset(&set);
+		sigemptyset(&set_empty);
+
+		//添加一个键盘终端信号(ctrl + c)
+		sigaddset(&set, SIGINT);
+
+		//为当前进程的绑定SIGINT信号,并为这个信号绑定一个方法
+		struct sigaction sa;
+		sa.sa_handler = func;
+		sigemptyset(&sa.sa_mask);
+		sigaction(SIGINT, &sa, NULL);
+
+		//首先为进程屏蔽绑定SIGINT信号
+		sigprocmask(SIG_BLOCK, $set, NULL);
+
+
+		while(1){
+			// 不停的向标准输出中输出*号
+			wirte(1, "*", strlen("*"));
+
+			// 临时放过set_empty集合之外的信号,等执行完一个信号后
+			// 再恢复到原来的信号屏蔽值,这样每接收一个SIGINT信号
+			// 就会打印一个 "--\n",如果没有任何信号,则会一直阻塞 
+	#if 1
+			sigsuspend(&set_empty);
+	#else
+			// 撤销对该进程的set中的信号屏蔽
+			sigprocmask(SIG_UNBLOCK, &set, NULL);
+			
+			// 每隔一秒钟打印一个*号
+			// 此时,每发送一次SIGINT信号就会发送一个"--n"并提前
+			// 打断sleep(会提前醒来)
+			sleep(1);
+	#endif
+		}	
+
+	}
+
+```
+
+
+###sigsuspend
+* 将信号屏蔽,临时设置成set中的信号,在接收到一个信号(set之外的)之前
+  当前进程会被阻塞;
+  当接收到一个信号并处理完信号函数后,信号屏蔽会恢复到原来的值。
+
+```c
+	#include <signal.h>
+	int sigsuspend(const sigset_t *set);
+```
+
+
 ###sigaction
-* 设置信号sig要处理的函数,和sigal的不同的是sigal只能接收一次该信号
+* 设置信号sig要处理的函数,和sigal函数类似
 * sig: 信号
 * *restrict: 信号函数放在该结构体中,如sigaction.sa_handler,
 	sa_handler是一个宏#define sa_handler __sigaction_u.__sa_handler
 * 成功返回0,错误返回-1
+
 ```c
 	#include <signal.h>
 	int sigaction(int sig, const struct sigaction *restrict act
@@ -1218,6 +1326,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 * *new_value: 要设置的时间
 * *old_value: 如果该值不为空,则返回上一次的定时器设置
 * 成功返回0,错误返回-1
+
 ```c
 	struct timeval{
 		time_t		tv_sec; //秒
@@ -1241,6 +1350,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 	* RLIMIT_NOFILE: 当前进程可代开的最大文件描述符
 	* RLIMIT_AS: 允许进程使用的最大虚拟空间
 * *rlim: 描述资源闲置的软硬结构体
+
 ```c
 	struct rlimit{
 		rlim_t	rlim_cur; //软限制,内核限制的资源
@@ -1253,9 +1363,67 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ```
 
 
+###内存映射函数mmap
+* 将文件描述符映射进用户空间,按页大小来映射,多余空间补零。
+  比如需要映射1个字节的内存,但是系统页大小是4KB,最终会映射
+  到用户空间4KB的内存,除了第一个字节,其它都是0。
+* *addr: 映射进用户空间的开始地址,如果不指定则有内核决定 
+* length: 需要映射的内存字节个数 
+* prot: 映射内存的保护模式,有如下四中方式:
+	* PROT_EXEC: 映射的页内存可以被执行
+	* PROT_READ: 映射的内存可以读
+	* PROT_WRITE: 可以被写
+	* PROT_NONE: 不能被访问
+* flags: 指定映射模式:
+	* MAP_PRIVATE: 创建一个隐私的copy-on-write映射,对该内存的更新,其它进程不可见 
+	* MAP_SHARED: 共享映射,更新操作对其它进程可见
+	* MAP_ANON: 同MAP_ANONYMOUS;(deprecated)
+	* MAP_ANONYMOUS: 匿名映射,不会指向任何文件,
+		设置该标志位后fd最好为-1,offset为0。
+* fd: 要映射的文件描述符,当flags为MAP_ANONYMOUS时设置为-1
+* offset: 要映射的文件描述符的偏移位,当flags为MAP_ANONYMOUS时设置为0 
+
+* 成功则返回一个分配好的指针,失败则返回MAP_FAILED((void *)-1)*
+
+```c
+	#include <sys/mman.h>
+	void *mmap(void *addr, size_t length, int prot, int flags,
+			int fd, off_t offset);	
+```
+
+
+###setsid
+* 每打开一个终端或一个登入都是一个会话,每个会话都有一个唯一的前台进程组和多个后台进程组,
+  只有前台进程组才会有会话终端。
+* 子进程调用setsid方法会使子进程晋升为进程组长,如果进程已经是进程组长则返回错误。
+  这样子进程就和原来的进程完全脱离了关系,并且子进程也不会被分配控制终端。
+* 如果想重新打开控制终端可以调用open("/dev/ttyn")方法。
+  如果不想该进程重新打开控制终端,则可以在fork()一次,这样第一个子进程退出,新fork()出的子进程
+  就变成了当前进程,并且因为新fork出的进程不是进程组长,所以就无法重新再打开控制终端。
+
+
+###sigaddset
+* 添加一个信号signo到信号集合set中
+* 成功返回0,错误返回-1并且设置errno
+
+```c
+	#include <signal.h>
+	int sigaddset(sigset_t *set, int signo);
+``` 
 
 
 
 ###strncmp
 
+
+###gethostname
+
+
+###memmove
+
+
+###sysconf
+
+
+###umask
 
