@@ -1222,6 +1222,11 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ###sigprocmask
 * 屏蔽或解除屏蔽当前进程的信号;屏蔽的意思就是信号过来后不会立即
   执行信号绑定的方法,而是阻塞在内核。
+* 另外,如果在信号函数正在执行时,进程又收到了同样的信号,那么在该函数
+  执行完之前,只会保留一个后续信号,所以这里把进程接收信号的装置看成
+  一个布尔变量会好理解一点;当信号来了,变量为true,然后将变量设置为fasle并开始
+  执行信号绑定的函数,后续不管来多少这个信号,都是把变量置为true,然后内核会
+  判断当前是否有正在执行的信号函数,如果没有则执行绑定的函数。
 * how:
    * SIG_BLOCK: 为当前进程追加屏蔽信号
    * SIG_UNBLOCK: 删除当前进程set集合中的屏蔽信号,保存oldset中的信号
@@ -1234,7 +1239,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 
 	#例子:
 	#include <stdio.h>
-	#include <siganl.h>
+	#include <signal.h>
 	#include <unistd.h>
 	#include <string.h>
 
@@ -1260,12 +1265,12 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 		sigaction(SIGINT, &sa, NULL);
 
 		//首先为进程屏蔽绑定SIGINT信号
-		sigprocmask(SIG_BLOCK, $set, NULL);
+		sigprocmask(SIG_BLOCK, &set, NULL);
 
 
 		while(1){
 			// 不停的向标准输出中输出*号
-			wirte(1, "*", strlen("*"));
+			write(1, "*", strlen("*"));
 
 			// 临时放过set_empty集合之外的信号,等执行完一个信号后
 			// 再恢复到原来的信号屏蔽值,这样每接收一个SIGINT信号
@@ -1292,6 +1297,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 * 将信号屏蔽,临时设置成set中的信号,在接收到一个信号(set之外的)之前
   当前进程会被阻塞;
   当接收到一个信号并处理完信号函数后,信号屏蔽会恢复到原来的值。
+* 信号函数在用户态执行
 
 ```c
 	#include <signal.h>
@@ -1305,6 +1311,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 * *restrict: 信号函数放在该结构体中,如sigaction.sa_handler,
 	sa_handler是一个宏#define sa_handler __sigaction_u.__sa_handler
 * 成功返回0,错误返回-1
+* 信号函数在用户态执行
 
 ```c
 	#include <signal.h>
@@ -1412,18 +1419,191 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ``` 
 
 
+###setgid
+* 设置进程组ID
+
+
+###ioctl
+(下面这段描述来自网络)
+* 虽然在文件操作结构体"struct file_operations"中有很多对应的设备
+  函数,但是有些命令是是在找不到对应的操作函数。比如CD-ROM的驱动,
+  想要一个弹出光驱的操作,这种操作并不是所有的字符设备都需要,所以
+  文件操作结构体也不会有对应的函数操作。出于这种原因,ioctl就有了
+  它的用处:一些没办法归类的函数,就统一放在ioctl这个函数操作中,通过
+  指定的命令来实现对应的操作。
+
+* 对于操作套接字和普通文件描述符来说,有些功能和其它函数是有重合的
+
+```c
+	#include <unistd.h>
+	int ioctl(int fd, int cmd, ... /* void *arg */);
+```
+
+其中,第三个参数总是一个指针,指针类型依赖cmd。
+* cmd: 传入的命令参数
+  * SIOCATMARK
+  * SIOCSPGRP: 获取进程ID或进程组ID; 等同fcntl的F_GETOWN命令。 
+  * SIOCGPGRP: 设置进程ID或进程组ID; 等同fcntl的F_SETOWN命令。 
+
+  * FIONBIO: 设置fd的阻塞和非阻塞标志; 等同fcntl的F_SETFL命令的O_NONBLOCK标记。 
+  * FIOASYNC: 等同fcntl的F_SETFL命令的O_ASYNC标记。
+  * FIONREAD
+  * FIOSETOWN
+  * FIOGETOWN
+
 
 ###strncmp
+* 比较两个字符大小,最多比较n各字符
+* *s1: 原字符串
+* *s2: 要比较的字符串
+* 返回0表示相等; s1>s2则返回大于0的值; s1<s2则返回小于0的值 
+
+```c
+	#include <string.h>
+	int strncmp(const char *s1, const char *s2, size_t n);
+```
 
 
 ###gethostname
+* 获取主机名字
+* *name: 主机名字会填充到这里
+* len: *name指向的数组长度
+* 如果实际主机名字的长度大于len,则名字会被截断
+```c
+	#include <unistd.h>
+	int gethostname(char *name, size_t len);
+```
+
+
+###socketpair
+* 创建一对没有绑定的socket描述符
+* domain: 指定使用哪种通信域来创建这对socket套接字
+    * SOCK_STREAM: 提供有序、可靠、双向的字节流模型(类似TCP)
+    * SOCK_DGRAM: 提供无连接状态的数据报(类似UDP)
+    * SOCK_SEQPACKET:
+* type: 指定创建哪种socket类型	
+* protocol: 如果是非0,则需要指定一个address family支持的协议;0则系统使用该默认实现。 
+* socket_vector: 用来接收被创建的socket套接字(注意是未被绑定的)
+* 成功返回0,失败返回-1
+
+```c
+	#include <sys/socket.h>
+	int socketpair(int domain, int type, int protocal, int socket_vector[2])
+
+	// 用于主子进程通信的例子:
+	#include <sys/socket.h>
+	#include <stdio.h>
+	#include <errno.h>
+	#include <stdlib.h>
+	#include <unistd.h>
+	#include <string.h>
+	#include <unistd.h>	
+	
+	int main(int argc, char **argv){
+		int domain = AF_UNIX;
+		int type = SOCK_STREAM;
+		int protocol = 0;
+		int sockets[2];
+
+		if(socketpair(domain, type, protocol, sockets[0] == -1)){
+			printf("创建套接字对错误[%d]\n", errno);
+			return -1;	
+		}
+
+
+		// fork子进程
+		int pid = fork();
+		
+		if(pid == -1){
+			printf("fork子进程时错误\n");
+			return -1;
+		}
+
+		
+		// 子进程
+		if(pid == 0){
+			char buf[1];
+
+			while(1){
+				// 一直读,每次读一个字符
+				ssize_t n = read(sockets[1], buf, sizeof(buf));
+				if(n < 1){
+					sleep(1);
+				}
+				
+				// 读完一个字符就输出到标准输出
+				write(STDOUT_FILENO, buf, sizeof(buf));
+				write(STDOUT_FILENO, "\n", sizeof("\n"));
+			}
+		}
+
+		
+		// 主进程
+		int i = 0;
+		char *str = "hello";
+		while(1){
+			write(sockets[0], str, strlen(str));
+			sleep(1);
+		}	
+	}
+```
+
+
+###sendmsg、recvmsg
+* 所有的read/readv/recv/recvfrom都可以替换成revcmsg。各种输出函数也可以替换成sendmsg
+* 该函数可以接收或输出一个结构体(是不是有点像java中的序列化)
+ 
+```c
+	#include <sys/socket.h>
+	ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+	ssize_t sendmsg(int sockfd, struct msghdr *msg, int flags);
+
+	
+	#通过msghdr结构体来发送数据(消息)
+	struct msghdr {
+		/*
+		 * name指向一个套接字地址结构体,用来存放对端的结构地址(比如套接字地址)。
+		 * 如果无需指明则name应该设置为空.
+		 * 
+		 * 对于recvmsg函数,name是需要回填的值结果参数。
+		 * 对于recvmsg函数,namelen指定name的内存大小。  
+		 */
+		void		*msg_name;
+		socklent_t	msg_namelen;
+
+		
+		/*
+		 * 这两个指定输入输出的缓冲区数组(注意msg_iov是个数组)
+		 * iovlen是数组的个数,比如: iov[3]那么iovlen就应该等于3
+		 * struct iovec {
+		 *	void 	*base;   //缓冲区开始地址
+		 *	size_t	iov_len; //缓冲区长度 
+		 * }
+		 *
+		 * msg_iov和msg_name一样是个值结果参数,用来接收和输出数据
+		 * 是个缓冲区。
+		 */	
+		struct iovec	*msg_iov;
+		int 		msg_iovlen;
+	
+
+		/*
+		 * 指定可选的辅助数据的位置大小 TODO 明天看
+		 * 
+		 * msg_control和msg_name一样是个值结果参数 
+		 */
+		void		*msg_control;
+		socklen_t	msg_controllen;
+	
+		// 只有recvmsg使用该成员,该函数被调用时,入参flags会被复制到
+		// 该成员变量中
+		int 		msg_flags;
+	}
+```
 
 
 ###memmove
-
-
 ###sysconf
 
 
-###umask
 

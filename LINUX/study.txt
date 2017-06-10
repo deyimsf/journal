@@ -471,6 +471,13 @@ $ stty erase ^h  //删除字符变为[ctrl]+h
 #标准输入(stdin):代码为0,使用<或<< 
 #标准输出(stdout):代码为1，使用>或>>; 
 #标准错误输出(stderr):代码为2，使用2>或2>>; 
+```c
+	#include <unistd.h>
+	#define	 STDIN_FILENO	0	/* standard input file descriptor */
+	#define	STDOUT_FILENO	1	/* standard output file descriptor */
+	#define	STDERR_FILENO	2	/* standard error file descriptor */
+```
+
 
 #黑洞设备 
 /dev/null 
