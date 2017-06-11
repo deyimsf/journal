@@ -1747,7 +1747,7 @@ I/O重定向
  struct hostnet *gethostbyaddr(const char *addr,int len, 0);
 
 两种套接字结构
-   struct sockaddr{ //一般类型的套接字地址结构
+   struct sockaddr{ //通用类型的套接字地址结构
    	unsigned short sa_family;
 	char 	       sa_data[14];
    }
