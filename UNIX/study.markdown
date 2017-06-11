@@ -1552,7 +1552,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ###sendmsg、recvmsg
 * 所有的read/readv/recv/recvfrom都可以替换成revcmsg。各种输出函数也可以替换成sendmsg
 * 该函数可以接收或输出一个结构体(是不是有点像java中的序列化)
- 
+* 成功则为读入或写出的数据,出错则为-1
+
 ```c
 	#include <sys/socket.h>
 	ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
@@ -1565,8 +1566,9 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 		 * name指向一个套接字地址结构体,用来存放对端的结构地址(比如套接字地址)。
 		 * 如果无需指明则name应该设置为空.
 		 * 
-		 * 对于recvmsg函数,name是需要回填的值结果参数。
-		 * 对于recvmsg函数,namelen指定name的内存大小。  
+		 * 对于recvmsg函数,name是需要回填的结果参数。
+		 * 对于recvmsg函数,namelen指定name的内存大小,同时也是内核要回填的值,是
+		 * 一个值结果参数  
 		 */
 		void		*msg_name;
 		socklent_t	msg_namelen;
@@ -1577,28 +1579,140 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 		 * iovlen是数组的个数,比如: iov[3]那么iovlen就应该等于3
 		 * struct iovec {
 		 *	void 	*base;   //缓冲区开始地址
-		 *	size_t	iov_len; //缓冲区长度 
+		 *	size_t	iov_len; //缓冲区数组个数 
 		 * }
 		 *
-		 * msg_iov和msg_name一样是个值结果参数,用来接收和输出数据
-		 * 是个缓冲区。
+		 * iovlen和namelen一样是个值结果参数。
 		 */	
 		struct iovec	*msg_iov;
 		int 		msg_iovlen;
 	
 
 		/*
-		 * 指定可选的辅助数据的位置大小 TODO 明天看
+		 * 指定可选的辅助数据(控制信息)
 		 * 
-		 * msg_control和msg_name一样是个值结果参数 
+		 * controllen和namelen一样是个值结果参数 
+		 *
+		 * msg_control指向一个cmsghr结构体,用来传递或接收辅助信息
+		 * struct cmsghdr {
+		 *	// 数据和结构体的总长度
+		 *	socklent_t	cmsg_len;
+		 *	// 协议:IPPROTO_IP|IPPROTO_IPV6|SOL_SOCKET
+		 *	int 		cmsg_level;
+		 *	// 协议类型
+		 *	int 		cmsg_type;
+		 *	/* char cmsdata[] 数据  */
+		 * }
 		 */
 		void		*msg_control;
 		socklen_t	msg_controllen;
 	
 		// 只有recvmsg使用该成员,该函数被调用时,入参flags会被复制到
-		// 该成员变量中
+		// 该成员变量中,也是一个值结果参数
 		int 		msg_flags;
 	}
+
+
+	
+	// 一个使用这两个方法的例子
+	#include <sys/socket.h>
+	#include <stdio.h>
+	#include <errno.h>
+	#include <stdlib.h>
+	#include <unistd.h>
+	#include <string.h>
+	#include <unistd.h>
+
+
+	int main(int argc, char **argv){
+
+	        // UNIX套接字
+        	int domain = AF_UNIX;
+       		int type = SOCK_STREAM;
+        	int protocol = 0;
+        	int sockets[2];
+
+        	if(socketpair(domain, type, protocol, sockets) == -1){
+
+                	printf("创建套接字对错误[%d]\n", errno);
+                	exit(-1);
+        	}
+
+
+        	// fork子进程
+        	int pid = fork();
+
+		if(pid == -1){
+                	printf("fork子进程是错误\n");
+                	return -1;
+        	}
+
+
+        	typedef struct {
+                	int      age;
+       		} person_t;
+
+        	// 子进程
+        	if(pid == 0){
+                	person_t sub;
+
+                	struct iovec iov[1];
+                	struct msghdr   msg;
+
+                	while(1){
+
+                        	// 用于接收数据的缓冲区开始地址
+                        	iov[0].iov_base = (char *)&sub;
+                        	// 缓冲区长度
+                        	iov[0].iov_len = sizeof(person_t);
+
+                        	msg.msg_name = NULL;
+				msg.msg_namelen = 0;
+                        	msg.msg_control = NULL;
+                        	msg.msg_controllen = 0;
+
+                        	// 设置接收数据的缓冲区数组
+                        	msg.msg_iov = iov;
+                        	msg.msg_iovlen = 1;
+
+
+                        	int n = recvmsg(sockets[1], &msg, 0);
+                        	if(n == -1){ //出错了
+                                	sleep(1);
+                                	write(STDOUT_FILENO, "error", sizeof("error"));
+                        	}
+
+                        	// 输出结果
+                       		printf("接收数据: %d个字节, 值是%d\n",n, sub.age);
+                	}
+        	}
+
+		
+		// 主进程
+        	while(1){
+                	person_t main;
+                	main.age = 23;
+
+                	struct iovec iov[1];
+                	struct msghdr msg;
+
+                	iov[0].iov_base = (char *)&main;
+                	iov[0].iov_len = sizeof(main);
+
+                	msg.msg_name = NULL;
+                	msg.msg_namelen = 0;
+                	msg.msg_control = NULL;
+			msg.msg_controllen = 0;
+                	msg.msg_iov = iov;
+               		msg.msg_iovlen = 1;
+
+                	printf("\n>>发送数据%zu\n", iov[0].iov_len);
+                	sendmsg(sockets[0], &msg, 0);
+                	// 每隔一秒发送一个person_t结构体
+                	sleep(1);
+        	}
+	}
+       		
 ```
 
 
