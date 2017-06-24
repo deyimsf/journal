@@ -1222,6 +1222,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ###sigprocmask
 * 屏蔽或解除屏蔽当前进程的信号;屏蔽的意思就是信号过来后不会立即
   执行信号绑定的方法,而是阻塞在内核。
+
 * 另外,如果在信号函数正在执行时,进程又收到了同样的信号,那么在该函数
   执行完之前,只会保留一个后续信号,所以这里把进程接收信号的装置看成
   一个布尔变量会好理解一点;当信号来了,变量为true,然后将变量设置为fasle并开始
@@ -1597,9 +1598,9 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 		 * struct cmsghdr {
 		 *	// 数据和结构体的总长度
 		 *	socklent_t	cmsg_len;
-		 *	// 协议:IPPROTO_IP|IPPROTO_IPV6|SOL_SOCKET
+		 *	// 协议级别:IPPROTO_IP|IPPROTO_IPV6|SOL_SOCKET
 		 *	int 		cmsg_level;
-		 *	// 协议类型
+		 *	// 协议类型:SCM_RIGHTS(辅助数据是一个文件指针)
 		 *	int 		cmsg_type;
 		 *	/* char cmsdata[] 数据  */
 		 * }
