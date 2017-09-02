@@ -10,17 +10,25 @@
  //不知道为什么
 
 #启动gdb
- $ gdb a.out
+ $ gdb -tui a.out
 
  调试程序的时候也可以先启动gdb,然后再attach某个进程号
- $ gdb
+ $ gdb -tui ./sbin/nginx  // 关联上程序(nginx)源码
  (gdb) attach <pid>
+
+ 也可以启动gdb时直接关联上源代码和pid 
+ $ gdb -tui ./sbin/nginx  pid
 
 #启动一个带参数的程序
  $ sudo gdb -tui ./nginx
  (gdb) set args -t
  (gdb) run
  上面的命令等同于 ./nginx -t
+
+
+#查看设置好的运行参数
+ (gdb) show args
+ Argument list to give program being debugged when it is started is "-s reload".
 
 
 #图形方式启动gdb
@@ -43,17 +51,28 @@
  (gdb) l	//该命令可以查看源代码
  (gdb) list aa.c:函数名|行号  //从aa.c这个文件的第一行开始看
 
+
 #打断点
  (gdb) break [file:]函数名|行号
 
+
+#条件断点 
+ break <函数名|行号> if <condition>
+ 例子:
+	 break main if i=100
+ 在main函数中,如果i值等于100则停住程序
+	
 #查看断点
  (gdb) info b|break
+
 
 #删除断点
  (gdb) delete 5 | 5-10
 
+
 #开始运行程序
  (gdb) run 	//这个时候会程序会停止在断点处
+
 
 #打印变量
  (gdb) print i  //i是程序中得变量
@@ -126,4 +145,13 @@
   
 #切换调试的进程
  (gdb) inferior <Num>
+
+
+#查看当前调试程序的状态(是否在运行、进程号、被暂定原因l)
+(gdb) info program
+ 
+
+#设置观察点(WatchPoint)
+
+
 

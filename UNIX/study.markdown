@@ -1719,6 +1719,6 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 
 ###memmove
 ###sysconf
-
+###getsockname
 
 
