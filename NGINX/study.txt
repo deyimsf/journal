@@ -734,6 +734,9 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 				proxy_cache_valid 200 301 302  1s;
 				#使用HTTP/1.1协议请求后端应用
 				proxy_http_version 1.1;
+				
+				#指定缓存方法,默认是GET、HEAD
+				#proxy_cache_methods GET HEAD;
 
 				proxy_pass http://tomcat_;
 			}
@@ -2258,4 +2261,72 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
   }
 
 
+#嵌套location的几个规则:
+  1.对于无修饰符的location可以互相嵌套,但内部location的名字必须
+    包含外部location名字,比如:
+	location /7 {
+		location /7/3 {
+			//内部location的名字必须包含外部名字/7
+		}
+	}
+
+
+  2.正则修饰符的location可以相互嵌套
+
+  3.无论何时,无修饰符的location如果是被嵌套的,名字必须包含外部location
+    名字,比如:
+	location ~ /7 {
+		location /7/3 {
+			//内部location的名字必须包含外部名字/7
+		}
+	}
+  
+  4.精确匹配(=)的location中不可以嵌套location
+
+  5.以@开头的location中不可以嵌套location,也不可以被嵌套
+
+
+#location队列排列顺序
+  在/src/http/ngx_http_core_module.c/ngx_http_core_find_config_phase()阶段方法中匹配location 
+
+  每个server{}块和location{}块都会维护一个location队列
+  locations队列排完序后的顺序如下: 
+
+  1.=  (精确匹配,终止匹配) | 无修饰符 | ^~ (和无修饰符相同,但终止匹配)
+       按字符倒序排序,如果顺序一样则短的在前。在NGX_HTTP_FIND_CONFIG_PHASE阶段执行匹配工作。
+  
+  2.~* | ~  按照在配置文件中的位置排序,终止匹配。在NGX_HTTP_FIND_CONFIG_PHASE阶段执行匹配工作。
+
+  3.@  内部匹配(只匹配一次),对应/src/http/ngx_http_core_module.c/ngx_http_named_location()方法
+       不参与NGX_HTTP_FIND_CONFIG_PHASE阶段的匹配工作
+ 
+  4.if () {}  rewirte模块的脚本引擎执行,不参与FIND阶段的匹配工作,所以如果if在server{}块中,那么
+ 	它的执行总是先于location的匹配
+
+
+#proxy_pass 在if中的执行
+ 对于如下配置:
+ 	locationg / {
+		proxy_pass http://www.baidu.com;
+		
+		if ($uri) {
+			proxy_pass http://www.jd.com;
+		}
+	}
+ 我们知道在ngx中if本身会被看成一个location对待,所以它也有对应的ngx_http_core_loc_conf_t结构体,
+ 然而location的匹配结果就是拿到对应的ngx_http_core_loc_conf_t结构体,然后后续的各个阶段中运行的
+ loc级别的指令信息,都会从该结构体中索引到,所以上面的if执行成功也就表示拿到了对应的ngx_http_core_loc_conf_t
+ 结构体,所以就正确的执行了匹配的proxy_pass指令。
+
+
+#server匹配大体流程
+ ls->handler = ngx_http_init_connection;
+	c->read->handler = ngx_http_wait_request_handler;
+		rev->handler = ngx_http_process_request_line;
+			rev->handler = ngx_http_process_request_line;
+				ngx_http_set_virtual_server
+					ngx_http_find_virtual_server
+						ngx_http_core_srv_conf_t  *cscf;
+						cscf = ngx_hash_find_combined()
+						正则匹配(virtual_names->regex;)
 
