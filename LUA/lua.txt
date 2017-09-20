@@ -31,11 +31,11 @@
 
 #获取数据类型
  print(type("hello world"));		-->string
- print(type(20*3));					-->number //lua中数字都是double类型的
- print(type(print));				-->function
- print(type(true));					-->boolean 
- print(type(a));					-->nil
- print(type({}));					-->table
+ print(type(20*3));			-->number //lua中数字都是double类型的
+ print(type(print));			-->function
+ print(type(true));			-->boolean 
+ print(type(a));			-->nil
+ print(type({}));			-->table
 
 #可以用[[]]表示字符串，里面的内容不用转义
  lua> page=[[<html> </htm> "a"]] 
@@ -1026,7 +1026,7 @@ lua> print(debug.traceback())
     
 ##创建C数据对象
   cdata = ffi.new(ct [,nelem],[,init ...]); 
-  ct: c数据类型
+  ct: c数据类型描述符,如"struct person"
   nelem: 结构体中类似int[?]的变长数组的初始化值
   init: 其他类型的初始化值
 

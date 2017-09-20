@@ -1919,8 +1919,8 @@ IP地址结构
  /* 向epoll增改删I/O句柄
   * epfd: epoll对象句柄
   * op: 要进行的操作
-  *	  EPOLL_CTL_ADD : 向epoll中添加一个事件
-  *	  EPOLL_CTL_MOD : TODO ??
+  *	  EPOLL_CTL_ADD : 将fd放入到epfd中,不可重复添加,重复添加会报错
+  *	  EPOLL_CTL_MOD : 修改fd在epfd中注册的事件
   *	  EPOLL_CTL_DEL : 从epoll中删除一个事件
   * fd: 要增删的I/O句柄
   * event: 要监控的事件和用户的私有数据 
@@ -1981,7 +1981,8 @@ IP地址结构
 
 			//如果是普通的读事件
 			if(events[n].events & EPOLLIN){
-				// TODO  是否需要再次向epoll中添加此事件
+				// EPOLLONESHOT:(Linux 2.6.2以后)只监听一次,想继续监听则需将fd在此放入到epoll中
+				// 如果设置了该掩码则需要再次向epoll中添加此事件
 				...
 			}else {
 				error

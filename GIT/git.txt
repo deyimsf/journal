@@ -278,3 +278,38 @@ $ git mergetool
  在工作区更改某个文件后,如果换没有add到stage,可以使用该命令用版本库的内容覆盖工作区的内容
 
 
+#强行覆盖本地库
+ $git fetch --all
+ $git reset --hard origin/master
+
+
+#查看远程主机网址(origin是当前版本库的一个主机)
+ $git remote -v
+ origin	https://github.com/deyimsf/journal.git (fetch)
+ origin	https://github.com/deyimsf/journal.git (push)
+
+
+#查看远程主机的详细信息
+ $git remote show origin
+  * remote origin
+   Fetch URL: https://github.com/deyimsf/journal.git
+   Push  URL: https://github.com/deyimsf/journal.git
+   HEAD branch: master
+   Remote branches:
+     gh-pages tracked
+     master   tracked
+     test1    tracked
+   Local branches configured for 'git pull':
+     gh-pages merges with remote gh-pages
+     master   merges with remote master
+   Local refs configured for 'git push':
+     gh-pages pushes to gh-pages (up to date)
+     master   pushes to master   (up to date)
+
+
+#添加远程主机
+ $git remote add origin1  https://meand.com/deyimsf/jdtd.git
+
+
+#删除远程主机
+ $git remote rm origin1
