@@ -37,7 +37,7 @@
 ```c
 	local person_ptr = ffi.new("person_t *");
 
-	local person_ptr_type = ffi.typeof("person_t*");
+	local person_ptr_type = ffi.typeof("person_t *");
 	local person_ptr = ffi.new(person_ptr_type);
 ```
 * c形式:
@@ -92,6 +92,9 @@
 	local str = "hello"; -- 一个lua字符串
 	
 	// 加1是因为c语言里面需要一个'\0'作为字符串的结尾
+	// 如果第一个参数是VLA或VLS,则第二个参数必须指定个数,第三个参数随意
+	// 比如"char [?]" 是一个VLA(变长数组)
+	// 比如"struct person[?]" 是一个VLS(变长结构体)
 	local c_str_a = ffi.new("char [?]",string.len(str)+1, str);
 	local c_str_b = ffi.new("char *[1]", c_str_a);
 	local c_str_c = ffi.new("char *[1]", c_str_b);
@@ -105,5 +108,127 @@
 	print(c_int_a[0]);
 ```
 
+
+## 将一个指针表示的字符串打印
+str = ffi.string(ptr [,len])
+
+
+## 举例打印系统毫秒时间
+* 获取系统时间的函数声明
+	int gettimeofday(struct timeval *tv, void *tz);
+
+* 用C实现如下:
+```c
+	#include <stdio.h>
+	#include <sys/time.h>
+
+	int main(){
+        	struct timeval time;
+        	int status = gettimeofday(&time,NULL);
+    
+        	if(status < 0){ 
+                	return -1; 
+         	}   
+    
+         	long millis = (long)time.tv_sec * 1000 + (long)time.tv_usec / 1000;
+    
+         	printf("%lu\n",millis);
+	} 
+```
+
+* 另一种用C实现的方式:
+```c
+        #include <stdio.h>
+        #include <sys/time.h>
+
+        int main(){
+                struct timeval time[1];
+                int status = gettimeofday(time,NULL);
+    
+                if(status < 0){ 
+                        return -1; 
+                }   
+    
+                long millis = (long)time[0].tv_sec * 1000 + (long)time[0].tv_usec / 1000;
+    
+                printf("%lu\n",millis);
+        }   
+```
+
+可以看到以上两种方式在传第一个入参的时候,一个是&time,一个是time,其实都是传的地址,但是这个地址
+指向的内存(结构体)需要我们事先分配好,这两种方式都是实现分配好的。
+
+* 用ffi实现如下
+```lua
+	local ffi = require("ffi");
+
+	ffi.cdef[[
+    		/********************时间函数声明********************/
+		struct timeval{
+			long int tv_sec;
+			long int tv_usec;
+		};
+
+		int gettimeofday(struct timeval *tv, void *tz);
+	]]
+
+	local function time(){
+		-- 这一句类似C中的 struct timeval time[1];
+        	local c_timeval = ffi.new("struct timeval[1]");
+		-- 这里的c_timeval就相当于C中的 time变量了,如此就可以清晰的看出我们传的是地址了
+        	ffi.C.gettimeofday(c_timeval,NULL);
+
+        	local current_time = c_timeval.tv_sec * 1000 + c_timeval.tv_usec / 1000;
+		
+		return current_time;
+	}	
+```
+
+* 上面的例子是针对C函数要求一个一级指针传参,如果需要一个二级指针传参怎么办?
+```c
+   // 一级指针
+	timeval *tv
+	 -----
+	 | * |
+	 -----
+	   \
+	   -----------
+	   | timeval |
+	   -----------
+
+   // 二级指针
+	timeval **tv
+	 -----
+	 | * |
+	 -----
+	   \
+	   -----
+	   | * |
+	   -----
+	      \
+	     -----------
+	     | timeval |
+	     -----------
+
+   // 用C写可以这样
+	timeval time[1];
+	timeval *a_time[1];	
+	
+	a_time[0] = time;
+   // 这样a_time在内存中的结构就和 **tv是一样的了
+```
+
+所以用ffi的时候,如果遇见多层次的指针传递(最后的结构体需要自行分配内存的),就可以仿效上面的方式:
+```lua
+	// 相当于C的 struct timeval time[1]
+        local c_timeval = ffi.new("struct timeval[1]");
+
+	// 相当于C的 struct timeval *a_time[1];  a_time[0] = time; 这两句。
+	// 最后C中的a_time和ffi中的a_c_timeval变量的内存结构一致
+	local a_c_timeval = ffi.new("struct *timeval[1]", c_timeval);
+```
+
+注意:
+    在ffi中用一个长度是1的数组来获取变量的地址,是因为ffi中没有获取地址的修饰符(C中是&)
 
 
