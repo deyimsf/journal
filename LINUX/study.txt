@@ -1745,3 +1745,10 @@ $ iostat -xk
   dig +trace www.jd.com
 
 
+#过滤man中的控制字符
+  将gcc命令的man文档打印出,并去掉乱码(控制字符)
+  
+  $ man gcc |col -b > gcc.man
+
+
+
