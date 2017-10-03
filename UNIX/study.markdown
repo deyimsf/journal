@@ -1578,10 +1578,11 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 		/*
 		 * 这两个指定输入输出的缓冲区数组(注意msg_iov是个数组)
 		 * iovlen是数组的个数,比如: iov[3]那么iovlen就应该等于3
-		 * struct iovec {
+		 * 数组元素是 struct iovec
+		 *   struct iovec {
 		 *	void 	*base;   //缓冲区开始地址
-		 *	size_t	iov_len; //缓冲区数组个数 
-		 * }
+		 *	size_t	iov_len; //缓冲区长度 
+		 *   }
 		 *
 		 * iovlen和namelen一样是个值结果参数。
 		 */	
@@ -1717,8 +1718,101 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ```
 
 
+
+###writev
+* 把iov数组中的数据写到文件描述符fd中,其中iov数组中有iovcnt个struct iovec
+* fd: 文件描述符
+* iov: 一个数组,里面存放要写出的数据
+* iovcnt: iov数组中元素的个数
+
+```c
+	#include <sys.uio.h>
+	
+	struct iovec {
+		void *iov_base;	/* Starting address  开始地址*/
+		size_t iov_len; /* Number of bytes to transfer 数据长度*/
+	}
+
+	ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+
+```
+
+
+###数据传输过程中的上下文切换和数据拷贝
+要把一个文件中的数据发送到网络上,传统的方式我们需要如下两个方法
+	read(int fd, void *buf, size_t nbytes);
+	write(int fd, const void *buf, size_t nbytes);
+这两个方法都是系统调用,我们看看这两个方法分别走做了什么
+
+read方法数据流向
+	文件 --> kernel buffer --> user buffer
+这期间经历了两次上下文切换和两次数据拷贝
+两次上下文切换分别是
+	调用read方法,进程从用户态切入内核态
+	read方法返回,进程从内核态切入用户态
+两次数据拷贝分别是
+	DMA把磁盘中的数据拷贝到kernel buffer中,此次拷贝并没有使用cpu
+	CPU将kernel buffer中的数据拷贝到user buffer中
+	
+write方法的数据流向
+	user buffer --> kernel socket buffer --> 协议引擎(协议栈)
+这期间同样经历了两次上下文切换和两次数据拷贝
+两次上下文切换分别是
+	调用write方,进程从用户态进入内核态
+	write方法将数据写入到kernel socket buffer后返回
+两次数据拷贝分别是
+	CPU将user buffer中的数据拷贝到kernel socket buffer,然后方法返回
+	DMA将kernel socket buffer中的数据拷贝到协议引擎中
+
+从上面可以看到,一个简单的数据传输居然经历了四次上下文切换和四次数据拷贝,
+我们可以通过mmap的方式来替代read对这个过程做一个简单的优化
+
+mmap方法的数据流向
+	文件 --> kernel buffer(shared by user buffer)
+这期间经历了两次上下文切换,但是且只发生了一次数据拷贝
+两次上下文切换分别是
+	调用mmap方法,进程有用户态进入内核态
+	mmap方法将数据映射到user buffer后返回
+一次数据拷贝是
+	DMA模块将数据从磁盘拷贝到内核,这次并没有将数据拷贝到用户,只是做了一个映射
+
+从上面的例子可以看到,如果read换成mmap则整个过程会少一次cpu拷贝,但是这样会增加
+程序的复杂性,比如当此时进行write调用时另一个进程对映射的文件进行截断,那么write会被
+SIGBUS信号中断,我们需要根据实际情况来出来这个信号,以免系统崩溃。
+
+
+###sendfile(零拷贝)
+* out_fd: 数据会发送到该描述符中;linux2.6.33之前必须是一个socket fd 
+* in_fd: 必须是一个支持mmap方法的fd,不能是socket fd 
+* offset: in_fd中的偏移量,如果是NULL则从in_fd开始位置传递数据,并且更新in_fd描述符
+	的偏移量(offset);
+	如果该变量不是NULL,那么sendfile会从in_fd的offset位置开始读取数据,当sendfile
+	返回后,变量offset会被设置成in_fd文件被读走数据的最后位置,但是in_fd文件本身
+	的offset不会被更改
+* count: 要拷贝的字节个数 
+* 正确则返回实际传输的数据,失败则返回-1并设置errno
+```c
+	#include <sys/sendfile.h>
+	ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
+```
+
+该方法的数据流向如下:
+	文件 --> kernel buffer --> kernel socket buffer --> 协议栈(协议引擎)
+发生了两次数据拷贝
+	DMA模块把磁盘数据拷贝到kernel bufer
+	DMA模块把kernel socket buffer拷贝到协议栈
+也就是说,从kernel buffer到kernel socket buffer并没有发生拷贝动作,只是sendfile方法
+把kernel buffer中数据的给到了kernel socket buffer
+
+发生了两次上下文切换
+	用户调用sendfile方法,有用户态进入内核态
+	sendfiel方法将数据信息给到kernel socket buffer后返回,从内核态进入用户态
+
+可以看到,sendfile方法比使用read/write方法,上下文切换和数据拷贝都减少了一倍;
+并且从操作系统内核的角度来看的话,彻底消除了CPU拷贝,所以linux中管他叫零拷贝
+
+
+
 ###memmove
 ###sysconf
 ###getsockname
-
-
