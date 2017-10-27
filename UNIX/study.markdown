@@ -1826,11 +1826,98 @@ SIGBUS信号中断,我们需要根据实际情况来出来这个信号,以免系
  此时a对应的A中的数据放入到磁盘,然后再把b映射到A,此时A就和虚拟地址b对应上了。 
  
 
+###在分配内存的时候为什么要数据对齐
+ cpu在操作内存的时候并不是按照单字节来操作的,为拉提高读取效率,在cpu的眼里内存是
+ 一块一块的,这个块的大小可能是2、4、8、16等字节大小,假设cpu把内存看成是有2个字节
+ 的块组成的,也就是说cpu一次读内存至少是2个字节
+ 例一: 内存对齐的情况下从内存读2字节数据,从地址0开始
+     register                  内存
+      ----- 0                 ------ 0
+      |   |                   |    |
+      ----- 1                 ------ 1
+      |   |                   |    |
+      -----                   ------ 
+    这种情况下内存中的数据直接就可以进入寄存器
+
+ 例二: 内存不对齐的情况下从内存读2个字节数据,从地址1开始
+     register                  内存 
+     ----- 0                 ------ 0
+     |   |                   |    |
+     ----- 1                 ------ 1
+     |   |                   |    |
+     -----                   ------ 2 
+			     |    |
+			     ------ 3
+			     |    |
+			     ------
+    这时候需要从内存读取1、2两个地址的字节数据,但是在cpu眼里只能看到块1(编号0,1)
+    块2(编号2,3),所以就需要把块1和块2的数据都读到cpu寄存器,然后在整合成一个完整
+    数据,这种显然浪费空间又浪费时间,所以有些cpu干脆罢工抛异常。
+
+ 				
+###内核读磁盘文件的对齐方式(directio) (?)
+  像cpu读内存时分块一样,内核在处理磁盘IO时也是需要分块的,一般块大小是pagesize
+  也就是说在内核的眼里,文件的大小都是按照pagesize块大小组成的,这里可以看到内存
+  的角色其实跟cpu中的寄存器是一样的,磁盘则对应内存,正常情况下我们要求这两个都要
+  对齐
+
+  如果内存不对齐,则有可能从磁盘读512字节需要需要两块内存在接收  
+    
+
+###directio
+  direcctio方式读数据时有几个条件需要注意
+  1.接收数据的内存需要对齐,单位是块,按文件系统块大小(一般4096字节)或设备块大小(一般512字节)
+    都可,ngx使用posix_memalign()来分配自定义粒度的对齐
+  2.读偏移量也需要按照块大小对齐
+  3.读字节个数size也需要按照块大小对齐
+ 
+  不满足这几个条件则直接返回错误 "Invalid argument" 
 
 
 ###memmove
+* 从src中拷贝n个字节放入到dest中,如果这两个区域的内存有重叠,该方法会先把src才被到一个
+  临时内存,然后再从临时内存拷贝到dest中.如果没有重叠则同memcpy()方法. 
+* 返回指向dest的指针
+
+```c
+	#include <string.h>
+	
+	void *memmove(void *dest, const void *src, size_t n);
+```
+
+
 ###sysconf
+* 获取当前系统限制值或特征选项,比如_SC_NPROCESSORS_ONLN获取当前可用处理器个数 
+
+```c
+	#include <unistd.h>
+	
+	long sysconf(int name);
+```
+
+
 ###getsockname
+* 通过socket描述符sockfd获取这个描述符的socket信息
+* addr: 用来接收socket的内存空间
+* addrlen: 该值一般会被初始化为addr空间的大小;方法执行成功后会被填充成实际
+      socket大小,另外如果addr空间要小于实际socket的大小,那么返回的实际socket
+      数据将会被截断,那么此时返回的addrlen会比实际传入的值要大,所以可以通过
+      addrlen的先后值来判断socket是否被截断
+
+```c
+	#include <sys/socket.h>
+
+	int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+
+	#例子
+        struct sockaddr_in addr;
+	int addr_len = sizeof(addr);
+
+	getsockname(sockfd, (struct sockaddr *)&addr, &addr_len);	
+```
+
+
+
 
 
 
