@@ -313,3 +313,13 @@ $ git mergetool
 
 #删除远程主机
  $git remote rm origin1
+
+
+#删除本地的远程分支
+ $ git pull -p
+ 此时本地的远程分支会和远程的分支保持一致,那些在远程已经删掉的分支,在本地的远程分支中也不会存在了。
+
+ $ git --prune origin
+ $ git fetch -p
+
+
