@@ -1751,4 +1751,11 @@ $ iostat -xk
   $ man gcc |col -b > gcc.man
 
 
+#火焰图
+ 使用perf命令收集数据
+ 	$ perf record -F 99 -p 928 -g -- sleep 10
+ record表示记录,-F 99 表示每秒记录99次, -p 928表示采样928这个进程,-g表示记录
+ 调用栈,sleep 10表示持续采样10秒,最后产生一个perf.data文件,这里面就是采样数据
+ 火焰图就是根据这份数据产生的.
 
+ 
