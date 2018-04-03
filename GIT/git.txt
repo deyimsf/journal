@@ -49,20 +49,38 @@
  $ git tag  
  不带参数则是直接查看里程碑
 
-#打标签
- $ git tag version
+ $git tag -n[num]
+ 查看里程碑的同时显示说明,显示最多num行里程碑的说明
+  
+ $git tag -l app*
+ 查看以app开头的里程碑
+
+#创建带说明的里程碑
+ $ git tag -m <msg>  <tagname>  [<commit>]
+  msg: 里程碑的描述信息
+  tagname: 里程碑名字
+  commit: [可选]提交ID,如果没有则基于头指针HEAD创建里程碑
+
+#获取某个里程碑的代码
+ $ git checkout -b <branch_name> <tagname>
+ branch_name: 分支名字,里程碑tagname中的代码会放到该分支中
+ tagname: 要获取代码的里程碑 
+
+ $ git checkout -b tag_branch v2.0
+ 把里程碑v2.0的代码放到分支tag_branch上,并git工作状态切换到该分支上
+
 
 #删除标签
- $ git tag -d version
+ $ git tag -d <tagname>
 
 #单独push一个tag到远程
- $ git push origin version
+ $ git push origin <tagname>
 
 #push所有的tag到远程
  $ git push --tags
 
 #删除一个远程标签
- $ git push --delete origin version
+ $ git push --delete origin <tagname>
 
 
 #查看在暂存区和工作树文件的信息：ls-files
@@ -82,7 +100,7 @@
  tags
 
 #获取远程版本库的内容
-$ git fetch
+$ git fetch [<origin> <master>] [--all]
 
 #merge相关操作
  //将远程分支origin/master合并到当前分支,这个远程分支是从远程拉倒本地的分支
@@ -263,12 +281,21 @@ $ git mergetool
  //将本地分支直接推送到远程master中
  $git push origin brand_b:master
 
+ //将本地分支强制推送到远程版本库,此时远程版本库代码会被本地代码覆盖
+ $git push [<origin> <branch>] --force
+
  //删除远程分支
  $git push origin :brand_b
 
 #忽略文件
  如果想忽略某些文件,可以编写以下文件
  .git/info/exclude
+
+ 或者在代码目录下创建.gitignore文件,并编辑该文件,例如:
+	.idea
+	*.iml
+	target/*
+
 
 #撤销某个文件在add之后的操作(用本地版本库的文件,覆盖暂存区)
  git reset HEAD /path/filename
@@ -321,5 +348,11 @@ $ git mergetool
 
  $ git --prune origin
  $ git fetch -p
+
+
+#空提交
+ git commit --allow-empty -m "blank commit"
+
+
 
 
