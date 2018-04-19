@@ -1,0 +1,29 @@
+微信小程序
+
+1.使用小程序的如下信息生成一个token
+  appID ：xxx
+  appsecret：yyy
+
+2.生成access_token，有效期2个小时，每次调用都会覆盖先前token
+  https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=xxx&secret=yyy
+
+3.获取消息模板(POST)
+  https://api.weixin.qq.com/cgi-bin/wxopen/template/library/list?access_token=<第二步生成的token>
+   
+  请求体：
+    {
+     "offset":0,
+     "count":5
+    }  
+
+4.发送消息(POST)
+  https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=<第二步生成的token>
+
+  请求体：
+    {
+     "touser": "<OPENID>",
+     "template_id": "<模板id>", 
+     "form_id": "<FORMID>",
+     "data": {}
+    }
+
