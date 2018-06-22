@@ -4,7 +4,7 @@
 #JDK安装目录
  /Library/Java/JavaVirtualMachines/1.6.0_41-b02-445.jdk/Contents/Home
 
-#使用多个JDK
+#使用多个JDK(/etc/profile)
  export JAVA6_HOME=/Library/Java/JavaVirtualMachines/1.6.0_41-b02-445.jdk/Contents/Home
  export JAVA7_HOME=/Library/Java/JavaVirtualMachines/jdk7/Contents/Home
  export JAVA8_HOME=/Library/Java/JavaVirtualMachines/jdk8/Contents/Home
@@ -18,3 +18,35 @@
 #Mac中idea运行tomcat控制台乱码问题
  默认tomcat获取file.encoding是拿的Mac本地的编码,是EUC_CN;
  需要在idea中配置tomcat的面板中,在VM options中设置 -Dfile.encoding=UTF-8
+
+#修改终端提示符,需要修改如变量
+  PS1='\u@\h:\W\$ '
+ 这个变量在
+    /etc/bashrc
+ 文件中,其实这个文件是在
+    /etc/profile
+ 中被引用的
+
+#设置vim特殊属性
+ /usr/share/vim/vimrc 或者 ~/.vimrc
+
+ syntax on: 打开语法高亮
+ set nu: 显示行号
+ set hlsearch: 高亮显示查找到的数据
+ set ts=4: 用4个空格代表一个tab键
+ set ruler: 显示行号
+
+#设置别名
+  /etc/profile
+ 
+  alias ll='ls -al'
+
+#idea
+
+#maven(/etc/profile)
+ export M2_HOME=/My/work/apache-maven-3.0.5 
+ export PATH=$PATH:$M2_HOME/bin
+
+#tomcat
+
+
