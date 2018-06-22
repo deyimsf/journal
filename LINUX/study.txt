@@ -1318,7 +1318,11 @@ $ iostat -xk
  	$curl -H 'X-My-Head:123' localhost/test
  -v:查看请求和响应头
     $curl http://www.baidu.com -v
-    	
+ -d:post请求的数据
+    $curl http://www.baidu.com -d "user=name&pass=b"    	
+ --cookie:设置cookie
+    $curl http://www.baidu.com --cookie "user=name;pass=1234"
+
 
 #col筛选换行符
  -b Do not output any backspaces,printing only the last character written to each column position.
