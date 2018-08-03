@@ -1802,10 +1802,10 @@ SIGBUS信号中断,我们需要根据实际情况来出来这个信号,以免系
 	DMA模块把磁盘数据拷贝到kernel bufer
 	DMA模块把kernel socket buffer拷贝到协议栈
 也就是说,从kernel buffer到kernel socket buffer并没有发生拷贝动作,只是sendfile方法
-把kernel buffer中数据的给到了kernel socket buffer
+把kernel buffer中数据的信息给到了kernel socket buffer
 
 发生了两次上下文切换
-	用户调用sendfile方法,有用户态进入内核态
+	用户调用sendfile方法,由用户态进入内核态
 	sendfiel方法将数据信息给到kernel socket buffer后返回,从内核态进入用户态
 
 可以看到,sendfile方法比使用read/write方法,上下文切换和数据拷贝都减少了一倍;

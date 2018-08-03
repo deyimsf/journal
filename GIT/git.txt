@@ -354,5 +354,12 @@ $ git mergetool
  git commit --allow-empty -m "blank commit"
 
 
+#比较两个分支或提交记录的文件差异
+ $git diff <branch1|commit1> <branch2|commit2> [某个文件路径] --stat
+
+ stat参数表示，显示所有存在差异的文件列表，不加则显示详细差异。
+ 加上文件路径名则只显示这个文件的差异。
 
 
+#查看某个分支指向的变迁
+ $git reflog show master
