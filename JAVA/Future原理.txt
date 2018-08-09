@@ -1,0 +1,92 @@
+ThreadPoolExecutor类
+    Worker(Runnable firstTask) {
+       setState(-1); // inhibit interrupts until runWorker
+       this.firstTask = firstTask;
+       // 这一行吧pool池中的Worker传到一个新创建的线程中了
+       // 所以后续this.thread线程的运行，就是在运行Worker中的run()方法
+       // run()方法调用runWorker()方法
+       // 
+       this.thread = getThreadFactory().newThread(this); 
+   }
+   
+   
+ 
+   
+   
+ 调用线程池的submit()方法的时候
+ 1.如果入参是Runnable则调用newTaskFor(Runnable,T value)方法来生成RunnableFuture(FutureTask)
+ 2.如果入参是Callbale则调用newTaskFor(Callable)方法来生成RunnableFuture(FutureTask)
+ 
+ 
+ 
+ 3.newTaskFor()方法最终调用FutureTask构造函数，分别是:
+   new FutureTask(Callbale)
+   new FutureTask(Runnable,V)  
+   
+ 4.FutureTask(Callbale)构造函数直接把入参赋值给当前字段，例如:
+   this.callable = callable
+   
+ 5.new FutureTask(Runnable,V)则需要把Runnable做一个简单的封装,比如:
+   this.callable = Executors.callable(runnable, result);
+   
+ 6.Executors.callable方法里会生成一个运行适配器RunnableAdapter,该适配器实现了Callable接口
+   RunnableAdapter(Runnable task, T result) {
+     this.task = task;
+   }
+   public T call() {
+     task.run();
+     return result;
+   }
+   这样run()方法就的执行就可以通过call()方法调用了
+  
+   
+   
+ 
+ 7.FutureTask创建好之后调用execute(Runable),这个Runnable就是上面创建好的FutureTask
+ 
+ 8.然后调用addWorker(Runable, true)方法,该方法会创建一个Worker,比如
+   w = new Worker(Runnable),这里的runnable就是在submit的时候创建的FutureTask
+   
+   这个Worker接收一个Runnable(这里的runnable就是在submit的时候创建的FutureTask),然后
+   创建一个线程,Worker本身也实现了Runnable接口
+    Worker(Runnable firstTask) {
+            this.firstTask = firstTask;// 这里的runnable就是在submit的时候创建的FutureTask
+            this.thread = getThreadFactory().newThread(this);
+            // 用当前Worker自己创建一个线程，后续调用这个线程后就会运行这个worker的run()方法，
+            // 从而触发runWorker()方法
+     }
+     
+     public void run() {
+        runWorker(this);
+     }
+   
+ 9.创建好Worker后，启动Worker.thread线程,启动后就会调用woker的run()方法，然后就会
+   触发Worker中的runWorker(Worker)方法,这里的入参就是第八步骤的new Worker(Runnable)对象
+   
+   runWorker()方法最终会取出Worker中的firstTask字段，这个字段存放的就是在submit的时候创建的FutureTask
+   然后调用firstTask.run()方法
+   
+   
+ 10.FutureTast的run()方法最终会取出FutureTast对象中的callable字段，这个字段存放的是一个RunnableAdapter
+    适配器，或者是submit时用户直接传递的一个Callable接口实现类
+    
+    然后调用callable字段的call()方法：
+      如果这个callable是适配器，则走第六步中的call方法
+      如果不是适配器，则直接调用call()方法
+      
+    这一步其实就是在线程池中的线程中执行了
+    
+    等线程执行完毕后调用FutureTast的set(V v)方法，这一步会把call()方法的返回结果放到outcome字段中,
+    然后调用finishCompletion()方法通知阻塞的FutureTast.get()方法
+    
+    FutureTast.get()中使用LockSupport.park(this)方法来阻塞的，详情换需要去了解一下LockSupport类
+    中的方法。
+    
+    
+   
+   
+   
+   
+   
+ 
+ 
