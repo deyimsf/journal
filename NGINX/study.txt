@@ -2336,3 +2336,34 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
 						cscf = ngx_hash_find_combined()
 						正则匹配(virtual_names->regex;)
 
+
+#locaiton中关于是否带后缀“/”的处理
+ ngx_http_scgi_module.c:1820:        clcf->auto_redirect = 1;
+ ngx_http_memcached_module.c:719:    clcf->auto_redirect = 1;
+ ngx_http_fastcgi_module.c:3488:     clcf->auto_redirect = 1;
+ ngx_http_uwsgi_module.c:2106:       clcf->auto_redirect = 1;
+ ngx_http_proxy_module.c:3775:       clcf->auto_redirect = 1;
+
+ 如果locaiton后缀带“/”，比如：
+  location /a/ {
+ 	proxy_pass  http://xxx;
+  }
+ 那么当用"/a"访问时，nginx会返回301，并且location响应头设置为“/a/”
+
+ 注意，只有location中的指令是上述5个之一时才会有这种情况(auto_redirect)
+
+ 这个机制在ngx_http_core_find_static_location()方法中体现,用下面代码完成:
+      if (len + 1 == (size_t) node->len && node->auto_redirect) {
+          r->loc_conf = (node->exact) ? node->exact->loc_conf:     // locaiton = /a/ {}
+                                        node->inclusive->loc_conf; // location /a/ {}
+          rv = NGX_DONE;
+      }
+ 首先，能走到这里，表示uri的名字和node->name的名字是有重合的，要么是uri的名字子
+ 包含node->name的名字(比如,uri="/abc",node->name="/ab")，要么是node->name的名字
+ 包含uri的名字(比如,node->name="/abc",uri="/ab").
+ 然后如果node->auto_redirect被标记为1，那么表示该node->name的最后一个字符肯定是"/"，
+ 如果uri的名字的长度加一正好是node->name名字的长度，那就说明uri的名字只比node->name
+ 少一个"/"符号，至此auto_redirect生效，并返回NGX_DONE，然后它的最上层方法ngx_http_core_find_config_phase()
+ 会根据NGX_DONE标记并通过ngx_http_finalize_request(r, NGX_HTTP_MOVED_PERMANENTLY)方法来结束请求。
+
+

@@ -714,6 +714,10 @@ lua> print(debug.traceback())
     所以挂起后再次调用resume时传递的参数,并不会对主函数的入参变量赋值,只是
     用来给挂起点(yield)当返回值用的。
 
+    resume函数的入参是yield函数的返回值，yield的入参是resume函数的返回值
+    (注意:携程第一次启动时调用resume的入参不是yield的返回值，就是传入主函数的工作入参)
+
+
   例子：
 	local co = coroutine.create(function(a,b)
 					local x,y = coroutine.yield(a,b);  --1

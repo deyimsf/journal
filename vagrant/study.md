@@ -1,5 +1,9 @@
 #vagrant用法,需要先安装VirtualBox
+* 下载VirtualBox: https://www.virtualbox.org/wiki/Downloads
+* 下载vagrant: https://www.vagrantup.com/downloads.html
+
 ```shell
+ // 增加一个box,通过http或本地。完成后镜像被放到/Users/mashunfeng/.vagrant.d/boxes 目录下
  $ vagrant box add <name> http://xxx.box|./xxx.box   //增加一个box,通过http或本地 
  $ vagrant global-status //查看所有box状态,用返回的ID可以ssh上这个虚拟机 
  

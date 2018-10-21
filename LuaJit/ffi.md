@@ -221,7 +221,7 @@ str = ffi.string(ptr [,len])
 所以用ffi的时候,如果遇见多层次的指针传递(最后的结构体需要自行分配内存的),就可以仿效上面的方式:
 ```lua
 	// 相当于C的 struct timeval time[1]
-        local c_timeval = ffi.new("struct timeval[1]");
+    local c_timeval = ffi.new("struct timeval[1]");
 
 	// 相当于C的 struct timeval *a_time[1];  a_time[0] = time; 这两句。
 	// 最后C中的a_time和ffi中的a_c_timeval变量的内存结构一致
