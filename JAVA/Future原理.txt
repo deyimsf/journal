@@ -37,7 +37,7 @@ ThreadPoolExecutor类
      task.run();
      return result;
    }
-   这样run()方法就的执行就可以通过call()方法调用了
+   这样run()方法的执行就可以通过call()方法调用了
   
    
    
@@ -79,7 +79,7 @@ ThreadPoolExecutor类
     等线程执行完毕后调用FutureTast的set(V v)方法，这一步会把call()方法的返回结果放到outcome字段中,
     然后调用finishCompletion()方法通知阻塞的FutureTast.get()方法
     
-    FutureTast.get()中使用LockSupport.park(this)方法来阻塞的，详情换需要去了解一下LockSupport类
+    FutureTast.get()中使用LockSupport.park(this)方法来阻塞的，详情还需要去了解一下LockSupport类
     中的方法。
     
     
