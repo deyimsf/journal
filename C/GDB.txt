@@ -119,7 +119,7 @@
       (gdb) x/3hx 0x10058009  //从该地址开始,双字节表示一个单位，显示三个单位的十六进制内容
 
 
-#gdb调试多进程
+#gdb调试多进程(用show查看)
  set follow-fork-mode [parent|child] 
  parent: 表示gdb跟着主进程代码走(默认)
  child: 表示gdb跟着子进程代码走

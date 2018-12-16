@@ -2300,7 +2300,10 @@ MSS:最大报文段长度，表示TCP传往另一端的最大块数据的长度�
   2.~* | ~  按照在配置文件中的位置排序,终止匹配。在NGX_HTTP_FIND_CONFIG_PHASE阶段执行匹配工作。
 
   3.@  内部匹配(只匹配一次),对应/src/http/ngx_http_core_module.c/ngx_http_named_location()方法
-       不参与NGX_HTTP_FIND_CONFIG_PHASE阶段的匹配工作
+       不参与NGX_HTTP_FIND_CONFIG_PHASE阶段的匹配工作,因为他匹配完之后直接走NGX_HTTP_REWRITE_PHASE阶段:
+         r->phase_handler = cmcf->phase_engine.location_rewrite_index;
+         r->write_event_handler = ngx_http_core_run_phases;
+         ngx_http_core_run_phases(r);
  
   4.if () {}  rewirte模块的脚本引擎执行,不参与FIND阶段的匹配工作,所以如果if在server{}块中,那么
  	它的执行总是先于location的匹配
