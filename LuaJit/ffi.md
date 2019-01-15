@@ -117,6 +117,21 @@
    int c_int_a[1] = 15;
 ```
 
+##luajit中,无法直接将一个lua数据赋值给指针,可以这样做
+```lua
+   local tmp = "hello";
+   local str_a = ffi.new("char [?]", string.len(str_a)+1, str_a);
+   local str_b = ffi.new("char *",str_a); 
+   print(tostring(str_b));
+   -- 其实str_a和str_b是一样的，都是一个指针，都是指向“hello”这个字符串
+
+   local tmp = 15;
+   local int_a = ffi.new("int [1]", 15);
+   local int_b = ffi.new("int *", int_a);
+   print(int_b[0]);
+
+```
+
 
 ## 将一个指针表示的字符串打印
 str = ffi.string(ptr [,len])
