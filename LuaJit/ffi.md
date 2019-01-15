@@ -42,7 +42,7 @@
 ```
 * c形式:
 ```c
-	person_t *person;
+	person_t *person_ptr;
 ```
 
 
@@ -55,15 +55,15 @@
 	local person_arr = ffi.new("person_t[1]",{ {height=1;age=2} });
 
 	local person_arr_type  = ffi.typeof("person_t[?]");
-    	local person_arr = ffi.new(person_arr_type,5);
+    local person_arr = ffi.new(person_arr_type,5);
 
-    	local person_arr_type = ffi.typeof("person_t[8]");
-    	local person_arr = ffi.new(person_arr_type);
+    local person_arr_type = ffi.typeof("person_t[5]");
+    local person_arr = ffi.new(person_arr_type);
 ```
 * c形式:
 ```c	
-	person_t arr[5];
-   	person_t arr[1] = {1;2}
+	person_t person_arr[5];
+   	person_t person_arr[1] = {1;2}
 ```
 
 ##ffi.cast(ct, init)
@@ -96,16 +96,25 @@
 	// 比如"char [?]" 是一个VLA(变长数组)
 	// 比如"struct person[?]" 是一个VLS(变长结构体)
 	local c_str_a = ffi.new("char [?]",string.len(str)+1, str);
-	local c_str_b = ffi.new("char *[1]", c_str_a);
-	local c_str_c = ffi.new("char *[1]", c_str_b);
+    
+    // 在C中类似 char *b[3] = &a;
+    // 数组里面的值b[i]是一个指针,这个指针(b[i])指向一个char型
+    // ffi.new中的语法类似把正常的c变量定义中的变量拿掉了 
+    // 比如: int *a[3], 可以写成ffi.new("int *[3]")
+	local c_str_b = ffi.new("char *[1]", c_str_a); 	
+    local c_str_c = ffi.new("char *[1]", c_str_b);
 
 	-- 其中 c_str_c 就对应了c中的 ***str
 ```
 
-在lua中声明一个指针类型的变量并赋值(如int *c_int_a = 15):
+##在lua中声明一个指针类型的变量并赋值(如int *c_int_a = 15):
 ```lua
 	local c_int_a = ffi.new("int[1]", 15);
 	print(c_int_a[0]);
+```
+上面的代码在c语言中有如下对应:
+```c
+   int c_int_a[1] = 15;
 ```
 
 

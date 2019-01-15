@@ -11,5 +11,7 @@ int main(int argc, char **argv){
 		printf("%d\n", size);
 	}
 
+	char **a[1] = {"haha"};
+	printf("%s\n",a[0]);
 }
 
