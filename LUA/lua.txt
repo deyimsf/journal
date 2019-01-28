@@ -753,7 +753,7 @@ lua> print(debug.traceback())
     //5.再次启动,这时候和步骤3相似,从挂起点--3出开始执行,并把传递给resume
     //  的参数5,6,7作为yield的返回值,赋值给第二个local x,y,z随后打印5,6,7并
     //  将主函数的返回值"end"作为resume的返回值返回。
-    print(coroutine.resume(co,5,6));
+    print(coroutine.resume(co,5,6,7));
 	-->5,6,7
     -->true end
   
