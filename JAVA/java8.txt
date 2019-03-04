@@ -1,0 +1,37 @@
+#方法引用
+方法引用是Lambda表达式的一种简写形式,用“::”表示
+
+如果Lambda表达式的存在仅仅是为了调用一个已经存在的方法，那
+此时就可以使用方法引用来简写这个Lamdba表达式
+
+例子1:
+  Function fun = (s)-> String.valueOf(s);
+  // 上面这个Lambda表达式的目的就是调用String对象中的一个方法,
+  // 所以可以进行简写,如下
+  fun = String::valueOf;  
+
+其它例子:
+ (Person p)-> p.getName();                ==> Person::getName;
+ ()-> Thread.currentThread().dumpStack(); ==> Thread.currentThread::dumpStack;
+ (str,i)-> str.substring(i);              ==> String::substring;
+ (String s) -> System.out.println(s);     ==> System.out::println;
+
+
+主要有四种引用形式:
+1)类::方法
+  String::trim;
+  String::format;
+2)实例::非静态方法
+  String str = "";
+  str::trim;
+3)类::构造函数
+  // 函数式接口有几个入参，则引用的就是哪个构造函数
+  String::new
+
+
+#函数式接口FunctionalInterface
+函数式接口，有且仅有一个抽象方法，Object的public方法除外
+
+
+
+
