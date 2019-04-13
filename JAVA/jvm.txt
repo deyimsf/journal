@@ -38,7 +38,7 @@
   -class 类的加载数量等
   -compiler jit编译的类的个数等
   -gccapacity 显示内存的使用状况
-  -gccause gc引起的暂定信息
+  -gccause gc原因; gc引起的暂定信息
   -gcnew
   -gcnewcapacity
   -gcold
@@ -83,4 +83,20 @@
      DSS：当前需要survivor（幸存区）的容量 (字节)（Eden区已满）
      TT： 持有次数限制
      MTT ： 最大持有次数限制
+
+
+#查看jvm的启动参数
+jcmd <pid> VM.flags
+
+#查看jvm启动时的命令行
+jcmd <pid> VM.command_line
+
+#列出某个pid可用的命令
+jcmd <pid> help
+
+#对jvm执行System.gc()
+jcmd <pid> GC.run
+
+
+
 

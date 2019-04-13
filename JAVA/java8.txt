@@ -15,6 +15,12 @@
  ()-> Thread.currentThread().dumpStack(); ==> Thread.currentThread::dumpStack;
  (str,i)-> str.substring(i);              ==> String::substring;
  (String s) -> System.out.println(s);     ==> System.out::println;
+ 
+ Set = new HashSet();
+ Function fun = (Object o)-> {
+    return set.contains(0);
+ }
+ ===>  fun = set::contains;
 
 
 主要有四种引用形式:

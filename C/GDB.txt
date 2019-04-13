@@ -154,4 +154,54 @@
 #设置观察点(WatchPoint)
 
 
+#查看程序的编译目录
+ 在编译好的程序中,用objdump反汇编后会看到”.debug_*“段，这里包含了调试信息  
+ 然后在编译单元中(DW_TAG_compile_unit)会看到两个调试信息条目,DW_AT_comp_dir(编译目录),DW_AT_name(编译名称)  
+   
+ $objdump -g ./sbin/nginx
+   Compilation Unit @ offset 0x0:
+   Length:        0x3b01 (32-bit)
+   Version:       4      
+   Abbrev Offset: 0x0
+   Pointer Size:  8
+ <0><b>: Abbrev Number: 1 (DW_TAG_compile_unit)
+    <c>   DW_AT_producer    : xxx -mtune=generic -march=x86-64 -g -O       
+    <10>   DW_AT_language    : 1    (ANSI C)
+    <11>   DW_AT_name        : (xxx): src/core/nginx.c       
+    <15>   DW_AT_comp_dir    : (xxx): /export/servers/src/nginx-1.10.3      
+    // other 
 
+ <0><61c4>: Abbrev Number: 1 (DW_TAG_compile_unit)
+    <61c5>   DW_AT_producer    : xxx -mtune=generic -march=x86-64 -g -O
+    <61c9>   DW_AT_language    : 1      (ANSI C)
+    <61ca>   DW_AT_name        : (xxx): src/core/ngx_palloc.c
+    <61ce>   DW_AT_comp_dir    : (xxx:w): /export/servers/src/nginx-1.10.3
+    // other
+ 以上是nginx的调试信息中的两个编译单元,里面记录了程序跟对应源码的关系
+
+
+#GDB识别源代码位置
+ 当你调试程序的主机不是构建程序的机器时,你需要告诉GDB去哪里寻找源代码  
+
+ ##1.可以根据从objdump的编译单元中的信息来重建源码路径 
+   比如把源代码都放到/export/servers/src/nginx-1.10.3目录中 
+
+ ##2.修改GDB查找源代码的路径
+   (gdb) list
+     ./Programs/src/core/nginx.c: No such file or directory.  
+   (gdb) directory /export/servers/src/nginx-1.10.3
+
+ ##3.设置GDBB路径替换规则
+   (gdb) list
+     ./Programs/...: No such file or directory.
+   (gdb) set substitute-path /export/nginx-1.10.3  /usr/nginx-1.10.3
+
+ ##4.把二进制文件移动源代码目录(因为GDB默认从当前目录下找)
+   
+ ##5.编译时增加-fdebug-prefix-map=old_path = new_path
+     ./configure CFLAGS="-fdebug-prefix-map=old_path = new_path"
+    
+
+
+
+ 
