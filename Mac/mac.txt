@@ -50,3 +50,17 @@
 #tomcat
 
 
+#解决mac链接ssh空闲自动断开问题，两种方式
+ ##第一种是在服务端设置/etc/ssh/ssh_config文件 
+  // 表示每60秒向客户端发送一次活跃请求
+  ClientAliveInterval 60  
+  // 表示客户端超过3次没有响应服务端时就断开连接
+  ClientAliveCountMax 3 
+
+ ##第二种是在客户端设置/etc/ssh/ssh_config文件
+   // 每60秒向服务端发送一次请求
+   ServerAliveInterval 60  
+   // 服务端超过3次没有响应客户端的请求时则断开连接
+   ServerAliveCountMax 3 
+  
+
