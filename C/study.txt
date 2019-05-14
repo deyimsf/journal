@@ -2407,7 +2407,8 @@ DJB Hash
    的内容,最终所有包含处理完之后会看到,方法ngx_palloc的声明实际上放在了最后。
 
 
-
+#C开发环境
+ vim+cscope+ctags
 
 
 

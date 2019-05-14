@@ -1309,9 +1309,23 @@ $ iostat -xk
  dst: 指定抓取的目标ip地址 
  src: 指定抓取来源ip地址
 
- 例子:
+ 语法格式:
+   tcpdump  [options] [not] proto dir  type
+ 其中:
+   options:值可以是-i|-c|-e|-vvv|-nn等
+   not: // TODO
+   proto:代表抓什么协议,例如ip,arp,tcp,udp,ip6,wlan等
+   dir:指定数据包的方向，可以是src、dst、src and dst、src or dst(默认)
+   type:可以是host|net|port|portrange
+    
+ 例子1:
  $tcpdump -i eth0 -c 800 tcp port 80 -w test.pcap
  抓取eth0网口 抓800个包 抓tcp协议 抓80端口 抓取结果放入test.pcap文件
+
+ 例子2:
+ tcpdump -i eth0 tcp dst host www.baidu.com -w test.pcap
+ 抓取eth0网口 抓tcp协议 抓www.baidu.com域名 抓取结果放入test.pcap文件
+
 
 #curl命令
  -H:指定请求头
