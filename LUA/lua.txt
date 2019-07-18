@@ -356,7 +356,25 @@ lua> print(debug.traceback())
 #rawget(table,key)和rawset(table,key,value)
  这两个函数可以绕过__index和__newindex等metamethod方法
 
-#lua的所有全局变量都存在_G表中
+
+##全局变量
+ 所有的全局变量都是放在一个特定 lua table 的诸个域中，这个特定的 table 叫作 
+ environment（环境）table 或者简称为"环境"。 
+ 每个函数都有对一个环境的引用，所以一个函数中可见的所有全局变量都放在这个函数
+ 所引用的环境表（environment table）中。 
+ 当一个函数被创建出来，它会从创建它的函数中继承其环境。
+
+ 因为环境是也是一张表，所以可以为这个环境表设置原表,以此来更改获取全局变量的行为
+ 
+ lua5.2后这个环境表用_ENV变量表示
+
+
+##继承上级变量,但又不修改上级变量,可以在自己的函数中做如下操作
+ _ENV={__index=_G,_G=_G}; 
+ _G.setmetatable(_ENV,_ENV); 
+
+
+#lua的所有全局变量都存在_G表中(在函数中则是用_ENV表示,可以把_G理解成祖宗)
  for n in pairs(_G) do
 	print(n)
  end
