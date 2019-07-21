@@ -1125,8 +1125,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 ###accept
  从监听的套接字描述符中,获取网络套接字描述符(包括内核地址)
 * listenfd: 用于监听的套接字描述符
-* *sock_addr: 要回填的内核地址(struct sockaddr)
-* *addrlen: 要回填的内核地址长度
+* *sock_addr:(可选)要回填的地址(struct sockaddr)
+* *addrlen:(可选)要回填的地址长度
 * 返回网络描述符,出错返回-1
 ```c
 	int accept(int listenfd, struct sockaddr *sock_addr, int *addrlen);
