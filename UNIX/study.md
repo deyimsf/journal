@@ -1142,6 +1142,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 * size: 可处理的描述符大小,一个建议值；Linux2.6.8之后会忽略这个值,但必须是正数 
 * 返回epoll描述符,错误返回-1
 ```c
+    #include<sys/epoll.h>
 	int epoll_create(int size);
 ```
 
@@ -1185,6 +1186,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 * 成功返回0, 失败返回-1 
 
 ```c
+    #include<sys/epoll.h>
 	int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
 ```  
 
@@ -1196,6 +1198,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 * timeout: 超时时间,0会立即返回,-1表示indefinitely 
 * 成功则返回就绪描述符的个数,如果返回0则表示超时了,错误则返回-1
 ```c
+    #include<sys/epoll.h>
 	int epoll_wait(int epfd, struct epoll_event *events, 
 			int maxevents, int timeout);
 
@@ -1207,6 +1210,44 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
 	
 	int result = epoll_wait(epfd, events, maxevents, timeout);
 ```
+
+
+###epoll中epoll_wait()方法返回的条件 
+ 只要内部的一个队列rdllist不为空就可以返回,有两种方式可以让该队列不为空 
+
+ 第一种:文件描述符状态改变(可以认为由网卡驱动触发)
+ 第二种:文件描述符的事件标志位被打标了(可以认为在调用epoll_wait()方法时触发)
+
+ --->如下几种状况发生时会触发文件描述符的改变 
+ 1.读缓冲区由空变为不空时 
+ 2.读缓冲区有新数据到达时 
+ 3.写缓冲区由不可写变为可写时(比如,缓冲区从满到不满)
+ 4.写缓冲区有数据被取走时(比如客户端从服务端的写缓冲区读走部分数据时)
+ 5.监听的文件描述符有新建连接时(如果好几个客户端同时到达,则只提醒一次)
+ 
+ --->如下几种状况发生时会触发事件标志位被打标 
+ 1.读缓冲区中有数据可读(也就是数缓冲区不为空)
+ 2.写缓冲区未被写满 
+
+ --->初始过程举例 
+ 1.当第一次调用epoll_wait()方法后,需要等文件描述符状态改变后,才会触发rdllist不为空,并唤醒等待进程。 
+ 2.epoll_wait()方法被唤醒后会先拷贝一份数据到txlist队列中,然后清空rdllist队列。 
+ 3.随后遍历txlist队列,在获取每个描述符最新的events标志位后,把就绪数据拷贝到用户空间(供外循环使用)
+ 4.遍历的过程中,如果描述符不是ET模式则将其重新加入rdllist队列,这样下一个IO循环会立即返回 
+    (?外循环会收到没有任何就绪事件的fd吗? 或者说在第3步的时候会检查出,然后不把数据拷贝到用户空间?)   
+ 5.遍历的过程中,如果描述符是ET模式就不会重新加入到rdllist队列。 
+
+ 
+###epoll操作文件描述符的两种模式 
+ LT模式:也叫水平触发,文件描述符状态改变和事件标志位被打标都会触发。 
+
+ ET模式:也叫边沿触发,只有文件描述符状态改变才会触发。 
+
+
+###ET模式的accept()方法(监听描述符需要是非阻塞,否则该方法会被阻塞)
+ 为了避免漏掉同时到达的客户端连接,需要一直循环处理完就绪队列中所有连接后再退出。 
+ (返回-1并且errno为EAGAIN表示处理完毕)
+
 
 
 ###sigemptyset
