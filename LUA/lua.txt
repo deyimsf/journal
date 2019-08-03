@@ -356,7 +356,42 @@ lua> print(debug.traceback())
 #rawget(table,key)和rawset(table,key,value)
  这两个函数可以绕过__index和__newindex等metamethod方法
 
-#lua的所有全局变量都存在_G表中
+
+##全局变量
+ 所有的全局变量都是放在一个特定 lua table 的诸个域中，这个特定的 table 叫作 
+ environment（环境）table 或者简称为"环境"。 
+ 每个函数都有对一个环境的引用，所以一个函数中可见的所有全局变量都放在这个函数
+ 所引用的环境表（environment table）中。 
+ 当一个函数被创建出来，它会从创建它的函数中继承其环境。
+
+ 因为环境是也是一张表，所以可以为这个环境表设置原表,以此来更改获取全局变量的行为
+ 
+ lua5.2后这个环境表用_ENV变量表示
+
+
+##继承上级变量,但又不修改上级变量,有如下两种方式
+ _ENV={__index=_G,_G=_G}; 
+ _G.setmetatable(_ENV,_ENV); 
+ ---------上面两行解释如下-----------
+ 第一行:__index=_G是为了设置查找域;
+        _G=_G是为了第二行可以从当前环境(_ENV)中通过_G拿到setmetatable函数
+ 第二行:将自己设置为自己的元表,此后任何的查找,如果当前环境中没有找的,则直接从__index指定的表中查找. 
+
+ t={__index=_G}; 
+ _ENV={_G=_G,t=t}; 
+ _G.setmetatable(_ENV,t);
+ ---------上面三行解释如下-----------
+ 第一行:设置查找域。
+ 第二行:默认当前方法的环境是_ENV表;
+        _G=_G是为了第三行可以从当前环境中拿到setmetatable函数;
+        _t=_t是为了在第三行可以直接从当前环境(_ENV)中拿到t,如果不设置,则t就无法从当前环境获取;
+ 第三行:从当前环境(_ENV)中拿到_G和t,然后再通过_G调用setmetatable方法
+       (如果第二行不在_ENV中设置t=t,那此时是无法获取到t的)
+  
+
+
+
+#lua的所有全局变量都存在_G表中(在函数中则是用_ENV表示,可以把_G理解成祖宗)
  for n in pairs(_G) do
 	print(n)
  end
