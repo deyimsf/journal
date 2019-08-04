@@ -1207,6 +1207,17 @@ int fexecve(int fd, char *const argv[], char *const envp[]);
   如果多个进程使用的是同一个epoll对象,那么对于相同描述符,ET模式下不会产生惊群。 
 
 
+###SO_REUSEPORT
+  Linux 3.9后使用该标志位也可以避免惊群
+     fcntl(sock_fd,F_SETFL,flags |O_NONBLOCK|SO_REUSEPORT);
+  使用这个标志位之后我们就可以在多个进程中绑定和监听同一个"ip和端口"了
+
+  在没有这个标志位之前,linux只能通过先在主进程创建sock_fd并绑定和监听后,在fork出多个
+  子进程,以这种方式来实现多进程同时监听一个"ip和端口"对,但这种形式会有惊群效应。
+
+  如果不使用这个标记,那同一个"ip和端口"是无法被多个进程同时绑定的。  
+
+
 ###epoll_wait
  等待I/O事件的到来
 * epfd: epoll对象描述符
