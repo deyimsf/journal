@@ -71,9 +71,8 @@
 * 另一种理解,把init强转成cdata数据:
 ```lua
 	local str = "hello";
-    	local c_str = ffi.cast("char *", str);
-    	print(c_str[0]);
-    	print(c_str[1]);
+    local c_str = ffi.cast("char *", str);
+    print(ffi.string(c_str));
 ```
 
 
