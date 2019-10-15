@@ -1,0 +1,99 @@
+#Guava异步调用例子
+ //1. 用线程池弄一个执行器
+ ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
+ 
+ //2. 用执行器提交任务
+ ListenableFuture<String> listenableFuture = executorService.submit(new Callable<String>(){
+    @Override
+    public String call() throws Exception {
+
+       // 执行任务
+
+	   return Thread.currentThread().getName();
+    }
+ });
+
+ //3.可以直接使用get方法获取结果
+ listenableFuture.get();// 这里会阻塞
+
+ //3.可以为任务注册一个监听器，等任务执行完毕后该监听器就会被执行
+ listenableFuture.addListener(new Runnable() {
+    @Override
+    public void run() {
+       // 当listenableFuture代表的任务执行完毕后,该方法会被调用
+
+       // 这里做一些事
+
+    }
+ }, executorService); //executorService是用来执行监听器的线程池  
+
+ //3.可以使用Futures.addCallback()处理,FutureCallback类似上面的Runnable
+ Object result = Futures.addCallback(listenableFuture, new FutureCallback() {
+       @Override
+       public void onSuccess(@Nullable Object result) {
+          // listenableFuture代表的任务执行成功后该方法被被执行
+          // 入参result是listenableFuture.get()的返回结果 
+       }
+
+       @Override
+       public void onFailure(Throwable throwable) {
+	 	  // listenableFuture代表的任务执行异常后调用这个方法
+       }
+ }, listenerPool); 
+ // listenerPool是执行FutureCallback中方法的线程池，默认同listenableFuture中用的线程池
+
+
+
+#Futures.transform()
+ 这是一个同步方法，可以这样用:
+   ListenableFuture future = Futures.transform(listenableFuture,...);
+ 第一个入参是一个Future.
+
+ 第二个入参可以是AsyncFunction，可以这样用:
+   ListenableFuture future = Futures.transform(listenableFuture, new AsyncFunction<String, Object>() {
+       @Override
+       public ListenableFuture<Object> apply(String s) throws Exception {
+		   // 这个方法里的操作，跟父方法Futures.transform()是同步的
+		   // 入参s是用listenableFuture里get的结果
+           // 出参也是一个ListenableFuture对象，表示通过入参s转换成的结果Object
+		
+		   // 我们可以在这个方法中做异步操作(这也是第二个入参带Async字眼的意义)，即:
+           ListenableFuture<String> listenableFuture = listeningExecutorService.submit(xxx);
+		   return listenableFuture;
+
+		   // 我们也可以在这个方法中做同步操作(不推荐，因为Async的意义就不存在了)，例如:
+           
+           // 在这里做完一堆逻辑后用下面的代码组装返回;
+           Object result = 各种逻辑；
+
+
+           ListenableFuture future = SettableFuture.create();
+		   future.set(result);
+           // 或者使用这个
+           future = Futures.immediateFuture(result);
+           
+		   return future;
+       }
+  });
+最后通过future的get方法获取结果数据，例如:
+  Object result = future.get();  
+
+以上方法Futures.transform()的第二个参数也可以是Function，可以这样用:
+  ListenableFuture future4 = Futures.transform(listenableFuture, new Function<String, Object>() {
+      @Override
+      public Object apply(@Nullable String s) {
+		  // 该方法同AsyncFunction中的apply方法基本相同，不同的返回值不再是ListenableFuture
+          // 而是直接要返回的结果
+
+	      // 不再建议使用异步的ListenableFuture,但没强制，所以咋用随你自己
+
+		  // 这里一般会用入参s做各种逻辑，然后转换成一个结果返回,比如:
+          Object value = 可以通过s转换出来;
+		
+          return value;
+      }
+  });
+
+
+
+
