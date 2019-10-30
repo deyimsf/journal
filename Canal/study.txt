@@ -1,0 +1,52 @@
+#
+ 每个destionation对应的是一个mysql实例
+ 一个mysql实例对应一个instance实例?
+ 一个instance实例就是一个消息队列
+
+ 一个server有多个instance。
+ 每个instance都会模拟成一个mysql实例的slave。
+ instance模块有四个核心组成部分：
+   parser模块、sink模块、store模块，meta模块。
+ 核心接口为CanalInstance
+
+
+
+
+#HA模式中,Server之间通过destinations的指定来识别是否是同一个集群
+ 比如
+  canal.destinations=dbA,dbB
+ 该配置表示同一个server启动了两个instance,也就是两个队列(代表两个数据库实例)
+ 当server1启动时会试图去ZooKeeper抢占如下两个节点:
+   /otter/canal/destinations/dbA/running
+   /otter/canal/destinations/dbB/running 
+ 此后，若另一个server2实例在启动，则也会试着抢占上面的两个节点，但是因为已经被占，
+ 所以抢占失败，所以server2就是备用的。
+ 此后，若又一个server3实例启动，则也会试着抢占上面的两个节点，但是因为已经被占，
+ 所以抢占失败，所以server3也是备用的。
+ 
+ 此时，canal集群中共有三个server，但只有server1在工作，当server1出现故障后，会试图
+ 切换到其它可用的server来工作。切换完毕后会通知客户端。 
+ 
+ 节点用的是Zookeeper中的临时节点，当创建临时节点的程序停掉之后，这个临时节点就会消失。
+
+
+#canal.destinations
+ 当前server上部署的instance列表,例子:
+   canal.destinations=dba,dbb
+ 其中，dba和dbb分别对应两个instance的名字
+
+ 在canal.properties定义了canal.destinations后，
+ 需要在canal.conf.dir对应的目录下建立同名的文件 ????
+ 没看到代码中有conf.dir的配置呀????
+
+
+
+
+
+
+
+
+
+
+
+

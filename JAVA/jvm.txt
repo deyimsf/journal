@@ -97,6 +97,7 @@ jcmd <pid> help
 #对jvm执行System.gc()
 jcmd <pid> GC.run
 
-
+#查看jvm用的什么垃圾收集器
+java -XX:+PrintGCDetails -version
 
 

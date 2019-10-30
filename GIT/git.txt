@@ -363,3 +363,24 @@ $ git mergetool
 
 #查看某个分支指向的变迁
  $git reflog show master
+
+
+#git pull 相当于执行如下两个命令
+ git fetch origin 
+ git merge origin/master
+
+
+#git pull --rebase 相当于如下执行如下两个命令
+ git fetch origin
+ git rebase origin/master
+
+
+#改变分支依赖用git rebase
+ 将历史记录回滚到最后一个公共父节点,并重新生成两个分支的commit
+
+
+
+
+
+
+
