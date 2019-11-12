@@ -171,13 +171,13 @@ Tcp慢启动和避免拥塞算法
   listen 8080 so_keepalive=7200:75:9
 
 #数据接收过程中涉及的队列
-##半链接队列
+##半链接队列(syns queue)
  该队列用来保存SYN_RECV状态的链接,队列长度由net.ipv4.tcp_max_syn_backlog设置。
  查看默认值:
   $sysctl -a | grep net.ipv4.tcp_max_syn_backlog
    net.ipv4.tcp_max_syn_backlog = 512
 
-##accept队列 
+##accept队列(accept queue) 
  用来保存ESTABLISHED状态的还未被服务端接收的链接。
  队列长度为min(net.core.somaxconn,backlog),backlog是我们创建
  ServerSocket(int port,int backlog)时指定的参数,最终传递给

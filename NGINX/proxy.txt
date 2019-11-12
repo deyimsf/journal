@@ -1,0 +1,19 @@
+#代理到其它网站
+
+http{
+    
+    upstream bbb {
+       server www.baidu.com:443;
+    }   
+    
+
+    server {
+      listen 80; 
+
+      location / { 
+         proxy_http_version      1.1;
+         proxy_set_header Host   www.baidu.com; 
+         proxy_pass https://bbb;
+      }   
+   } 
+}  

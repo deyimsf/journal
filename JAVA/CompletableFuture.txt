@@ -1,0 +1,113 @@
+#创建没有返回值的异步任务
+ CompletableFuture future = CompletableFuture.runAsync(()-> {
+	System.out.println("我是没有返回值的异步任务");
+ });
+
+
+#创建有返回值的异步任务
+ CompletableFuture<String> future = CompletableFuture.supplyAsync(new Supplier<String>() {
+    @Override
+    public String get() {
+       return "我是有返回值的异步任务";
+    }
+ });
+
+
+#生成一个不可以接收入参，也无法有返回值的异步任务
+ future.thenRun(()->{
+	System.out.println("我是一个即不需要入参，也不需要返回值的异步任务");
+ });
+
+
+#生成一个需要接收入参，但是没有返回值的异步任务
+ future.thenAccept((result)->{ // 这里的result来自future.get()
+    System.out.println("我是一个需要接收入参，但是没有返回值的异步任务");
+ });
+
+
+#生成一个需要接收入参，同时也需要有返回值的任务
+ future.thenApply((result)->{
+    System.out.println("我是一个即需要入参，也需要有返回值的异步任务");
+	return "我是返回值";
+ });
+
+
+#使用exceptionally()方法处理异常
+ future.exceptionally((ex)->{
+    System.out.println("处理异常");
+    return "errorResult"; // 下一个任务可以接收到这个返回值  
+ }).thenAccept((input)->{
+    // 如果上一个任务有异常产生,则input的值为"errorResult"
+    System.out.println("处理任务");
+ });
+
+ // 如果future的过程有异常产生,exceptionally方法会执行,并且随后的thenAccept会执行
+ // 如果future的过程有异常产生,紧跟其后没有调用exceptionally,则最后的thenAccept不会执行
+ // 如果future的过程有异常产生,不管是否存在exceptionally方法,下面的操作都会把异常抛出
+ // 但是,如果是thenAccept产生异常,则下面的代码不会感知到
+ future.get(); 
+
+
+#使用handle()方法处理异常
+ future.handle((result,throwable)->{
+    // 在这里处理异常
+    if (throwable != null) {
+       // 走到这里说明上一个任务出现异常了
+       return "errorResult";
+    }
+
+ }); 
+
+
+#两个任务执行完毕后再做事
+   CompletableFuture fA = 
+   CompletableFuture fB =
+
+   // 任务fA和fB都执行完毕后,可以接收两个任务的返回结果做一些事,但不提供返回值
+   fA.thenAcceptBoth(fB, (reA,reB)->{}); 
+   
+   // 任务fA和fB都执行后,接收两个任务的返回结果做一些事,然后提供返回值
+   fA.thenCombine(fB, (reA,reB) -> "result");
+
+   // 任务fA和fB都执行后,做一些事,不接收任何任务的返回结果,同时也不提供返回值
+   fA.runAfterBoth(fB, ()-> {});
+
+
+#聚合多个任务(等所有任务都执行完了再执行后续的代码)
+  CompletableFuture fA =
+  CompletableFuture fB =
+  CompletableFuture fC =
+
+  CompletableFuture<Void> fD = CompletableFuture.allOf(fA, fB, fC);
+  fD.get(); // 这里会被阻塞，等所有任务都执行完毕后才会阻塞结束
+
+
+#等待多个任务中的一个(anyOf)
+  CompletableFuture fA =
+  CompletableFuture fB =
+  CompletableFuture fC =
+
+  CompletableFuture<Object> fD = CompletableFuture.anyOf(fA, fB, fC);
+  Object result = future.get(); // 只要有一个任务执行完毕就返回
+
+
+#两个之中任务一个执行完毕就可以返回
+  CompletableFuture fA =
+  CompletableFuture fB =
+ 
+  fA.acceptEither(fB, resultA->{}); // 在执行fA或fB的任务的池中执行
+  fA.acceptEitherAsync(fB,resultA->{}); // 在公共池中执行ForkJoinPool.commonPool()
+  fA.acceptEitherAsync(fB,resultA->{},executor); // 在executor池中执行
+
+  fA.applyToEither(...
+  fA.runAfter(...
+
+
+#关于几个方法的变种
+ fA.thenApply(Function); // 在执行fA任务的线程池中执行这个任务
+ fA.thenApplyAsync(Function fn); // 在公共池ForkJoinPool.commonPool()中执行这个任务
+ fA.thenApplyAsync(Function fn, Executor executor); // 在线程池executor中执行这个任务
+
+
+
+
