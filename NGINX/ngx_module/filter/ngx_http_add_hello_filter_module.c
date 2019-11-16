@@ -204,6 +204,8 @@ ngx_http_add_hello_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 	tmp->next = nct;
 	nct->next = NULL;
 	nct->buf = buf;	
+	
+	// 因为我们改变了输出内容的大小，所以要把清空响应头的长度，这样后续就会使用chunked编码了
 		
 	return ngx_http_next_body_filter(r,in);
 }
