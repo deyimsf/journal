@@ -372,7 +372,7 @@ $ git mergetool
 
 #git pull --rebase 相当于如下执行如下两个命令
  git fetch origin
- git rebase origin/master
+ git rebase origin/master  // 给予或者rebase到master上
 
 
 #改变分支依赖用git rebase
