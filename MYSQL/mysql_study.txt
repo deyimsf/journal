@@ -21,6 +21,7 @@ MySql安装
 远程登陆
  默认只有本机可以进行访问，需要增加可访问ip，mysql库的user表存放了可访问的主机ip。
  #命令行进入mysql
+ #语法: mysql -h [host] -u [username] --port=[3358] -p
  $mysql -u root -p
  >use mysql;
  >select host,user,password from user;
@@ -73,3 +74,31 @@ root密码丢失解决办法
   脏读：一个事务读到另一个事物未提交的更新数据
   不可重复读：一个事物读到另一个事物已提交的更新数据;
   幻读：一个事务读取到另一个事务已提交的新插入(或删除的)的数据
+
+
+#mysql查询系统级别事务隔离级别
+  SELECT @@global.tx_isolation;
+
+
+#mysql查询会话级别事务隔离级别
+   SELECT @@tx_isolation;
+   SELECT @@session.tx_isolation;
+
+
+#开始一个事务
+  start transaction; 或者 begin;
+
+
+#回滚事务
+  rollback;
+
+
+#提交事务
+  commit;
+
+
+
+
+
+
+
