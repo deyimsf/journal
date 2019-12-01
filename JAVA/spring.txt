@@ -1,0 +1,2 @@
+#注解管理事务时，从方法内部回滚
+  TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();

@@ -341,8 +341,16 @@ $ new_var=${old_var:-content}
 
 :vsp[filename] //左右
 
-#vim移动光标到指定行 
-:set 3 
+#vim光标向上移动n行
+nk
+#向下移动n行
+nj
+
+#vim光标向左激动n列
+nh
+#向右移动n列
+nl
+l是小写的L, 表示从当前光标开始,向后移动n列
 
 #vim批量注释一
  ctrl+v --> 移动光标选择要注释的行 --> 大写I --> 写注释符 --> 按Esc --> 成功
