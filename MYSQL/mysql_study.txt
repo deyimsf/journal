@@ -90,6 +90,10 @@ root密码丢失解决办法
         update(delete)时读取数据是最新版本的数据(看到其它事务的数据),而select是到当前事物版本为止的数据。
         所以幻读应该包括update(delete)自己能够“看到”其它事务提交的数据。 
 
+		update(delete)操作的都是最新的数据(能看到其它事务已提交的数据)
+        而select只能看到快照的数据,当然,如果update(delete)是成功的(mysql返回值大于0),那后续的select也是可以看到的
+        所以幻读应该包括update(delete、insert)命令本身能够“看到”其它事务提交的数据。
+
 
 #mysql查询系统级别事务隔离级别
   SELECT @@global.tx_isolation;
