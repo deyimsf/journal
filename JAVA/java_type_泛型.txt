@@ -1,0 +1,53 @@
+#关于泛型的疑问
+```java
+ public class Father {
+    public void accept2(Map<String, String> inputs) {
+        System.out.println(inputs.get("name"));
+    }
+
+    public void accept1(Map<String, Long> puts){
+        System.out.println(puts.get("name"));
+    }
+    
+ }
+```
+上面两个方法的编译结果为啥不一样，编译后结果是这样的:
+```java
+    public void accept2(Map<String, String> inputs) {
+        System.out.println((String)inputs.get("name"));
+    }
+
+    public void accept1(Map<String, Long> puts) {
+        System.out.println(puts.get("name"));
+    }
+```
+可以看到,第一个方法体被强转成String,而第二个则没有???????
+
+
+
+另外，对于上面的类,在外部调用时，入参的参数类型必须和定义的一致，像这样:
+```java
+   HashMap<String, Long> puts = new HashMap<>();
+
+   Father father = new Father();
+   father.accept1(puts);
+   father.accept2(puts); // 这一句编译报错，因为入参的参数类型和方法定义不一致，这个符合预期
+```
+但是，如果Father类定义的时候使用泛型，比如这样:
+```java
+ public class Father<T> {
+     // 方法定义不变 
+ }
+```
+此时，外部调用的时候无法正确约束，比如这样:
+```java
+   HashMap<String, Long> puts = new HashMap<>();
+
+   Father  father = new Father();
+   father.accept1(puts);
+   father.accept2(puts); // 此时这里不会报错，为啥？？？？
+```
+此时就没有任何编译错误，为啥。。。。
+
+
+
