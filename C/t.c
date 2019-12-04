@@ -3,15 +3,24 @@
 
 int main(int argc, char **argv){
 
-	int size = getpagesize();
+	int a = 6;
 
-	printf("%d\n", size);
+    switch(a) {
 
-	if (0) {
-		printf("%d\n", size);
+		case 8:{
+			printf("case8: %d\n",a);
+            case 7:
+        	printf("case7 \n");     
+		}
+		default:
+			printf("default: %d\n",a);
+	
+		case 6:
+            printf("case6 \n");
+	
 	}
 
-	char **a[1] = {"haha"};
-	printf("%s\n",a[0]);
+
+
 }
 

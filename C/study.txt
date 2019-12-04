@@ -286,6 +286,29 @@
 		...
 		break;
  }
+表示从哪里开始执行,如果对应的case中没有break,则一直执行下去,并且case和default不关心大括号,
+比如下面的语句,同上面的语句一样，case 35后面的大括号有没有都一样:
+ switch (num) {
+   case 35: {
+      ...
+      break;
+      
+      default:
+         ...
+         break;
+   }
+ }
+再看下面一个例子:
+  switch (num) {
+     default:
+        ...
+     case 23:
+        ...
+     case 12: 
+        ...
+  }
+当num等于23时，case23和12都会执行。
+当num不等于23和12时,default、case23、case12都会执行。
 
 
 #C语言没有指定同一运算符的计算顺序
