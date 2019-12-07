@@ -1,2 +1,8 @@
 #注解管理事务时，从方法内部回滚
   TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+
+
+#获取当前代理对象
+  Person targetProxy = (Person)AopContext.currentProxy(); // 获取当前目标的代理对象
+  targetProxy.add(); // 通过当前对象调用目标对象的方法
+
