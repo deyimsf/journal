@@ -5,3 +5,39 @@ tExceptionHandler接口
 当一个未捕获异常在线程被抛出，JVM尝试寻找3种handler
  在当前线程找handler--->在当前线程组寻找handler--->当前线程默认的handler
  如果以上都找不到，则异常信息写入控制台，结束任务。
+
+
+#关于中断的一个例子
+	Thread aa = new Thread(new Runnable() {
+	    public void run() {
+	      while(true) {
+	        for(int i=0; i< 10; i++) {
+	            try {
+	                System.out.println("开始睡觉");
+	                Thread.sleep(2000);
+	            } catch (InterruptedException e) {
+	                // 每次发生InterruptedException异常后，会自动把当前线程中断标记设置为false
+	                // 而这里紧接着又调用了一下interrupt()方法，这将导致当前线程中断标记为true
+	                // 当sleep()方法看到当前线程中断标记为true时，会再次抛出InterruptedException异常
+	                // 所以这里发生一次中断后就不再睡觉了，会立即执行完这个for循环
+	                Thread.currentThread().interrupt();
+	                System.out.println("发生中断了");
+	            }
+	        }
+	      }
+	    }
+	}, "aa");
+	
+	aa.start();
+	aa.interrupt();
+	
+	try {
+	    Thread.sleep(1000000000);
+	} catch (InterruptedException e) {
+	    e.printStackTrace();
+	}
+	System.out.println("end");
+
+
+
+
