@@ -1344,6 +1344,8 @@ $ iostat -xk
     $curl http://www.baidu.com -d "user=name&pass=b"    	
  --cookie:设置cookie
     $curl http://www.baidu.com --cookie "user=name;pass=1234"
+ -X:指定请求方法
+    $curl -X HEAD http://www.com
 
 
 #col筛选换行符
