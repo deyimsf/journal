@@ -379,6 +379,29 @@ $ git mergetool
  将历史记录回滚到最后一个公共父节点,并重新生成两个分支的commit
 
 
+#合并多个提交的注释
+   $git rebase -i HEAD~3  //[),从HEAD开始到第二个提交
+ 随后会出来一个界面,形态如下:
+   pick 86ec832 注释2
+   pick 7890dd3 注释1
+ 每条记录就之前的一次提交，记录以提交的倒序排列。
+ 除pick名另外,还有如下几个命令:
+   reword :使用这个commit，但是后续可以编辑这个提交，--continue后会提供继续修改页面
+   edit   :使用这个commit，但是后续不可以编辑这个提交，--continue后不提供修改页面
+   squash :使用这个commit，但是和上一个提交融合成一个，--continue后会提供继续修改页面
+   fixup  :禁用这个commit的注释，但是这个commit关联的代码还在，不能有多个连续的该命令
+   drop   :删除这个commit，也包括这个commit提交的代码
+   exec   :运行一个命令
+##合并过程中使用如下命令放弃
+  $git rebase --abort
+##使用如下命令继续编辑合并信息
+  $git rebase --edit-toto
+##用如下命令结束合并动作
+  $git rebase --continue
+
+
+
+
 
 
 
