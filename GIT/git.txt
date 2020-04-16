@@ -381,6 +381,8 @@ $ git mergetool
 
 #合并多个提交的注释
    $git rebase -i HEAD~3  //[),从HEAD开始到第二个提交
+ 如果想从第一个提交开始rebase,则使用如下命令   
+   $git rebase -i --root
  随后会出来一个界面,形态如下:
    pick 86ec832 注释2
    pick 7890dd3 注释1
