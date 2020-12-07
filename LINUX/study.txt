@@ -1346,6 +1346,9 @@ $ iostat -xk
     $curl http://www.baidu.com --cookie "user=name;pass=1234"
  -X:指定请求方法
     $curl -X HEAD http://www.com
+ -G:构造URL的查询字符串
+	$curl -G -d 'name=zhangsan' -d 'age=20' https://a.b.com
+
 
 
 #col筛选换行符
@@ -1770,7 +1773,8 @@ $ iostat -xk
 
 #用dig命令查询dns请求路径
   dig +trace www.jd.com
-
+  dig www.jd.com
+可以验证是否用了cdn?
 
 #过滤man中的控制字符
   将gcc命令的man文档打印出,并去掉乱码(控制字符)

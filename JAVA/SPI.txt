@@ -1,0 +1,24 @@
+#spi
+java的spi机制通过ServiceLoader类实现
+
+假设某个jar包下有如下目录结构
+  META-INF/
+  	services/
+		com.msf.Person
+其中com.msf.Demo是个文件,里面有如下内容:
+    com.msf.Man
+    com.msf.Woman
+他们都是Person的实现类，执行如下代码:
+   ServiceLoader<Person> loadedPersons = ServiceLoader.load(Person.class);		
+   Iterator<Person> personsIterator = loadedPersons.iterator();
+此时personsIterator迭代器里返回的就是Man和Woman的实例.
+
+
+#JDBC通过DriverManager来实现驱动的加载
+该类用的就是ServiceLoader方法。
+可以在mysql、oracle等数据库的java客户端的jar包中的META-INF/services中找到
+名为java.sql.Driver的文件，然后该文件中存放的就是jdbc驱动的实现类。
+
+
+
+

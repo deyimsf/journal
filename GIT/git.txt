@@ -402,7 +402,8 @@ $ git mergetool
   $git rebase --continue
 
 
-
+#使用git命令修改“commit message”同时重置当前Commit的user/email
+  $git commit --amend --reset-author
 
 
 
