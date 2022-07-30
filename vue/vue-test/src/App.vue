@@ -1,31 +1,15 @@
 <template>
+  <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/>
-  <div>abddd</div>
-  <div>{{ dataA }}</div>
-  <button type="button" v-on:click="test()">button</button>
 </template>
 
 <script>
-import Web3 from 'web3'
-
-console.log(Web3);
-
-//import HelloWorld from './components/HelloWorld.vue'
-
-
-function test(){
-    alert("d");
-}
+import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
-  methods:{
-      test
-  },
-  data(){
-     return {
-       dataA:'文本插值-----',
-     }
+  components: {
+    HelloWorld
   }
 }
 </script>

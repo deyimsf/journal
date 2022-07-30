@@ -1,0 +1,12 @@
+#搭建vue项目
+1.安装@vue/cli
+$npm install -g @vue/cli
+
+2.创建项目初始工程目录
+$vue create vue-project
+
+3.启动vue服务
+$npm run serve
+
+
+
