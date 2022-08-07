@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    Vue.createApp({
+        data(){
+            return {
+                list:['hello','world','dell','lee']
+            }
+        },
+        template:`
+            <ul>
+                // 遍历数组list
+                <li v-for="item of list">{{item}} test</li>
+
+                // 遍历数组list,并展示下标
+                <li v-for="(item,index) of list">{{item}} {{index}}</li>
+            </ul>
+        `
+    }).mount('#root');
+</script>
+</html>

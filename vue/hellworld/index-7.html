@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>双向绑定</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    // createApp()方法 表示创建一个vue应用
+    // 入参是一个对象，对象中描述这个应用的最外层组件应该如何展示
+    // mvvm设计模式, m->model(数据)，v->view(视图), vm->viewModel 视图数据连接器
+    const app = Vue.createApp({
+        data(){
+            return{
+                message:'hello world'
+            }
+        },
+        template:"<div>{{message}}</div>"
+    });
+       
+    // vm就代表vue应用的根组件
+    const vm = app.mount('#root');
+    // 用这个方式可以访问data中的数据
+    vm.$data.message
+
+</script>
+</html>
