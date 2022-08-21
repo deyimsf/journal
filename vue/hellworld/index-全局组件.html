@@ -10,26 +10,24 @@
     <div id="root"></div>
 </body>
 <script>
- 
-
     const app = Vue.createApp({
-        data(){
-            return {
-                num:123,
-            }
-        },
         template:` 
             <div>
-                <!-- 属性值绑定 -->
-               <test :content="num"/>
+                <counter />
+                <counter />
             </div>
         `
     });
 
-    app.component('test',{
-        props:['content'],
+    // 组件
+    app.component('counter',{
+        data(){
+            return {
+                count:1
+            }
+        },
         template:`
-            <div>{{content}}</div><br/>
+            <div @click="count += 1">  {{count}}</div>
         `
     });
        

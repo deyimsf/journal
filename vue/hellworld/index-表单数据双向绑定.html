@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return {
+                message:'hello',
+                boxs:[],
+                radios:'',
+                options:[
+                    {text:'A', value:'A'},
+                    {text:'B', value:{value:'B'}},
+                    {text:'C', value:'C'}
+                ],
+                selects:[],
+                boxdata:'world'
+            }
+        },
+        template:` 
+            <div>
+                {{message}}<br/>
+                {{boxs}}<br/>
+                {{radios}}<br/>
+                <!--
+                    v-model: 表单双向绑定    
+                -->
+                <input v-model="message"/>
+                <textarea v-model="message"/>
+                <br/>
+                <input type="checkbox" v-model="boxs" value="jack"/>
+                <input type="checkbox" v-model="boxs" value="dell"/>
+                <input type="checkbox" v-model="boxs" value="lee"/>
+
+                <br/>
+                <input type="radio" v-model="radios" value="lee"/>
+                <input type="radio" v-model="radios" value="lee2"/>
+                
+                <br/>
+                {{selects}}
+                <select v-model="selects" multiple>
+                    <option v-for="item in options" v-bind:value="item.value">
+                        {{item.text}}
+                    </option>
+                </select>
+
+                <br/>
+                <!--
+                    数据转换
+                    当时true的时候转成hello
+                    false时转成world
+
+                    修饰符
+                     v-model.lazy  //数据改变变得延迟
+                     v-model.number //数据转成number
+                     v-model.trim  // 数据去掉两边空格
+                -->
+                {{boxdata}}
+                <input type="checkbox" v-model="boxdata" true-value="hello" false-value="world"/>
+            </div>
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

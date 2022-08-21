@@ -10,26 +10,19 @@
     <div id="root"></div>
 </body>
 <script>
- 
-
     const app = Vue.createApp({
         data(){
-            return {
-                num:123,
+            return{
+                show:true,
+                conditionOne:false
             }
         },
         template:` 
-            <div>
-                <!-- 属性值绑定 -->
-               <test :content="num"/>
-            </div>
-        `
-    });
+            <div v-if="show">hello world</div>
+            <div v-show="show">Bye world</div>
 
-    app.component('test',{
-        props:['content'],
-        template:`
-            <div>{{content}}</div><br/>
+            <div v-if="conditionOne">if</div>
+            <div v-else>else</div>
         `
     });
        

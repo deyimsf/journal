@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return {
+                counter:0
+            }
+        },
+        methods:{
+            handleBtnClick(){
+                this.counter +=1;
+            },
+            handleBtnClick1(){
+                alert(1);
+            },
+            handleBtnClick2(){
+                alert(2)
+            },
+            handleDivClick(){
+                alert("div clicked");
+            },
+            handleKeyDown(){
+                console.log('keydown')
+            }
+        },
+        template:` 
+            <div>
+                {{counter}}
+                <br/>
+                <button @click="handleBtnClick">button</button>
+                
+                <!-- 一个事件绑定多个方法 -->
+                <br/>
+                <button @click="handleBtnClick1(),handleBtnClick2()">button2</button>
+            </div>
+            <br/>
+
+            <div>
+                {{counter}}
+                <br/>
+                <div @click="handleDivClick">
+                    <!-- .stop表示停止事件冒泡,否则上层div的click事件也会执行 -->
+                    <button @click.stop="handleDivClick">button3</div>
+                </div>
+            </div>
+            
+
+            <br/>
+            <div>
+                <!-- 
+                    @click.self //只有点自己dom标签出发才执行,子标签出发的不执行 
+                    @click.capture // 从外到内捕获,跟冒泡相反
+                    @click.prevent // 取消事件的默认行为
+                    @click.once // 事件绑定只执行一次
+                    @scroll.passive // 滚动事件,passive可以提升性能   
+                -->
+                <div @click.self="handleDivClick">
+                    {{counter}}
+                    <button @click="handleBtnClick">button4</div>
+                </div>
+            </div>
+
+
+            <br/>
+            <div>
+                <!-- 
+                    @keydown.enter //按回车键时起作用
+                    @keydown.tab    //
+                    @keydown.delete
+
+                    @click.left //鼠标左键
+                    @click.middle
+                    @click.right
+
+                    @click.ctrl //当按住ctrl键后单击时执行
+                    @click.ctrl.exact // 精确匹配?
+                -->
+                <input @keydown.enter="handleKeyDown"/>
+            </div>
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>
