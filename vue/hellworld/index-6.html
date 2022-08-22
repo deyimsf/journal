@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>双向绑定</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return {
+                inputValue:'',
+                list:[]
+            }
+        },
+        methods:{
+            handleAddItem(){
+                this.list.push(this.inputValue);
+                this.inputValue='';
+            }
+        },
+        template:`
+            <div>
+                <!-v-model 把input的值和data()中的inputValue绑定->
+                <input v-model="inputValue" />
+                <button 
+                    v-on:click="handleAddItem"
+                    v-bind:title="inputValue" 
+                >增加</button>
+               
+                <ul>
+                    <todo-item 
+                        v-for="(item,index) of list" 
+                        v-bind:content="item"
+                        v-bind:index="index">
+                </ul>
+            </div>
+        `
+    });
+
+    app.component('todo-item',{
+        props:['content','index'],
+        template:`
+            <li>{{index}} -- {{content}}</li>
+        `
+    });
+
+    // app挂载到id等于root的容器中
+    app.mount('#root');
+</script>
+</html>

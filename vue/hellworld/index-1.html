@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    Vue.createApp({
+        data(){
+            return {
+                content:1
+            }
+        },
+        mounted(){ // 页面加载完后执行
+            setInterval(()=>{
+                this.content += 1;
+            }, 1000);
+        },
+        template:`<div>
+            {{content}}
+            <button v-on:click="handleBtnClick">反转</button>
+        }</div>`
+    }).mount('#root');
+</script>
+</html>

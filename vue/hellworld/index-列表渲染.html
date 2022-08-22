@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return{
+                listArray:['dell','lee','teacher'],
+                listObject:{
+                    firstName:'dell',
+                    lastName:'lee',
+                    job:'teacher'
+                }
+            }
+        },
+        methods:{
+            handleAddBtnClick(){
+                //1.数组变更函数 push/sort/pop/shift等
+                // this.listArray.push("hello");
+
+                //2.直接替换数组
+                // this.listArray = ['bye','world']
+                // this.listArray = ['bye','world'].filter(item=> item === 'bye');
+
+                //
+                // this.listArray[1] = 'hello'
+
+            }
+        },
+        template:` 
+            <div> <!--template是一个占位符,不会打印到页面,只是用来承载v-for等语句-->
+                <template v-for="(item,index) in listArray" :key="index">
+                    <div v-if="item !== 'lee'">
+                        {{item}} -- {{index}}
+                    </div>
+                </template> 
+                <button @click="handleAddBtnClick">新增</button>
+                
+                <div v-for="(value,key,index) in listObject">
+                    {{value}} -- {{key}} -- {{index}}
+                </div> 
+            </div>
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

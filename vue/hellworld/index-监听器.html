@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return{
+                message:'hello world',
+                count:2,
+                price:5
+            }
+        },
+        // 监听
+        watch:{
+            // 监听data中的price变量的改变
+            price(current,prev){
+                // todosomething
+            }
+        },
+        computed:{
+            // 当计算属性依赖的内容发生变更时会重新计算
+            total(){
+                return Date.now() + this.count;    
+            }   
+        },
+        methods:{
+            formatString(string){
+                return string.toUpperCase();
+            },
+            // 只要页面重新渲染就会重新计算
+            getTotal(){
+                return Date.now();
+            }
+        },
+        template:` 
+            <div >
+                {{message}} {{getTotal()}} {{total}}
+            </div>
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

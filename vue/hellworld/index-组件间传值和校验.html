@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+ 
+
+    const app = Vue.createApp({
+        data(){
+            return {
+                num:123,
+                fun(){
+                    alert(123);
+                },
+                content2:235553
+            }
+        },
+        template:` 
+            <div>
+                <!-- 属性值绑定 -->
+               <test v-bind:content="num" v-bind:funs="fun" :content2="content2"/>
+            </div>
+        `
+    });
+
+    app.component('test',{
+        // props:['content'], //用数组中制定的变量接收组件传值
+        props:{
+            content:String,  //用对象中制定的变量接收组件传值，并且可以指定要接收的变量类型
+            funs:Function,  //组件传递一个函数; 用对象中制定的变量接收组件传值，并且可以指定要接收的变量类型
+
+            content2:{
+                type:Number, // 指定content2需要时Number类型
+                required:true, // 要求父组件必须向子组件传递值
+                // default:4354 // 如果不传的话，默认值是这个
+                default: function(){ // 默认值可以是函数
+                    return 345; 
+                },
+                validator: function(value){ //参数校验
+                    return value < 1000;
+                }
+            }
+        },
+        methods:{
+            handleClick(){
+                this.funs();
+            }
+        },
+        template:`
+            <div>{{typeof content}}</div><br/>
+
+            <div @click="handleClick">{{funs}}</div>
+
+
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>
