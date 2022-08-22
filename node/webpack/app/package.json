@@ -1,0 +1,16 @@
+{
+  "name": "ewb",
+  "version": "1.0.0",
+  "main": "runoob1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^5.73.0"
+  },
+  "dependencies": {},
+  "keywords": [],
+  "description": ""
+}
