@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+    // 异步组件
+    const app = Vue.createApp({
+        template:` 
+            <common-item />
+            <async-common-item />
+        `
+    });
+
+
+    // 同步组件
+    app.component('common-item',{
+        template:`
+            <div>hello world</div>
+        `
+    });
+
+    // 异步组件
+    app.component('async-common-item', Vue.defineAsyncComponent(()=>{
+        return new Promise((resolve, reject) => {
+                setTimeout(()=>{
+                    // 执行成功，用resolve方法返回需要返回的数据
+                    resolve({
+                        template:`
+                            <div>this is an async component</div>
+                        `
+                    });
+                },2000); //两秒后执行
+            }
+        );
+    }))
+           
+    const vm = app.mount('#root');
+
+</script>
+</html>

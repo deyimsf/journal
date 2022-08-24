@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+    // 动态组件
+    const app = Vue.createApp({
+        data(){
+            return {
+                currentItem:'input-item'
+            }
+        },
+        methods:{
+            handleClick(){
+                if(this.currentItem === 'input-item'){
+                    this.currentItem = 'common-item';
+                }else{
+                    this.currentItem = 'input-item';
+                }
+            }
+        },
+        template:` 
+            <keep-alive> <!-- keep-alive用来缓存组件内容 -->
+                <component :is="currentItem" />
+            </keep-alive>
+            <button @click="handleClick">切换</button>
+
+        `
+    });
+
+    app.component('input-item',{
+        template:`
+            <input/>
+        `
+    });
+
+    app.component('common-item',{
+        template:`
+            <div></div>
+        `
+    });
+       
+
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

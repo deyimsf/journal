@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+ 
+    const app = Vue.createApp({
+       
+        methods:{
+            handleAdd(param1){
+                this.count += param1;
+            }
+        },
+        template:` 
+            <myform>
+                <div>提交</div>
+            </myform>
+
+            <myform>
+                <button>提交</button>
+            </myform>
+
+            <myform>
+            </myform>
+        `
+    });
+
+    app.component('myform',{
+        methods:{
+            handleClick(){
+                alert(123);
+            }
+        },
+        template:`
+            <div>
+                <input/>
+                <span @click="handleClick">
+                    <slot>当使用该组件是没有传递数据是则显示该默认值</slot>
+                </span>
+            </div>
+        `
+    });
+       
+
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

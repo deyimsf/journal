@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+ 
+    const app = Vue.createApp({
+        data(){
+            return {
+        
+            }
+        },
+        template:` 
+            <div>
+              <!--如果该组件模版中最外层只有一个标签,则msg属性就会被放到子组件的最外层标签上-->
+               <counter msg="hello" msg1="hello1"/>
+            </div>
+
+        `
+    });
+
+    app.component('counter',{
+        // inheritAttrs:false, // 不继承non-props特性
+        template:`
+            <div>Counter</div><br/>
+            <div v-bind="$attrs">Counter {{$attrs.msg}}  继承父组件传递的所有属性</div><br/>
+            <div v-bind:msg="$attrs.msg">Counter {{$attrs.msg}}  通过$attrs.msg获取父组件传递的msg属性</div><br/>
+            <div :msg1="$attrs.msg1">Counter</div><br/>
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

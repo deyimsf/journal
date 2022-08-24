@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+ 
+    const app = Vue.createApp({
+        data(){
+            return {
+                count:1,
+                count2:1
+            }
+        },
+        methods:{
+            handleAdd(param1){
+                this.count += param1;
+            }
+        },
+        template:` 
+            <div>
+               <!-- 用v-on监听一个自定义事件'add',当时事件被触发后调用handleAdd方法 -->
+               <counter :count="count" v-on:add="handleAdd"/>
+
+               <!-- 把组件counter2的内容和count2数据双向绑定, -->
+               <counter2 v-model:app="count2"/>
+
+            </div>
+
+        `
+    });
+
+    app.component('counter',{
+        props:['count'],
+        methods:{
+            addOne(){
+                // 触发当前组件上的'add'事件
+                this.$emit("add",2);
+            }
+        },
+        template:`
+            <div v-on:click="addOne">{{count}}</div>
+        `
+    });
+       
+
+    app.component('counter2',{
+        props:['app'],
+        methods:{
+            addOne(){
+                // 
+                this.$emit("update:app",this.app+2);
+            }
+        },
+        template:`
+            <div v-on:click="addOne">{{app}}</div>
+        `
+    });
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>

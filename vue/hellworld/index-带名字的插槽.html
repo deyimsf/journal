@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    
+    <div id="root"></div>
+</body>
+<script>
+ 
+    const app = Vue.createApp({
+        // 把插槽拆成多个部分,为插槽定义名字
+        template:` 
+            <layout>
+                <template v-slot:header>
+                    <div>header</div>
+                </template>
+
+                <template v-slot:footer>
+                    <div>footer</div>
+                </template>
+            </layout>
+        `
+    });
+
+    // 使用有名字的插槽
+    app.component('layout',{
+        template:`
+            <div>
+               <slot name="header"></slot>
+               <div>content</div>
+               <slot name="footer"></slot>
+            </div>
+        `
+    });
+       
+
+       
+    const vm = app.mount('#root');
+
+</script>
+</html>
