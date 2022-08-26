@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+
+   <!--
+    -->
+    <style>
+      
+
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // 局部mixin(混入),子组件不能直接用,需要在子组件中也加入 mixins:[myMixin] 才能用
+    const myMixin = {
+        data(){
+            return {
+                number:2,
+                count:3
+            }
+        },
+        created(){
+            console.log('mixin created');
+        }
+    }
+
+
+    const app = Vue.createApp({
+        data(){
+            return {
+               number:1,
+            }
+        },
+        created(){
+            console.log('main created');
+        },
+        mixins:[myMixin], // 局部mixin,子组件用不了里面的数据
+        methods:{
+            handleClick(){
+               console.log('handleClick');
+            },
+            
+        },
+        template:` 
+            <div>
+                <div> {{number}} {{count}}</div>
+                <button @click="handleClick">增加</button>
+
+                <child />
+            </div>
+        `
+    });
+
+    app.component('child',{
+        template:`
+            <div>count:{{count}}  -- numberAll:{{numberAll}} -- countAll:{{countAll}}</div>
+        `
+    })
+
+    // 全局mixin
+    app.mixin({
+        data(){
+            return {
+                numberAll:2,
+                countAll:3
+            }
+        },
+        created(){
+            console.log('all mixin created');
+        }
+    })
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

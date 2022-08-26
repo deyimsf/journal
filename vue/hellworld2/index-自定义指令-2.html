@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // 自定义指令 directive
+
+   
+
+    const app = Vue.createApp({
+        data(){
+            return {
+                hello:true
+            }
+        },
+        template:` 
+            <div>
+                <div v-show="hello">
+                 <input v-focus/>
+                </div>
+            </div>
+        `
+    });
+
+    // 全局指令定义
+    app.directive('focus',{
+        beforeMount(el) {
+            console.log('beforeMount');
+        },
+        mounted(el){
+            console.log('mounted');
+            el.focus();
+        },
+        beforeUpdate(){
+            console.log('beforeUpdate');
+        },
+        updated(){
+            console.log('updated');
+        },
+        beforeUnmount(){
+            console.log('beforeUnmount');
+        },
+        unmount(){
+            console.log('unmount');
+        },
+        
+
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

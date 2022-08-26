@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+
+    <!--
+        过渡
+    -->
+    <style>
+        .transition123 {
+            transition: 4s background-color ease;
+        }
+        .blue123 {
+            background: blue;
+        }
+        .green123 {
+            background: green;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return {
+                animateAbc:{
+                    transition123:true,
+                    blue123:true,
+                    green123:false
+                }
+            }
+        },
+        methods:{
+            handleClick(){
+                this.$data.animateAbc.blue123= !this.animateAbc.blue123;
+                this.animateAbc.green123= !this.animateAbc.green123;
+            }
+        },
+        template:` 
+            <div>
+                <div v-bind:class="animateAbc">
+                    hello world
+                </div>
+                <button @click="handleClick">切换</button>
+            </div>
+        `
+           
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

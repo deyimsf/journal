@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+
+   <!--vue中动画封装
+    -->
+    <style>
+       .v-enter-from {
+         opacity: 0;
+       }
+       .v-enter-active {
+         transition: opacity 3s ease-in;
+       }
+       .v-enter-to {
+        opacity: 1;
+       }
+
+       .v-leave-from {
+        opacity: 1;
+       }
+       .v-leave-active {
+        transition: opacity 3s ease-in;
+       }
+       .v-leave-to {
+        opacity: 0;
+       }
+
+
+
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    const ComponentA = {
+        template:`
+            <div>A hello world</div>
+        `
+    }
+
+    const ComponentB = {
+        template:`
+            <div>B hello world</div>
+        `
+    }
+
+    const app = Vue.createApp({
+        data(){
+            return {
+               show:false,
+               component:'component-a'
+            }
+        },
+        methods:{
+            handleClick(){
+               this.show = !this.show;
+            },
+            handleClick2(){
+               if(this.component === 'component-a'){
+                    this.component = 'component-b';
+               }else{
+                    this.component = 'component-a'; 
+               }
+            }
+        },
+        components:{
+            'component-a':ComponentA,
+            'component-b':ComponentB
+        },
+        template:` 
+            <div>
+                <!-- 
+                -->
+                <transition mode="out-in" appear>
+                    <div v-if="show">hello world</div>
+                    <div v-else="show">bye world</div>
+                </transition>
+                <button @click="handleClick">切换</button>
+            </div>
+
+            <br/>
+            <div>
+                <transition mode="out-in" appear>
+                    <component :is="component" />
+                </transition>
+                <button @click="handleClick2">切换</button>
+            </div>
+        `
+           
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

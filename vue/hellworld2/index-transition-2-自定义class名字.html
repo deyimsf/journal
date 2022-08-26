@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+
+   <!--vue中动画封装
+    -->
+    <style>
+        @keyframes shake {
+            0% {
+                transform: translateX(-100px);
+            }
+            50% {
+                transform: translateX(-50px);
+            }
+            100% {
+                transform: translateX(50px);
+            }
+        }
+
+
+        .v-enter-from {
+            opacity: 0;
+        }
+        .hello {
+            transition: opacity 3s ease-out;
+        }
+        .v-enter-to {
+            opacity:1;
+        }
+
+        .v-leave-from {
+            opacity:1;
+        }
+        .bye {
+            transition: opacity 3s ease-in;
+            animation: shake 3s;
+        }
+        .v-leave-to {
+            opacity:0;
+        }
+
+
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return {
+               show:false
+            }
+        },
+        methods:{
+            handleClick(){
+               this.show = !this.show;
+            }
+        },
+        template:` 
+            <div>
+                <!-- 
+                    transition是vue封装的标签
+                    可以自定义出入场动画的class(默认是v-enter-from等)
+                -->
+                <transition 
+                    enter-active-class="hello"
+                    leave-active-class="bye"
+                >
+                    <div v-if="show">hello world</div>
+                </transition>
+                <button @click="handleClick">切换</button>
+            </div>
+        `
+           
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

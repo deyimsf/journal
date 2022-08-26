@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+   
+    // 
+    const app = Vue.createApp({
+        template:` 
+            <div>{{name}}</div>
+
+            <div>{{nameObj.name}}</div>
+        `,
+        /* 
+          Vue3中的特性
+          Vue.createApp()实例被完全实例化之前会调用该方法
+          所以在该方法中拿不到app实例里面的东西,所以该方法中this关键词都不能使用
+        
+          响应式引用:
+           ref() 处理基础数据
+           reactive() 处理对象数据
+        */
+        setup(props,context){
+           const {ref} = Vue;
+           // proxy, ref把 'dell' 变成proxy({value: 'dell'})响应式引用
+           let name = ref('dell');
+           setTimeout(()=>{
+                name.value = 'lee';
+           },2000);
+        
+
+           const {reactive, readonly} = Vue;
+           // proxy, reactive把 {name:'dell'}变成proxy({name:'dell'})响应式引用
+           const nameObj = reactive({name:'dell'})
+           // 只读数据,修改会报错
+           const copyNameObj = readonly(nameObj);
+           
+           setTimeout(()=>{
+                nameObj.name = "abc";
+                // 只读数据,修改会报错
+                copyNameObj.name = "fdsfd";
+           },3000);
+
+        
+           return {name,nameObj}
+        }
+    });
+
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

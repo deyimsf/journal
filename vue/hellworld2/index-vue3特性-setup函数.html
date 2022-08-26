@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+   
+    const app = Vue.createApp({
+        template:` 
+            <div @click="handleClick">{{name}}</div>
+        `,
+        mounted(){
+            console.log(this.$options.setup());
+            console.log(this.$options);
+        },
+        /*
+          Vue3中的特性
+          Vue.createApp()实例被完全实例化之前会调用该方法
+          所以在该方法中拿不到app实例里面的东西,所以该方法中this关键词都不能使用
+        */
+        setup(props,context){
+            return {
+                name:'dell',
+                handleClick: ()=> {
+                    alert(456);
+                }
+            }
+        }
+    });
+
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+
+    <!--创建一个动画
+    
+        @keyframes	规定动画模式。
+        animation	设置所有动画属性的简写属性。
+        animation-delay	规定动画开始的延迟。
+        animation-direction	规定是否应该轮流反向播放动画。
+        animation-duration	规定动画完成一个周期应花费的时间。
+        animation-fill-mode	规定元素在不播放动画时的样式（在开始前、结束后，或两者同时）。
+        animation-iteration-count	规定动画应播放的次数。
+        animation-name	规定 @keyframes 动画的名称。
+        animation-play-state	规定动画是运行还是暂停。
+        animation-timing-function	规定动画的速度曲线。
+
+        animation 属性是一个简写属性，用于设置六个动画属性：
+            animation-name
+            animation-duration
+            animation-timing-function
+            animation-delay
+            animation-iteration-count
+            animation-direction
+    -->
+    <style>
+        @keyframes leftToRight {
+            0% {
+                transform: translateX(-100px);
+            }
+            50% {
+                transform: translateX(-50px);
+            }
+            0% {
+                transform: translateX(-0px);
+            }
+        }
+
+        .animation123 {
+            animation: leftToRight 3s;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data(){
+            return {
+                animateAbc:{
+                    animation123:true
+                }
+            }
+        },
+        methods:{
+            handleClick(){
+                this.$data.animateAbc.animation123= !this.$data.animateAbc.animation123;
+            }
+        },
+        template:` 
+            <div>
+                <div v-bind:class="animateAbc">
+                    hello world
+                </div>
+                <button @click="handleClick">切换</button>
+            </div>
+        `
+           
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

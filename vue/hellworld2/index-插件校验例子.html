@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // plugin 插件   
+   
+    const app = Vue.createApp({
+        data(){
+            return {name:'dell',age:28}
+        },
+        rules123:{
+            age:{
+                validate: (age) => {age > 25},
+                message:'too young, too simple'
+            }
+        },
+        template:` 
+            <div>name:{{name}}, age:{{age}}</div>
+        `
+    });
+
+    // 插件实现校验器
+    const validatorPlugin = (app,options) => {
+        app.mixin({
+            created() {
+                // 拿出自定义的rules123属性
+                for(let key in this.$options.rules123){
+                    const age123 = this.$options.rules123[key]; //key就是rules123中的age
+                    // 监听age数据
+                    this.$watch(key,(value)=>{
+                        // 调用rules123->age中的validate()方法
+                        const result = age123.validate(value);
+                        // 如果校验失败,则打印rules123->age中message携带的信息
+                        if(!result){
+                            console.log(age123.message);
+                        }
+                    });
+                }
+            }
+        })
+    }
+
+    //使用插件
+    app.use(validatorPlugin);
+
+    const vm = app.mount('#root');
+
+</script>
+</html>

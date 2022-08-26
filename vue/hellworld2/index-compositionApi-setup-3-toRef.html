@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    // 
+    const app = Vue.createApp({
+        template:` 
+            <div>{{name}} -- {{name2}}</div>
+        `,
+        /*
+          Vue3中的特性
+          Vue.createApp()实例被完全实例化之前会调用该方法
+          所以在该方法中拿不到app实例里面的东西,所以该方法中this关键词都不能使用         
+        */
+        setup(props,context){
+            const {reactive,toRefs,toRef} = Vue;
+            const data = reactive({name:'dell'})
+            const name = toRefs(data);
+            // toRef,当解构的数据name2不存在时可以默认添加上,toRefs则没有这个特性
+            const name2 = toRef(data,'name2'); 
+
+            setTimeout(()=>{
+                name2.value = '234';
+            },2000);
+
+            function abcFun() {
+                console.log("hhh");
+            };
+            abcFun();
+
+            const bbFun = ()=>{
+                console.log("bbFun");
+            }
+            bbFun();
+
+           return {name, name2} 
+        }
+    });
+
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

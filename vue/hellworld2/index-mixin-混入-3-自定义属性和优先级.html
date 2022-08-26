@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+
+   <!--
+    -->
+    <style>
+      
+
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // 自定义的属性，组件中的属性优先级高于mixin属性的优先级
+    const myMixin = {
+        number:1,
+    }
+
+
+    // this.$options可以取到app里所有数据
+    const app = Vue.createApp({
+        mixins:[myMixin],
+        number:2,
+        template:` 
+            <div>
+                <div> {{this.$options.number}}</div>
+            </div>
+        `
+    });
+
+    // 可以通过optionMergeStragies来更改自定义属性的显示策略
+    app.config.optionMergeStrategies.number = (mixinValue,appValue) => {
+        // 优先返回 mixinValue,如果mixinValue是空，则返回appValue
+        return mixinValue || appValue;
+    }
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

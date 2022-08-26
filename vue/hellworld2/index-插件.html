@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // plugin 插件   
+    const myPlugin = {
+        install(app,options){
+            // dosomething ...
+            console.log(app,options);
+
+            // 用插件扩展一个指令
+            app.directive('focus',{
+                mounted(el){
+                    el.focus();
+                }
+            })
+        }
+    }
+    
+
+
+    const app = Vue.createApp({
+        template:` 
+            <my-title>
+            </my-title>
+        `
+    });
+
+    app.component('my-title',{
+        template:`
+            <div>
+               hello world
+            </div>
+            `
+    });
+
+    app.use(myPlugin,{name:"dell"});
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

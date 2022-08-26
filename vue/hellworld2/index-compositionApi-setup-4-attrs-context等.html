@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    // 
+    const app = Vue.createApp({
+        methods:{
+            handleChange(){
+                alert('change');
+            }
+        },
+        template:` 
+            <child app="app123" @change='handleChange'>
+                parent
+            </child>
+        `,
+    });
+
+    app.component('child',{
+        props:['app'],
+        template:`
+            <div @click="handleClick">child {{app}}</div>
+        `,
+        /*
+          Vue3中的特性
+          Vue.createApp()实例被完全实例化之前会调用该方法
+          所以在该方法中拿不到app实例里面的东西,所以该方法中this关键词都不能使用         
+       */
+       setup(props,context){
+            // attrs是父组件传递给子组件的属性;子组件也可以用props:['属性']接收
+            const {attrs, slots, emit} = context;
+            console.log(attrs.app); 
+            // slots 插槽,单此时获取的是一个虚拟Dom
+            console.log(slots.default()); 
+
+            function handleClick(){
+                // 触发该组件上的change事件
+                emit('change');
+            }
+
+            return {handleClick} 
+        }
+    })
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

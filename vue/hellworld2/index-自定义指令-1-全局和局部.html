@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // 自定义指令 directive
+
+    // 局部指令
+    const directivesAbc = {
+        focusAbc:{
+            mounted(el){
+                el.focus();
+            }
+        }
+    }
+
+    const app = Vue.createApp({
+        directives: directivesAbc,
+        template:` 
+            <div>
+                <input v-focus/>
+                <input v-focusAbc/>
+            </div>
+        `
+    });
+
+    // 全局指令定义
+    app.directive('focus',{
+        mounted(el){
+            el.focus();
+        }
+
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>

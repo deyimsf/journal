@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+        .header {
+            position: absolute;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+
+    // 自定义指令 directive
+    const app = Vue.createApp({
+        data(){
+            return {
+                top:100
+            }
+        },
+        template:` 
+            <div>
+                <div v-pos:abc="50" class="header">
+                    <input />
+                </div>
+
+                <div v-pos:456="top" class="header">
+                    <input />
+                </div>
+            </div>
+        `
+    });
+
+    // 全局指令定义
+    // app.directive('pos',()=> {
+    //     el.style.top = binding.value + 'px';
+    // });
+    app.directive('pos',{
+       mounted(el,binding){
+        el.style.top = binding.value + 'px';
+       },
+       updated(el,binding){
+        el.style.top = binding.value + 'px';
+        console.log("arg:"+binding.arg);
+       }
+    });
+ 
+    const vm = app.mount('#root');
+
+</script>
+</html>
