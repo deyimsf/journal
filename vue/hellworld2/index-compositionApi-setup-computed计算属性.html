@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    
+    // 
+    const app = Vue.createApp({
+        setup(){
+            const {ref,computed} = Vue;
+            const count = ref(0);
+            const handleClick = ()=> {
+                count.value += 1;
+            }
+
+            // 计算属性,当依赖的count.value发生变化时,countAddFive也会随着改变
+            const countAddFive = computed(()=>{
+                return count.value + 5;
+            });
+            
+            // 计算属性,当依赖的count.value发生变化时,countAddFive2也会随着改变
+            // 当读取countAddFive2值时,get()方法会被调用
+            const countAddFive2 = computed({
+                get: ()=>{
+                    return count.value + 6;
+                },
+                set: (param)=>{ // 修改countAddFive2值时,修改的值就是param
+                    count.value = param;
+                }
+            });
+
+            setTimeout(()=>{
+                countAddFive2.value = 100; 
+            },2000);
+
+            return {
+               count,handleClick,countAddFive,countAddFive2
+            }
+        },
+        template:` 
+            <div>
+                <span @click="handleClick">{{count}} -- {{countAddFive}} -- {{countAddFive2}}</span>
+            </div>
+        `,
+    });
+
+  
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

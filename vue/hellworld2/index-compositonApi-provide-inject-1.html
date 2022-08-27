@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    // 
+    const app = Vue.createApp({
+        setup(){
+            const {provide} = Vue;
+            provide('name','zhang san');
+          
+            return {}
+        },
+        template:` 
+            <div>
+                <child />
+            </div>
+        `,
+    });
+
+    app.component('child',{
+        setup (){
+            const {inject} = Vue;
+            const name = inject('name','li si'); // 默认li si
+
+            return {name};
+        },
+        template:`
+            <div> {{name}} </div>
+        `
+    });
+  
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

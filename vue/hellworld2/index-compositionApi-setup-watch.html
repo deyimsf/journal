@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    
+    // 监听器
+    const app = Vue.createApp({
+        setup(){
+            const {ref,watch} = Vue;
+            const name = ref('dell');
+
+            watch(name,(currentValue, prevValue)=>{
+                console.log(currentValue, prevValue);
+            });
+
+            return {
+                name
+            }
+        },
+        template:` 
+            <div>
+                <div>
+                    Name: <input v-model="name">
+                </div>
+
+                <div>
+                    Name is {{name}}
+                </div>
+            </div>
+        `,
+    });
+
+  
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

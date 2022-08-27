@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    // 
+    const app = Vue.createApp({
+        setup(){
+            const {provide,ref,readonly} = Vue;
+            const name = ref('zhang san');
+            provide('name',readonly(name)); // 限制子组件直接修改name
+            provide('changeNameFun',(value)=>{
+                name.value = value;
+            })
+
+            return {}
+        },
+        template:` 
+            <div>
+                <child />
+            </div>
+        `,
+    });
+
+    app.component('child',{
+        setup (){
+            const {inject} = Vue;
+            const name = inject('name','li si'); // 默认li si
+            const changeNameFun = inject('changeNameFun');
+
+            const handleClick = ()=>{
+                name.value = 'fd';
+                changeNameFun('lee');
+            }
+
+            return {name,handleClick};
+        },
+        template:`
+            <div @click="handleClick"> {{name}} </div>
+        `
+    });
+  
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>

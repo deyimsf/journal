@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://unpkg.com/vue@next"></script>
+   <!--
+    -->
+    <style>
+       
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script>
+    
+    
+    // watch 监听器
+    // watchEffect 监听器
+    const app = Vue.createApp({
+        setup(){
+            const {ref,watch,watchEffect,toRefs,reactive} = Vue;
+            const nameObj = reactive({
+                name:'dell', englishName: 'lee'
+            });
+
+            // watch可以监听多个数据的变化,用数组接收
+            // lazy,只有每次监听的数据变动时才会执行,如果加immediate:true参数,则就会立即执行
+            // const stop1 = watch([()=> nameObj.name, ()=>nameObj.englishName],([curAName, curEngName], [endAName,endEngName])=>{
+            //     console.log('watch',curAName, endAName,'----',curEngName,endEngName);
+            //     setTimeout(()=>{
+            //        stop1();
+            //     },5000);
+            // }, {immediate:true});
+
+            // 不需要显示的传递要监听的内容,只要代码块里有依赖就可以自动被监听,能自动感知代码依赖
+            // 缺点是无法获取之前的值,只能获取变换后的值
+            // 立即执行,页面加载完就先执行一次,后面每次变动时继续执行
+            const stop = watchEffect(()=>{
+                console.log("abc");
+                console.log(nameObj.name);
+
+                setTimeout(()=>{
+                    stop();
+                },5000);
+            });
+
+            const {name, englishName} = toRefs(nameObj);
+            return {
+                name,englishName
+            }
+        },
+        template:` 
+            <div>
+                <div>
+                    Name: <input v-model="name">
+                </div>
+                <div>
+                    Name is {{name}}
+                </div><br/>
+
+                <div>
+                    EnglishName: <input v-model="englishName">
+                </div>
+                <div>
+                    EnglishName is {{englishName}}
+                </div>
+            </div>
+        `,
+    });
+
+  
+    
+    const vm = app.mount('#root');
+
+</script>
+</html>
