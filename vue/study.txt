@@ -8,5 +8,19 @@ $vue create vue-project
 3.启动vue服务
 $npm run serve
 
+#normalize.css可以磨平css在不同浏览器上的差异
+npm install normalize.css --save
+
+#rem
+rem是CSS3新增的一个相对单位（root em，根em）
+1rem = 1html中font-size的大小,比如
+	html {
+	 	font-size = 10px;
+	}
+则,2rem就等于20px;
+
+
+
+
 
 
