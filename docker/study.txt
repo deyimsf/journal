@@ -1,0 +1,67 @@
+#安装docker
+
+
+
+#查看本机安装的docker镜像
+$docker images
+
+#安装一个centos镜像
+$docker pull centos
+
+#启动一个容器
+语法:
+ docker run [可选参数] [镜像名字]
+可选参数: 
+--name="容器名字"
+ -d   后台方式运行
+ -it  使用交互方式运行,并制定一个终端
+$docker run -it centos /bin/bash
+
+#查看运行的容器
+$docker ps [-a 加该参数会列出历史运行的容器]
+
+#删除容器
+$docker rm [容器id]
+
+#启动/停止/重启/杀掉 容器
+$docker start   [容器id]  //也算后台启动容器吧
+$docker stop    [容器id]
+$docker restart [容器id]
+$docker kill    [容器id]
+
+#后台启动一个容器
+$docker run -d [镜像]
+
+#查看容器内部信息
+$docker inspect [容器id]
+
+#使用交互模式进入正在运行的容器
+$docker exec -it [容器id] [/bin/bash]
+
+#容器内文件拷贝到物理机上
+$docker cp [容器id]:/My/aa.txt [物理机目录]
+
+#查看容器状态(cpu、内存等)
+$docker stats
+
+
+
+问题
+今天在一台云服务器上安装CentOS 8系统，安装成功之后，运行 yum update 命令更新系统时报错：
+
+[root@server ~]# yum updateCentOS-8 - AppStream 70 B/s | 38 B 00:00Error: Failed to download metadata for repo 'appstream': Cannot prepare internal mirrorlist: No URLs in mirrorlist
+原因
+CentOS Linux 8 已于 2021 年 12 月 31 日结束生命周期 (EOL)。这意味着 CentOS 8 将不再从 CentOS 官方项目获得开发资源。在 2021 年 12 月 31 日之后，如果需要更新CentOS，需要将镜像更改为 vault.centos.org
+
+解决方案
+第1步：进入 /etc/yum.repos.d/ 目录。
+
+[root@server ~]# cd /etc/yum.repos.d/
+第2步：运行如下两条命令更换镜像。
+
+[root@server ~]# sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+[root@server ~]# sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+第3步：再次运行 yum update 命令。
+
+[root@server ~]# yum update -y
+

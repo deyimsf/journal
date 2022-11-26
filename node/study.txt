@@ -1,0 +1,61 @@
+# CommonJS模块加载方式,数据动态加载,加载的是对象,是同步加载
+let { stat, exists, readfile } = require('fs');
+
+//等同于
+let _fs = require('fs');
+let stat = _fs.stat;
+
+#ES6模块加载方式,静态加载(没有搞出一个fs对象)
+import { stat, exists, readfile } from 'fs';
+
+1.import命令输入的变量都是只读的，因为它的本质是输入接口。
+ 也就是说，不允许在加载模块的脚本里面，改写接口。
+ 但是可以更改里面的属性，并且其它模块也可以看到改写后的值
+   import {a} from './xxx.js'
+   a.foo = 'hello'; // 合法操作
+ 并且其它导入该模块的地方也可以看到这个值???
+
+2.import语句会执行所加载的模块(只能加载一次)，因此可以有下面的写法
+ // abc.js
+ var aaa = 'bbb';
+ function fun(){
+   console.log(aaa)
+ }
+
+ // main.js
+ import 'abc.js'
+ // 后台会打印 bbb
+
+
+#ES6可以用import()函数实现异步加载模块
+#import()返回一个 Promise 对象
+import('abc.js').then(module=>{
+	module.fun1();
+}).catch(err=>{
+	console.log('---->');
+})
+
+#ES6 export命令用于规定模块的对外接口
+var firstN = '';
+var lastN = '';
+export { firstN, lastN };
+
+export var m = 1;
+
+export function add(){
+	return x*y;
+}
+
+1.export default命令用于指定模块的默认输出。
+ 显然，一个模块只能有一个默认输出，因此export default命令只能使用一次,
+ 所以，import命令后面才不用加大括号，因为只可能唯一对应export default命令.
+
+2.export default也可以用来输出类。
+  // MyClass.js
+  export default class { ... }
+  // main.js
+  import MyClass from 'MyClass';
+  let o = new MyClass();
+
+
+
