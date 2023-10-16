@@ -1,0 +1,61 @@
+#flex布局父项常见属性
+ flex-direction:  设置主轴的方向
+ justify-content: 设置主轴上的子元素排列方式
+ flex-wrap:       设置子元素是否换行
+ align-content:   设置侧轴上的子元素排列方式(多行,适用于子元素出现换行情况,不换行情况下无效),配合flex-wrap=wrap时使用
+ align-items:     设置侧轴上的子元素排列方式(单行)
+ flex-flow:       复合属性，相当于同时设置了flex-direction和flex-wrap
+
+#flex-direction
+ row:           按行排列,方向是从做到右
+ row-reverse    按行排列,方向是从右到左
+ column         按列排序,方向是从上到下
+ column-reverse 按列排序,方向是从下到上
+
+#justify-content(设置主轴上的子元素排列方式)
+ flex-start     从头部开始(如果主轴是x,则从左到右；如果主轴是y,则从上到下)
+ flex-end       从尾部开始排列
+ center         在主轴居中对齐
+ space-around   平分剩余空间
+ space-between  先两边贴边 再分配剩余空间 
+
+#flex-wrap(设置子元素是否换行,默认不换行,超过会缩小子元素)
+ nowrap         不换行，默认值
+ wrap           换行 
+
+#align-items(设置侧轴上的子元素排列方式(单行))
+ flex-start     默认值,从侧轴的头部开始排列，如果侧轴是y,则从上到下排;如果侧轴是x,则从左到右排
+ flex-end       从侧轴的尾部开始排列
+ center         居中
+ stretch        拉伸(子元素不设置对应的高度或宽度时有效)
+
+#align-content(设置侧轴上的子元素排列方式(多行))
+ flex-start     默认值，从侧轴的头部开始配列
+ flex-end       从侧轴的尾部开始排列
+ center         在侧轴中间显示
+ space-around   子元素在侧轴平均分配空间
+ space-between  子元素在侧轴先分布在两头，在平均分配空间
+ stretch        拉伸 
+
+#flex-flow(复合属性，相当于同时设置了flex-direction和flex-wrap)
+
+
+#flex布局子项常见属性
+  flex          子项目占的份数,用来分配父元素下的剩余空间
+  align-self    控制子项自己在侧轴的排列方式
+  order         定义子项的排列顺序(前后顺序)
+
+#align-self
+ 允许单个项目有与其他项目不一样的对齐方式,可覆盖align-items属性。
+ 默认是auto,表示继承父元素的align-items属性,如果没有父元素,则等同于stretch
+ // 设置第二个div在侧轴上从底部开始排列
+ div:nth-child(2) {
+	align-self: flex-end;
+ }
+
+
+
+
+
+ 
+
