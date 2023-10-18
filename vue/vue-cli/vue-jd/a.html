@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3377328811483706"
+            crossorigin="anonymous"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RHZQ113HJ8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-RHZQ113HJ8');
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Little Games</title>
+
+    <script src="js/jquery-1.11.3.min.js"></script>
+
+    <script type="text/javascript">
+        var width = document.documentElement.clientWidth || document.body;
+        var ratio = width / 375;
+        var fontSize = 100 * ratio;
+
+        document.documentElement.style.fontSize = 100 * document.documentElement.clientWidth / 375 + 'px';
+        console.log(document.documentElement.style.fontSize)
+
+        $(window).resize(function() { //当浏览器大小变化时跟随变化
+            document.documentElement.style.fontSize = 100 * document.documentElement.clientWidth / 375 + 'px';
+            console.log(document.documentElement.style.fontSize)
+        });
+    </script>
+
+</head>
+<body>
+<div id="app"></div>
+<div class="wrapper">
+    <div class="banner">
+        <img class="banner__img" src="./banner.avif" />
+    </div>
+
+    <div class="nearby">
+        <h3 class="nearby__title">旺财街->京东</h3>
+       
+        <div class="shop">
+          <img src="https://ffffds" class="shop__img" />
+          <div>
+            <div class="shop__content__title">商品名称</div>
+            <div class="shop__content__tags">
+                <span class="shop__content__highlight">价格:</span>
+            </div>
+            <p class="shop__content__highlight">
+                购买
+            </p>
+          </div>
+      </div>
+
+</div>
+</body>
+</html>
+
+
+<style lang="scss" scoped>
+    html {
+        font-size:100px;
+    };
+
+    // 1rem = html中font-size的大小
+              body {
+                  font-size: 10px;
+              }
+
+    .wrapper {
+    // 纵向溢出?
+    overflow-y: auto;
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0.5rem;
+        right: 0;
+        padding: 0.03rem 0.1rem .1rem .1rem;
+    //background: rgb(205, 205, 211);
+    }
+</style>
+
+<style lang="scss" scoped>
+    .banner__img {
+    // overflow: hidden;
+        padding: 0 0 0 0;
+        width: 95%;
+        height: 70%;
+        border-radius:0.03rem;
+    }
+
+    .prediv {
+        display: flex;
+        flex-wrap: wrap;
+        margin: -0.2rem 0 0rem 0;
+    //background: blue;
+    }
+   
+</style>
+
+
+<style lang="scss">
+  
+    .nearby__title {
+        margin: .16rem 0 .02rem 0;
+        font-size: .18rem;
+        font-weight: normal;
+      }
+  
+    a {
+      text-decoration: none;
+    }
+    </style>
+
+
+<style lang="scss" scoped>  
+    .shop {
+        display: flex;
+        padding-top: .12rem;
+    }
+    .shop__img{
+        margin-right: .16rem;
+        width: .56rem;
+        height: .56rem;
+    }
+  
+  
+    .shop__content {
+            flex:1;
+    }
+    .shop--bordered {
+                border-bottom: .001rem solid #f1f1f1;
+    }
+    .shop__content__title{
+            line-height: .22rem;
+            font-size: .16rem;
+            font-size: #f1f1f1;
+        }
+    .shop__content__tags {
+            margin-top: .08rem;
+            line-height: .18rem;
+            font-size: .13rem;
+            color: #f1f1f1;
+        }
+    .shop__content__tag{
+            margin-right: .16rem;
+        }
+  
+    .shop__content__highlight{
+            margin-top:.08rem 0 0 0;
+            line-height:.18rem;
+            font-size: .13rem;
+            color: red;
+    }
+    
+    </style>
+  

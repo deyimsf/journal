@@ -1,0 +1,4 @@
+
+#截取视频,从26秒开始，最多截取8秒，拷贝视频编码，拷贝音频编码，输出到output.mp4
+ffmpeg -i 1234.mp4 -ss 26 -t 8 -c:v copy -c:a copy output.mp4
+
