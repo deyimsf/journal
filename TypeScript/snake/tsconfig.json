@@ -1,0 +1,13 @@
+{
+  /**
+    编译器的选项
+  */
+  "compilerOptions": {
+    // 指定被编译成ES的版本
+    "target": "ES2015",
+    // 指定要使用的模块化规则
+    "module": "ES2015",
+    "strict": true,
+    "noEmitOnError": true
+  }
+}

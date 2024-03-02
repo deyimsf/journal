@@ -1,0 +1,62 @@
+{
+ /**
+    tsconfig.json是ts编译器的配置文件,编译器可以根据它的信息来对代码进行编译
+      include: 指定哪些ts文件需要被编译
+      路径: ** 任意目录
+            * 任意文件
+
+      exclude: 不需要被编译的文件目录
+        默认值: ["node_modules", "bower_components", "jspm_packages"]
+
+      extends: 指定被继承的文件
+        "extends": "./configs/base"
+
+      files: 指定被编译的文件列表
+        "files" [
+          "abc.ts",
+          "dgg".ts
+        ]
+
+ */
+  "include": [
+    // 使用webpack.config.js后这里可以不管？？？
+    "./src/**/*"
+  ],
+  /**
+    编译器的选项
+  */
+  "compilerOptions": {
+    // 指定被编译成ES的版本
+    "target": "ES2015",
+    // 指定要使用的模块化规则
+    "module": "ES2015",
+    // 指定项目中要使用的库,比如dom
+    "lib": ["dom","ES6"],
+    // 编译后的文件放在哪个目录
+    "outDir": "./dist",
+//    // 将代码合并为一个文件
+//    "outFile": "./dist/index.js"
+    // 是否对js进行编译，默认是false
+    "allowJs": true,
+    // 是否检查js代码符合语法规范, 默认是false
+    "checkJs": false,
+    // 是否移除注释,默认是false
+    "removeComments": false,
+
+    // 所有严格检查的总开关
+    "strict": true,
+
+    // 不生成编译后的文件,默认是false
+    "noEmit": false,
+    // 当有错误时不生成编译后的文件,默认是false
+    "noEmitOnError": false,
+    // 设置编译后的js文件是否使用严格模式(use strict),默认false
+    "alwaysStrict": false,
+    // 不允许隐士的any类型,默认false,表示允许
+    "noImplicitAny": false,
+    // 不允许不明确类型的this,默认false
+    "noImplicitThis": false,
+    // 严格检查空值
+    "strictNullChecks": false
+  }
+}

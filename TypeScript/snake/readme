@@ -1,0 +1,10 @@
+#安装
+npm i 等同于 npm install
+
+#安装webpack对css的支持
+npm i -D less less-loader css-loader style-loader
+
+#css样式兼容支持
+npm i -D postcss postcss-loader postcss-preset-env
+
+
