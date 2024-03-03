@@ -1,0 +1,14 @@
+#Matplotlib
+ 专门开发2D图标(包括3D)
+
+#matplotlib.pyplot模块
+ 该模块包含了一系列的绘图函数
+ import matplotlib.pyplot as plt
+
+#创建画布
+  plt.figure(figsize=(), dpi=) 返回fig对象
+
+  figsize: 指定画布长度
+  dpi: 画像的清晰度
+
+
